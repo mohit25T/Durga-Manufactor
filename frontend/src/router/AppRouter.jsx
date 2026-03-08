@@ -10,12 +10,12 @@ import Contact from "../pages/Contact";
 
 /* Admin Pages */
 
-import Login from "../pages/admin/Login";
-import Dashboard from "../pages/admin/Dashboard";
-import AddProduct from "../pages/admin/AddProduct";
-import ProductsAdmin from "../pages/admin/Products";
-import Leads from "../pages/admin/Leads";
-import EditProduct from "../pages/admin/EditProduct";
+import Login from "../admin/Login";
+import Dashboard from "../admin/Dashboard";
+import AddProduct from "../admin/AddProduct";
+import ProductsAdmin from "../admin/Products";
+import Leads from "../admin/Leads";
+import EditProduct from "../admin/EditProduct";
 
 /* Protected Route */
 
