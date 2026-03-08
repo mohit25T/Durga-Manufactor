@@ -10,12 +10,12 @@ import Contact from "../pages/Contact";
 
 /* Admin Pages */
 
-import Login from "../admin/Login";
-import Dashboard from "../admin/Dashboard";
-import AddProduct from "../admin/AddProduct";
-import ProductsAdmin from "../admin/Products";
-import Leads from "../admin/Leads";
-import EditProduct from "../admin/EditProduct";
+import Login from "../pages/Login";
+import Dashboard from "../pages/Dashboard";
+import AddProduct from "../pages/AddProduct";
+import ProductsAdmin from "../pages/AdminProducts";
+import Leads from "../pages/Leads";
+import EditProduct from "../pages/EditProduct";
 
 /* Protected Route */
 
@@ -37,7 +37,7 @@ function AppRouter() {
 
         {/* Protected Admin Routes */}
 
-        <Route path="/admin" element={<adminLayout />}>
+        <Route path="/admin" element={<Dashboard />}>
           <Route path="/admin/add-product" element={<AddProduct />} />
           <Route path="/admin/products" element={<ProductsAdmin />} />
           <Route path="/admin/edit-product/:id" element={<EditProduct />} />
