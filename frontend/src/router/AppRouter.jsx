@@ -37,7 +37,7 @@ function AppRouter() {
 
         {/* Protected Admin Routes */}
 
-        <Route path="/admin" element={<Dashboard />}>
+        <Route path="/admin/dashboard" element={<Dashboard />}>
           <Route path="/admin/add-product" element={<AddProduct />} />
           <Route path="/admin/products" element={<ProductsAdmin />} />
           <Route path="/admin/edit-product/:id" element={<EditProduct />} />
