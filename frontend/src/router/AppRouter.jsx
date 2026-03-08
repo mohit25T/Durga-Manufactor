@@ -32,10 +32,6 @@ function AppRouter() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
 
-        {/* Admin Login (Public) */}
-
-        <Route path="/admin/login" element={<Login />} />
-
         {/* Protected Admin Routes */}
 
         <Route path="/admin" element={<ProtectedRoute />}>
