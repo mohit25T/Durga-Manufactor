@@ -35,11 +35,11 @@ function AppRouter() {
         {/* Protected Admin Routes */}
         <Route path="/admin/login" element={<Login />} />
         <Route path="/admin" element={<ProtectedRoute />}>
-          <Route path="/admin/dashboard" element={<Dashboard />} />
-          <Route path="/admin/add-product" element={<AddProduct />} />
-          <Route path="/admin/products" element={<ProductsAdmin />} />
-          <Route path="/admin/edit-product/:id" element={<EditProduct />} />
-          <Route path="/admin/leads" element={<Leads />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/add-product" element={<AddProduct />} />
+          <Route path="/products" element={<ProductsAdmin />} />
+          <Route path="/edit-product/:id" element={<EditProduct />} />
+          <Route path="/leads" element={<Leads />} />
         </Route>
       </Routes>
     </HashRouter>
