@@ -172,6 +172,9 @@ function Contact() {
                     <input
                       required
                       type="tel"
+                      maxLength={10}
+                      minLength={10}
+                      pattern="[0-9]{10}"
                       value={form.phone}
                       onChange={(e) =>
                         setForm({ ...form, phone: e.target.value })

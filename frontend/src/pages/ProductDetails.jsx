@@ -174,7 +174,11 @@ Thank you.
                   />
 
                   <input
+                    required
                     type="tel"
+                    maxLength={10}
+                    minLength={10}
+                    pattern="[0-9]{10}"
                     placeholder="Mobile Number"
                     className="w-full p-3 border rounded-lg"
                     value={client.phone}
