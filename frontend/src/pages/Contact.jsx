@@ -18,7 +18,7 @@ function Contact() {
     e.preventDefault();
     try {
       // Mocked if API fails
-      // await API.post("/leads", form);
+      await API.post("/leads", form);
       setStatus("success");
       setForm({ name: "", phone: "", email: "", message: "" });
       setTimeout(() => setStatus(null), 5000);
