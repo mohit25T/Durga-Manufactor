@@ -19,12 +19,11 @@ import EditProduct from "../pages/admin/EditProduct";
 
 /* Protected Route */
 
-import ProtectedRoute from "../components/ProtectedRoute";
-
 function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+
         {/* Public Website */}
 
         <Route path="/" element={<Home />} />
@@ -39,49 +38,16 @@ function AppRouter() {
 
         {/* Protected Admin Routes */}
 
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+       
 
-        <Route
-          path="/admin/add-product"
-          element={
-            <ProtectedRoute>
-              <AddProduct />
-            </ProtectedRoute>
-          }
-        />
+          <Route path="/admin/dashboard" element={<Dashboard />} />
+          <Route path="/admin/add-product" element={<AddProduct />} />
+          <Route path="/admin/products" element={<ProductsAdmin />} />
+          <Route path="/admin/edit-product/:id" element={<EditProduct />} />
+          <Route path="/admin/leads" element={<Leads />} />
 
-        <Route
-          path="/admin/products"
-          element={
-            <ProtectedRoute>
-              <ProductsAdmin />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/edit-product/:id"
-          element={
-            <ProtectedRoute>
-              <EditProduct />
-            </ProtectedRoute>
-          }
-        />
+        
 
-        <Route
-          path="/admin/leads"
-          element={
-            <ProtectedRoute>
-              <Leads />
-            </ProtectedRoute>
-          }
-        />
       </Routes>
     </BrowserRouter>
   );
