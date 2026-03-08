@@ -25,6 +25,7 @@ function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+
         {/* Public Website */}
 
         <Route path="/" element={<Home />} />
@@ -39,49 +40,16 @@ function AppRouter() {
 
         {/* Protected Admin Routes */}
 
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/admin" element={<ProtectedRoute />}>
 
-        <Route
-          path="/admin/add-product"
-          element={
-            <ProtectedRoute>
-              <AddProduct />
-            </ProtectedRoute>
-          }
-        />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="add-product" element={<AddProduct />} />
+          <Route path="products" element={<ProductsAdmin />} />
+          <Route path="edit-product/:id" element={<EditProduct />} />
+          <Route path="leads" element={<Leads />} />
 
-        <Route
-          path="/admin/products"
-          element={
-            <ProtectedRoute>
-              <ProductsAdmin />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/edit-product/:id"
-          element={
-            <ProtectedRoute>
-              <EditProduct />
-            </ProtectedRoute>
-          }
-        />
+        </Route>
 
-        <Route
-          path="/admin/leads"
-          element={
-            <ProtectedRoute>
-              <Leads />
-            </ProtectedRoute>
-          }
-        />
       </Routes>
     </BrowserRouter>
   );
