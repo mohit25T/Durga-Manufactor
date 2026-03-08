@@ -1,4 +1,4 @@
-import { HasgRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 
 /* Public Pages */
 
@@ -21,7 +21,7 @@ import EditProduct from "../pages/EditProduct";
 
 function AppRouter() {
   return (
-    <HasgRouter>
+    <HashRouter>
       <Routes>
         {/* Public Website */}
 
@@ -44,7 +44,7 @@ function AppRouter() {
           <Route path="/admin/leads" element={<Leads />} />
         </Route>
       </Routes>
-    </HasgRouter>
+    </HashRouter>
   );
 }
 
