@@ -8,12 +8,13 @@ export default {
     extend: {
       colors: {
         brand: {
-          slate: "#1f2937",    // Deep gray/blue
+          slate: "#1f2937",
           slateDark: "#111827",
-          amber: "#f59e0b",    // Vibrant industrial amber
-          amberHover: "#d97706",
-          gray: "#9ca3af",
-          light: "#f3f4f6"
+          black: "#111111",    // Deep Industrial Black
+          red: "#E62325",      // MillZon Vibrant Red
+          redHover: "#C91D20", // Darker Red for hover
+          gray: "#4B5563",
+          light: "#FFFFFF"
         }
       },
       fontFamily: {

@@ -11,7 +11,7 @@
   }
   
   body {
-    @apply bg-brand-light text-brand-slate;
+    @apply bg-brand-light text-brand-black;
   }
 
   /* Custom Scrollbar */
@@ -19,21 +19,21 @@
     width: 8px;
   }
   ::-webkit-scrollbar-track {
-    @apply bg-brand-slateDark;
+    @apply bg-brand-black;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-brand-amber rounded-full;
+    @apply bg-brand-red rounded-full;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-brand-amberHover;
+    @apply bg-brand-redHover;
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-lg;
+    @apply bg-white/70 backdrop-blur-md border border-brand-red/10 shadow-lg;
   }
   .glass-dark {
-    @apply bg-brand-slateDark/80 backdrop-blur-md border border-white/10 shadow-2xl;
+    @apply bg-brand-black/90 backdrop-blur-md border border-brand-red/20 shadow-2xl;
   }
 }
