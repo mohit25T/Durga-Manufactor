@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-    baseURL: "https://durga-manufactor.onrender.com/api",
+    baseURL: "https://backend-mp6m.onrender.com/api",
 });
 
 /* Attach JWT Token Automatically */
