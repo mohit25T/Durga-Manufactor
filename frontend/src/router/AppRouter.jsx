@@ -1,5 +1,5 @@
 import { HashRouter, Routes, Route } from "react-router-dom";
-
+import ScrollToTop from "../ScrollTop";
 /* Public Pages */
 
 import Home from "../pages/Home";
@@ -23,6 +23,7 @@ import EditProduct from "../pages/EditProduct";
 function AppRouter() {
   return (
     <HashRouter>
+      <ScrollToTop />
       <Routes>
         {/* Public Website */}
 
@@ -34,34 +35,46 @@ function AppRouter() {
 
         {/* Protected Admin Routes */}
         <Route path="/admin/login" element={<Login />} />
-          <Route
-            path="/admin/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/admin/add-product" element={
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/add-product"
+          element={
             <ProtectedRoute>
               <AddProduct />
             </ProtectedRoute>
-          } />
-          <Route path="/admin/products" element={
+          }
+        />
+        <Route
+          path="/admin/products"
+          element={
             <ProtectedRoute>
               <ProductsAdmin />
             </ProtectedRoute>
-          } />
-          <Route path="/admin/edit-product/:id" element={
+          }
+        />
+        <Route
+          path="/admin/edit-product/:id"
+          element={
             <ProtectedRoute>
               <EditProduct />
             </ProtectedRoute>
-          } />
-          <Route path="/admin/leads" element={
+          }
+        />
+        <Route
+          path="/admin/leads"
+          element={
             <ProtectedRoute>
               <Leads />
             </ProtectedRoute>
-          } />
+          }
+        />
       </Routes>
     </HashRouter>
   );
