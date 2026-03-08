@@ -37,11 +37,12 @@ function AppRouter() {
 
         {/* Protected Admin Routes */}
 
-        <Route path="/admin" element={<Dashboard />} />
-        <Route path="/admin/add-product" element={<AddProduct />} />
-        <Route path="/admin/products" element={<ProductsAdmin />} />
-        <Route path="/admin/edit-product/:id" element={<EditProduct />} />
-        <Route path="/admin/leads" element={<Leads />} />
+        <Route path="/admin" element={<adminLayout />}>
+          <Route path="/admin/add-product" element={<AddProduct />} />
+          <Route path="/admin/products" element={<ProductsAdmin />} />
+          <Route path="/admin/edit-product/:id" element={<EditProduct />} />
+          <Route path="/admin/leads" element={<Leads />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

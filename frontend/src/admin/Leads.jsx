@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import AdminLayout from "../../components/admin/AdminLayout";
-import API from "../../services/api";
+import AdminLayout from "../components/admin/AdminLayout";
+import API from "../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Phone, Calendar, Search, Inbox, Hash } from "lucide-react";
 

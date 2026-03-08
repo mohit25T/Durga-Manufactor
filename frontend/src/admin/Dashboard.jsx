@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import AdminLayout from "../../components/admin/AdminLayout";
-import API from "../../services/api";
+import AdminLayout from "../components/admin/AdminLayout";
+import API from "../services/api";
 import {
   PackageSearch,
   PackagePlus,
