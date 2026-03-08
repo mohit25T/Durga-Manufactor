@@ -19,8 +19,6 @@ import EditProduct from "../pages/admin/EditProduct";
 
 /* Protected Route */
 
-import ProtectedRoute from "../components/ProtectedRoute";
-
 function AppRouter() {
   return (
     <BrowserRouter>
@@ -40,15 +38,15 @@ function AppRouter() {
 
         {/* Protected Admin Routes */}
 
-        <Route path="/admin" element={<ProtectedRoute />}>
+       
 
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="add-product" element={<AddProduct />} />
-          <Route path="products" element={<ProductsAdmin />} />
-          <Route path="edit-product/:id" element={<EditProduct />} />
-          <Route path="leads" element={<Leads />} />
+          <Route path="/admin/dashboard" element={<Dashboard />} />
+          <Route path="/admin/add-product" element={<AddProduct />} />
+          <Route path="/admin/products" element={<ProductsAdmin />} />
+          <Route path="/admin/edit-product/:id" element={<EditProduct />} />
+          <Route path="/admin/leads" element={<Leads />} />
 
-        </Route>
+        
 
       </Routes>
     </BrowserRouter>
