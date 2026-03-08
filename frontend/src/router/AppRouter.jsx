@@ -7,6 +7,7 @@ import Products from "../pages/Products";
 import ProductDetails from "../pages/ProductDetails";
 import About from "../pages/About";
 import Contact from "../pages/Contact";
+import ProtectedRoute from "../components/ProtectedRoute";
 
 /* Admin Pages */
 
@@ -37,7 +38,8 @@ function AppRouter() {
 
         {/* Protected Admin Routes */}
 
-        <Route path="/admin/dashboard" element={<Dashboard />}>
+        <Route path="/admin" element={<ProtectedRoute />}>
+          <Route path="dashboard" element={<Dashboard />} />
           <Route path="/admin/add-product" element={<AddProduct />} />
           <Route path="/admin/products" element={<ProductsAdmin />} />
           <Route path="/admin/edit-product/:id" element={<EditProduct />} />
