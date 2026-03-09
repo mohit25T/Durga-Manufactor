@@ -138,21 +138,19 @@ Thank you.
 
               <p className="text-gray-600 mb-8">{product.description}</p>
 
-              {/* Specifications OR Table */}
+              {/* MACHINE SPECIFICATION TABLE */}
 
               <div className="space-y-4 mb-8">
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <CheckCircle2 className="text-brand-amber" />
-                  Technical Specifications
+                  Machine Specifications
                 </h3>
 
-                {/* TABLE VIEW */}
-
-                {product.tableData && product.tableData.length > 0 ? (
+                {product.table && product.table.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full border border-gray-200 rounded-xl overflow-hidden">
                       <tbody>
-                        {product.tableData.map((row, rowIndex) => (
+                        {product.table.map((row, rowIndex) => (
                           <tr
                             key={rowIndex}
                             className={`border-b ${
@@ -172,16 +170,10 @@ Thank you.
                       </tbody>
                     </table>
                   </div>
-                ) : product.specifications?.length ? (
-                  product.specifications.map((spec, i) => (
-                    <div key={i} className="flex gap-3">
-                      <span className="font-semibold">{spec.key}:</span>
-
-                      <span>{spec.value}</span>
-                    </div>
-                  ))
                 ) : (
-                  <p className="text-gray-400">No specifications available</p>
+                  <p className="text-gray-400">
+                    No specification table available
+                  </p>
                 )}
               </div>
 
@@ -205,7 +197,6 @@ Thank you.
                     required
                     type="tel"
                     maxLength={10}
-                    minLength={10}
                     pattern="[0-9]{10}"
                     placeholder="Mobile Number"
                     className="w-full p-3 border rounded-lg"
@@ -227,7 +218,7 @@ Thank you.
                 </div>
               </div>
 
-              {/* WhatsApp Button */}
+              {/* WHATSAPP BUTTON */}
 
               <a
                 href={isFormValid ? generateWhatsAppLink() : "#"}
