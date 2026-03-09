@@ -16,10 +16,6 @@ function AddProduct() {
     whatsappNumbers: "",
   });
 
-  const [specifications, setSpecifications] = useState([
-    { key: "", value: "" },
-  ]);
-
   const [tableData, setTableData] = useState([
     ["", ""],
     ["", ""],
@@ -40,24 +36,7 @@ function AddProduct() {
     setPreview(previewImages);
   };
 
-  /* SPECIFICATIONS */
-
-  const handleSpecChange = (index, field, value) => {
-    const updated = [...specifications];
-    updated[index][field] = value;
-    setSpecifications(updated);
-  };
-
-  const addSpecification = () => {
-    setSpecifications([...specifications, { key: "", value: "" }]);
-  };
-
-  const removeSpecification = (index) => {
-    const updated = specifications.filter((_, i) => i !== index);
-    setSpecifications(updated);
-  };
-
-  /* TABLE */
+  /* TABLE HANDLERS */
 
   const handleCellChange = (rowIndex, colIndex, value) => {
     const updated = [...tableData];
@@ -66,7 +45,7 @@ function AddProduct() {
   };
 
   const addRow = () => {
-    const cols = tableData.length > 0 ? tableData[0].length : 1;
+    const cols = tableData[0].length;
     setTableData([...tableData, Array(cols).fill("")]);
   };
 
@@ -92,7 +71,7 @@ function AddProduct() {
     }
 
     const updated = tableData.map((row) =>
-      row.filter((_, i) => i !== colIndex),
+      row.filter((_, i) => i !== colIndex)
     );
 
     setTableData(updated);
@@ -112,22 +91,19 @@ function AddProduct() {
       formData.append("category", product.category);
       formData.append("price", product.price);
 
-      /* CLEAN SPECIFICATIONS */
-      const cleanSpecs = specifications.filter(
-        (spec) => spec.key.trim() !== "" && spec.value.trim() !== "",
-      );
-
       /* CHECK TABLE DATA */
+
       const tableHasData = tableData.some((row) =>
-        row.some((cell) => cell.trim() !== ""),
+        row.some((cell) => cell.trim() !== "")
       );
 
-      /* SEND ONLY ONE TYPE */
-      if (tableHasData) {
-        formData.append("table", JSON.stringify(tableData));
-      } else if (cleanSpecs.length > 0) {
-        formData.append("specifications", JSON.stringify(cleanSpecs));
+      if (!tableHasData) {
+        alert("Please add at least one table value.");
+        setLoading(false);
+        return;
       }
+
+      formData.append("table", JSON.stringify(tableData));
 
       const numbers = product.whatsappNumbers
         .split(",")
@@ -142,6 +118,7 @@ function AddProduct() {
       setStatus("success");
 
       setTimeout(() => navigate("/admin/products"), 2000);
+
     } catch (error) {
       console.error(error);
       alert("Error adding product.");
@@ -153,9 +130,11 @@ function AddProduct() {
   return (
     <AdminLayout>
       <div className="max-w-5xl mx-auto">
+
         {/* HEADER */}
 
         <div className="flex items-center gap-4 mb-10">
+
           <Link
             to="/admin/products"
             className="w-12 h-12 bg-white rounded-xl border shadow-sm flex items-center justify-center"
@@ -164,32 +143,49 @@ function AddProduct() {
           </Link>
 
           <div>
-            <h1 className="text-3xl font-extrabold">Add New Machine</h1>
+            <h1 className="text-3xl font-extrabold">
+              Add New Machine
+            </h1>
+
             <p className="text-gray-500">
               Create a new product listing in your catalog.
             </p>
           </div>
+
         </div>
 
         {status === "success" && (
+
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-8 p-6 bg-green-50 rounded-2xl border flex items-center gap-4"
           >
+
             <CheckCircle2 className="text-green-600" />
+
             Product Added Successfully!
+
           </motion.div>
+
         )}
 
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
-          {/* LEFT */}
+
+          {/* LEFT SIDE */}
 
           <div className="lg:col-span-2 space-y-8">
+
             <div className="bg-white p-8 rounded-2xl shadow border">
+
               <div className="flex items-center gap-3 mb-6 border-b pb-4">
+
                 <Info className="text-orange-500" />
-                <h2 className="text-xl font-bold">General Information</h2>
+
+                <h2 className="text-xl font-bold">
+                  General Information
+                </h2>
+
               </div>
 
               <input
@@ -211,59 +207,14 @@ function AddProduct() {
                 }
               />
 
-              {/* SPECIFICATIONS */}
-
-              <label className="font-bold mb-2 block">
-                Technical Specifications
-              </label>
-
-              {specifications.map((spec, index) => (
-                <div key={index} className="grid grid-cols-2 gap-3 mb-3">
-                  <input
-                    placeholder="Key"
-                    value={spec.key}
-                    className="px-4 py-3 bg-gray-100 rounded-lg"
-                    onChange={(e) =>
-                      handleSpecChange(index, "key", e.target.value)
-                    }
-                  />
-
-                  <div className="flex gap-2">
-                    <input
-                      placeholder="Value"
-                      value={spec.value}
-                      className="flex-1 px-4 py-3 bg-gray-100 rounded-lg"
-                      onChange={(e) =>
-                        handleSpecChange(index, "value", e.target.value)
-                      }
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() => removeSpecification(index)}
-                      className="bg-red-500 text-white px-3 rounded"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              <button
-                type="button"
-                onClick={addSpecification}
-                className="text-orange-500 font-semibold mb-8"
-              >
-                + Add Specification
-              </button>
-
               {/* TABLE */}
 
               <label className="font-bold block mb-3">
-                Custom Specification Table
+                Machine Specification Table
               </label>
 
               <div className="flex gap-3 mb-4">
+
                 <button
                   type="button"
                   onClick={addRow}
@@ -279,16 +230,25 @@ function AddProduct() {
                 >
                   + Add Column
                 </button>
+
               </div>
 
               <div className="overflow-x-auto">
+
                 <table className="border w-full">
+
                   <tbody>
+
                     {tableData.map((row, rowIndex) => (
+
                       <tr key={rowIndex}>
+
                         {row.map((cell, colIndex) => (
+
                           <td key={colIndex} className="border p-2">
+
                             <div className="flex gap-2">
+
                               <input
                                 className="w-full p-2 bg-gray-100 rounded"
                                 value={cell}
@@ -296,7 +256,7 @@ function AddProduct() {
                                   handleCellChange(
                                     rowIndex,
                                     colIndex,
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                               />
@@ -308,11 +268,15 @@ function AddProduct() {
                               >
                                 ✕
                               </button>
+
                             </div>
+
                           </td>
+
                         ))}
 
                         <td className="border p-2">
+
                           <button
                             type="button"
                             onClick={() => deleteRow(rowIndex)}
@@ -320,18 +284,27 @@ function AddProduct() {
                           >
                             Delete Row
                           </button>
+
                         </td>
+
                       </tr>
+
                     ))}
+
                   </tbody>
+
                 </table>
+
               </div>
+
             </div>
+
           </div>
 
-          {/* RIGHT */}
+          {/* RIGHT SIDE */}
 
           <div className="space-y-8">
+
             <input
               required
               placeholder="Category"
@@ -376,7 +349,9 @@ function AddProduct() {
             >
               {loading ? "Saving..." : "Publish Product"}
             </button>
+
           </div>
+
         </form>
       </div>
     </AdminLayout>

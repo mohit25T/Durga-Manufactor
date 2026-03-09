@@ -13,24 +13,13 @@ const productSchema = new mongoose.Schema(
             required: true,
             trim: true
         },
-        tableData: {
+
+        /* MACHINE SPECIFICATION TABLE */
+
+        table: {
             type: [[String]],
             default: []
         },
-        specifications: [
-            {
-                key: {
-                    type: String,
-                    required: true,
-                    trim: true
-                },
-                value: {
-                    type: String,
-                    required: true,
-                    trim: true
-                }
-            }
-        ],
 
         views: {
             type: Number,
@@ -54,7 +43,6 @@ const productSchema = new mongoose.Schema(
             }
         ],
 
-        // NEW FIELD (multiple whatsapp numbers)
         whatsappNumbers: [
             {
                 type: String,
