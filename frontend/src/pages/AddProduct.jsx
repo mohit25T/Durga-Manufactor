@@ -2,13 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import AdminLayout from "../components/admin/AdminLayout";
 import API from "../services/api";
-import {
-  ArrowLeft,
-  Info,
-  IndianRupee,
-  Phone,
-  CheckCircle2,
-} from "lucide-react";
+import { ArrowLeft, Info, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 function AddProduct() {
@@ -26,21 +20,17 @@ function AddProduct() {
     { key: "", value: "" },
   ]);
 
-  /* ---------------- CUSTOM TABLE STATE ---------------- */
-
   const [tableData, setTableData] = useState([
     ["", ""],
     ["", ""],
   ]);
-
-  /* ---------------- EXISTING STATES ---------------- */
 
   const [images, setImages] = useState([]);
   const [preview, setPreview] = useState([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
 
-  /* ---------------- IMAGE HANDLER ---------------- */
+  /* IMAGE HANDLER */
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
@@ -50,7 +40,7 @@ function AddProduct() {
     setPreview(previewImages);
   };
 
-  /* ---------------- SPECIFICATION HANDLER ---------------- */
+  /* SPECIFICATIONS */
 
   const handleSpecChange = (index, field, value) => {
     const updated = [...specifications];
@@ -67,7 +57,7 @@ function AddProduct() {
     setSpecifications(updated);
   };
 
-  /* ---------------- TABLE FUNCTIONS ---------------- */
+  /* TABLE */
 
   const handleCellChange = (rowIndex, colIndex, value) => {
     const updated = [...tableData];
@@ -108,7 +98,7 @@ function AddProduct() {
     setTableData(updated);
   };
 
-  /* ---------------- SUBMIT ---------------- */
+  /* SUBMIT */
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -122,8 +112,22 @@ function AddProduct() {
       formData.append("category", product.category);
       formData.append("price", product.price);
 
-      formData.append("specifications", JSON.stringify(specifications));
-      formData.append("tableData", JSON.stringify(tableData));
+      /* CLEAN SPECIFICATIONS */
+      const cleanSpecs = specifications.filter(
+        (spec) => spec.key.trim() !== "" && spec.value.trim() !== "",
+      );
+
+      /* CHECK TABLE DATA */
+      const tableHasData = tableData.some((row) =>
+        row.some((cell) => cell.trim() !== ""),
+      );
+
+      /* SEND ONLY ONE TYPE */
+      if (tableHasData) {
+        formData.append("table", JSON.stringify(tableData));
+      } else if (cleanSpecs.length > 0) {
+        formData.append("specifications", JSON.stringify(cleanSpecs));
+      }
 
       const numbers = product.whatsappNumbers
         .split(",")
@@ -137,7 +141,7 @@ function AddProduct() {
 
       setStatus("success");
 
-      setTimeout(() => navigate("/admin/add-products"), 2000);
+      setTimeout(() => navigate("/admin/products"), 2000);
     } catch (error) {
       console.error(error);
       alert("Error adding product.");
@@ -154,7 +158,7 @@ function AddProduct() {
         <div className="flex items-center gap-4 mb-10">
           <Link
             to="/admin/products"
-            className="w-12 h-12 bg-white rounded-xl border shadow-sm flex items-center justify-center hover:bg-gray-100"
+            className="w-12 h-12 bg-white rounded-xl border shadow-sm flex items-center justify-center"
           >
             <ArrowLeft className="w-6 h-6 text-black" />
           </Link>
@@ -179,7 +183,7 @@ function AddProduct() {
         )}
 
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
-          {/* LEFT SIDE */}
+          {/* LEFT */}
 
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-white p-8 rounded-2xl shadow border">
@@ -187,8 +191,6 @@ function AddProduct() {
                 <Info className="text-orange-500" />
                 <h2 className="text-xl font-bold">General Information</h2>
               </div>
-
-              {/* NAME */}
 
               <input
                 required
@@ -198,8 +200,6 @@ function AddProduct() {
                   setProduct({ ...product, name: e.target.value })
                 }
               />
-
-              {/* DESCRIPTION */}
 
               <textarea
                 required
@@ -329,7 +329,7 @@ function AddProduct() {
             </div>
           </div>
 
-          {/* RIGHT SIDE */}
+          {/* RIGHT */}
 
           <div className="space-y-8">
             <input
@@ -368,8 +368,6 @@ function AddProduct() {
                 <img key={index} src={img} className="rounded-lg" />
               ))}
             </div>
-
-            {/* ADD PRODUCT BUTTON */}
 
             <button
               type="submit"

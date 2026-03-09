@@ -8,7 +8,7 @@ export const createProduct = async (req, res) => {
 
         let specifications = req.body.specifications;
         let whatsappNumbers = req.body.whatsappNumbers;
-        let tableData = req.body.tableData;
+        let tableDat = req.body.table;
 
         if (typeof specifications === "string") {
             specifications = JSON.parse(specifications);

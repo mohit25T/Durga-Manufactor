@@ -26,7 +26,6 @@ function ProductDetails() {
         const res = await API.get(`/products/${id}`);
         setProduct(res.data.data);
 
-        // prevent double view count
         if (!viewTracked.current) {
           viewTracked.current = true;
           await API.post(`/products/${id}/view`);
@@ -139,17 +138,45 @@ Thank you.
 
               <p className="text-gray-600 mb-8">{product.description}</p>
 
-              {/* Specifications */}
-              <div className="space-y-3 mb-8">
+              {/* Specifications OR Table */}
+
+              <div className="space-y-4 mb-8">
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <CheckCircle2 className="text-brand-amber" />
                   Technical Specifications
                 </h3>
 
-                {product.specifications?.length ? (
+                {/* TABLE VIEW */}
+
+                {product.tableData && product.tableData.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border border-gray-200 rounded-xl overflow-hidden">
+                      <tbody>
+                        {product.tableData.map((row, rowIndex) => (
+                          <tr
+                            key={rowIndex}
+                            className={`border-b ${
+                              rowIndex === 0 ? "bg-gray-100 font-semibold" : ""
+                            }`}
+                          >
+                            {row.map((cell, colIndex) => (
+                              <td
+                                key={colIndex}
+                                className="px-4 py-3 border-r text-sm"
+                              >
+                                {cell}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : product.specifications?.length ? (
                   product.specifications.map((spec, i) => (
                     <div key={i} className="flex gap-3">
                       <span className="font-semibold">{spec.key}:</span>
+
                       <span>{spec.value}</span>
                     </div>
                   ))
@@ -159,6 +186,7 @@ Thank you.
               </div>
 
               {/* CLIENT INQUIRY FORM */}
+
               <div className="bg-brand-light p-6 rounded-xl mb-6">
                 <h3 className="font-bold text-lg mb-4">Send Inquiry</h3>
 
@@ -200,6 +228,7 @@ Thank you.
               </div>
 
               {/* WhatsApp Button */}
+
               <a
                 href={isFormValid ? generateWhatsAppLink() : "#"}
                 target="_blank"
