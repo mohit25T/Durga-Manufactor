@@ -21,6 +21,7 @@ export const createProduct = async (req, res) => {
         if (typeof tableData === "string") {
             tableData = JSON.parse(tableData);
         }
+        console.log("Received Table DAta:", tableData);
 
         const product = new Product({
             name: req.body.name,
