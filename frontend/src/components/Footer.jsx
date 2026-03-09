@@ -103,14 +103,13 @@ function Footer() {
               >
                 +91 98252 70821
               </a>
-              <br />
               <a
                 href="tel:+919428156213"
                 className="text-brand-gray hover:text-brand-amber transition block"
               >
                 +91 94281 56213
               </a>
-              <br />
+              
               <a
                 href="tel:+919909917008"
                 className="text-brand-gray hover:text-brand-amber transition block"

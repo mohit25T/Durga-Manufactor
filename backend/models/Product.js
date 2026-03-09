@@ -13,7 +13,10 @@ const productSchema = new mongoose.Schema(
             required: true,
             trim: true
         },
-
+        table: {
+            type: [[String]],
+            default: []
+        },
         specifications: [
             {
                 key: {

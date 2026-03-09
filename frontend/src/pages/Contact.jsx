@@ -140,15 +140,6 @@ function Contact() {
                   </div>
                 </div>
               </div>
-
-              <div className="relative z-10 mt-16 pt-8 border-t border-white/10">
-                <p className="font-semibold text-brand-amber mb-2 uppercase tracking-wide">
-                  Business Hours
-                </p>
-                <p className="text-brand-gray">
-                  Monday - Saturday: 9:00 AM - 6:00 PM
-                </p>
-              </div>
             </div>
 
             {/* Form Side */}

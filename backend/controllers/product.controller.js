@@ -8,6 +8,7 @@ export const createProduct = async (req, res) => {
 
         let specifications = req.body.specifications;
         let whatsappNumbers = req.body.whatsappNumbers;
+        let tableData = req.body.tableData;
 
         if (typeof specifications === "string") {
             specifications = JSON.parse(specifications);
@@ -17,10 +18,15 @@ export const createProduct = async (req, res) => {
             whatsappNumbers = JSON.parse(whatsappNumbers);
         }
 
+        if (typeof tableData === "string") {
+            tableData = JSON.parse(tableData);
+        }
+
         const product = new Product({
             name: req.body.name,
             description: req.body.description,
             specifications,
+            tableData,
             category: req.body.category,
             price: req.body.price,
             whatsappNumbers,
@@ -45,6 +51,7 @@ export const createProduct = async (req, res) => {
     }
 };
 
+
 // GET ALL PRODUCTS
 export const getProducts = async (req, res) => {
     try {
@@ -67,7 +74,8 @@ export const getProducts = async (req, res) => {
     }
 };
 
-// GET SINGLE PRODUCT (NO VIEW INCREMENT HERE)
+
+// GET SINGLE PRODUCT
 export const getProductById = async (req, res) => {
     try {
 
@@ -95,9 +103,11 @@ export const getProductById = async (req, res) => {
     }
 };
 
+
 // INCREASE PRODUCT VIEW
 export const increaseProductView = async (req, res) => {
     try {
+
         const product = await Product.findOneAndUpdate(
             { _id: req.params.id },
             { $inc: { views: 1 } },
@@ -116,13 +126,17 @@ export const increaseProductView = async (req, res) => {
             message: "View counted",
             views: product.views,
         });
+
     } catch (error) {
+
         res.status(500).json({
             success: false,
             message: error.message,
         });
+
     }
 };
+
 
 // UPDATE PRODUCT
 export const updateProduct = async (req, res) => {
@@ -146,6 +160,7 @@ export const updateProduct = async (req, res) => {
 
         let specifications = req.body.specifications;
         let whatsappNumbers = req.body.whatsappNumbers;
+        let tableData = req.body.tableData;
 
         if (typeof specifications === "string") {
             specifications = JSON.parse(specifications);
@@ -155,12 +170,17 @@ export const updateProduct = async (req, res) => {
             whatsappNumbers = JSON.parse(whatsappNumbers);
         }
 
+        if (typeof tableData === "string") {
+            tableData = JSON.parse(tableData);
+        }
+
         const updatedProduct = await Product.findByIdAndUpdate(
             req.params.id,
             {
                 name: req.body.name,
                 description: req.body.description,
                 specifications,
+                tableData,
                 category: req.body.category,
                 price: req.body.price,
                 whatsappNumbers,
@@ -184,6 +204,7 @@ export const updateProduct = async (req, res) => {
 
     }
 };
+
 
 // DELETE PRODUCT
 export const deleteProduct = async (req, res) => {
@@ -212,6 +233,7 @@ export const deleteProduct = async (req, res) => {
 
     }
 };
+
 
 // DELETE PRODUCT IMAGE
 export const deleteProductImage = async (req, res) => {
