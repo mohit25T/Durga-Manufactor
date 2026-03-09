@@ -78,25 +78,54 @@ function Footer() {
                 <MapPin className="w-5 h-5 text-brand-red" />
               </div>
               <span className="text-brand-gray pt-1">
-                Plot No. A5, Shapar Main Road, Opp. Mahindra Gear, Decora Cement
-                Campus, Shapar (Veraval) 360024,Rajkot.
+                <a
+                  href="https://maps.app.goo.gl/aU3AFdMye5pQWjrZA"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-lg font-bold leading-relaxed hover:text-brand-amber transition"
+                >
+                  Plot No. A5, Shapar Main Road, Opp. Mahindra Gear, Decora
+                  Cement Campus, Shapar (Veraval) 360024, Rajkot.
+                  <br />
+                  Rajkot, Gujarat, India 360003
+                </a>
               </span>
             </li>
             <li className="flex items-center gap-4">
               <div className="bg-white/5 border border-white/10 p-2 rounded-lg shrink-0">
                 <Phone className="w-5 h-5 text-brand-red" />
               </div>
-              <span className="text-brand-gray">+91 98252 70821</span>
-              <span className="text-brand-gray">+91 94281 56213</span>
-              <span className="text-brand-gray">+91 99099 17008</span>
+              <a
+                href="tel:+919825270821"
+                className="text-brand-gray hover:text-brand-amber transition block"
+              >
+                +91 98252 70821
+              </a>
+
+              <a
+                href="tel:+919428156213"
+                className="text-brand-gray hover:text-brand-amber transition block"
+              >
+                +91 94281 56213
+              </a>
+
+              <a
+                href="tel:+919909917008"
+                className="text-brand-gray hover:text-brand-amber transition block"
+              >
+                +91 99099 17008
+              </a>
             </li>
             <li className="flex items-center gap-4">
               <div className="bg-white/5 border border-white/10 p-2 rounded-lg shrink-0">
                 <Mail className="w-5 h-5 text-brand-red" />
               </div>
-              <span className="text-brand-gray">
+              <a
+                href="mailto:durgamanufactures2010@gmail.com"
+                className="text-brand-gray hover:text-brand-amber transition"
+              >
                 durgamanufactures2010@gmail.com
-              </span>
+              </a>
             </li>
             <li className="flex items-center gap-4">
               {/* <div className="bg-white/5 border border-white/10 p-2 rounded-lg shrink-0">

@@ -79,8 +79,24 @@ function Contact() {
                       <p className="text-sm text-brand-gray mb-1 uppercase tracking-wider font-bold">
                         Sales & Support
                       </p>
-                      <p className="text-lg font-bold">+91 99999 99999</p>
-                      <p className="text-lg font-bold">+91 88888 88888</p>
+                      <a
+                        href="tel:+919825270821"
+                        className="text-lg font-bold block hover:text-brand-amber transition"
+                      >
+                        +91 98252 70821
+                      </a>
+                      <a
+                        href="tel:+919428156213"
+                        className="text-lg font-bold block hover:text-brand-amber transition"
+                      >
+                        +91 94281 56213
+                      </a>
+                      <a
+                        href="tel:+919909917008"
+                        className="text-lg font-bold block hover:text-brand-amber transition"
+                      >
+                        +91 99099 17008
+                      </a>
                     </div>
                   </div>
 
@@ -92,9 +108,12 @@ function Contact() {
                       <p className="text-sm text-brand-gray mb-1 uppercase tracking-wider font-bold">
                         Email inquiries
                       </p>
-                      <p className="text-lg font-bold break-all">
-                        info@durgamanufactures.com
-                      </p>
+                      <a
+                        href="mailto:durgamanufactures2010@gmail.com"
+                        className="text-lg font-bold break-all hover:text-brand-amber transition"
+                      >
+                        durgamanufactures2010@gmail.com
+                      </a>
                     </div>
                   </div>
 
@@ -106,11 +125,17 @@ function Contact() {
                       <p className="text-sm text-brand-gray mb-1 uppercase tracking-wider font-bold">
                         Factory Location
                       </p>
-                      <p className="text-lg font-bold leading-relaxed">
-                        123 Industrial Area, Near AJI GIDC,
+                      <a
+                        href="https://maps.app.goo.gl/aU3AFdMye5pQWjrZA"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-lg font-bold leading-relaxed hover:text-brand-amber transition"
+                      >
+                        Plot No. A5, Shapar Main Road, Opp. Mahindra Gear,
+                        Decora Cement Campus, Shapar (Veraval) 360024, Rajkot.
                         <br />
                         Rajkot, Gujarat, India 360003
-                      </p>
+                      </a>
                     </div>
                   </div>
                 </div>
