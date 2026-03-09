@@ -95,6 +95,8 @@ function Footer() {
               <div className="bg-white/5 border border-white/10 p-2 rounded-lg shrink-0">
                 <Phone className="w-5 h-5 text-brand-red" />
               </div>
+              <div className="flex flex-col">
+
               <a
                 href="tel:+919825270821"
                 className="text-brand-gray hover:text-brand-amber transition block"
@@ -115,6 +117,7 @@ function Footer() {
               >
                 +91 99099 17008
               </a>
+                </div>
             </li>
             <li className="flex items-center gap-4">
               <div className="bg-white/5 border border-white/10 p-2 rounded-lg shrink-0">
