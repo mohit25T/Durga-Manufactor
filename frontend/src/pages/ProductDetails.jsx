@@ -11,6 +11,7 @@ function ProductDetails() {
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const viewTracked = useRef(false);
 
@@ -24,7 +25,13 @@ function ProductDetails() {
     const fetchProduct = async () => {
       try {
         const res = await API.get(`/products/${id}`);
-        setProduct(res.data.data);
+        const data = res.data.data;
+
+        setProduct(data);
+
+        if (data.images?.length) {
+          setSelectedImage(data.images[0]);
+        }
 
         if (!viewTracked.current) {
           viewTracked.current = true;
@@ -67,7 +74,7 @@ Thank you.
 `;
 
     return `https://wa.me/${product.whatsappNumbers[0]}?text=${encodeURIComponent(
-      message,
+      message
     )}`;
   };
 
@@ -106,7 +113,9 @@ Thank you.
 
       <main className="flex-grow py-12">
         <div className="max-w-7xl mx-auto px-6">
+
           {/* Breadcrumb */}
+
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -120,69 +129,130 @@ Thank you.
           </motion.div>
 
           <div className="bg-white rounded-3xl p-8 shadow-xl grid lg:grid-cols-2 gap-16">
-            {/* Product Image */}
+
+            {/* PRODUCT IMAGE GALLERY */}
+
             <div>
+
+              {/* MAIN IMAGE */}
+
               <img
                 src={
-                  product.images?.[0] ||
+                  selectedImage ||
                   "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158"
                 }
                 alt={product.name}
-                className="rounded-2xl w-full"
+                className="rounded-2xl w-full mb-4"
               />
+
+              {/* THUMBNAILS */}
+
+              {product.images?.length > 1 && (
+
+                <div className="grid grid-cols-5 gap-3">
+
+                  {product.images.map((img, index) => (
+
+                    <img
+                      key={index}
+                      src={img}
+                      onClick={() => setSelectedImage(img)}
+                      className={`cursor-pointer rounded-lg border-2 ${
+                        selectedImage === img
+                          ? "border-brand-amber"
+                          : "border-transparent"
+                      }`}
+                    />
+
+                  ))}
+
+                </div>
+
+              )}
+
             </div>
 
-            {/* Product Info */}
-            <div>
-              <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
+            {/* PRODUCT INFO */}
 
-              <p className="text-gray-600 mb-8">{product.description}</p>
+            <div>
+
+              <h1 className="text-4xl font-bold mb-4">
+                {product.name}
+              </h1>
+
+              <p className="text-gray-600 mb-8">
+                {product.description}
+              </p>
 
               {/* MACHINE SPECIFICATION TABLE */}
 
               <div className="space-y-4 mb-8">
+
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <CheckCircle2 className="text-brand-amber" />
                   Machine Specifications
                 </h3>
 
                 {product.table && product.table.length > 0 ? (
+
                   <div className="overflow-x-auto">
+
                     <table className="w-full border border-gray-200 rounded-xl overflow-hidden">
+
                       <tbody>
+
                         {product.table.map((row, rowIndex) => (
+
                           <tr
                             key={rowIndex}
                             className={`border-b ${
-                              rowIndex === 0 ? "bg-gray-100 font-semibold" : ""
+                              rowIndex === 0
+                                ? "bg-gray-100 font-semibold"
+                                : ""
                             }`}
                           >
+
                             {row.map((cell, colIndex) => (
+
                               <td
                                 key={colIndex}
                                 className="px-4 py-3 border-r text-sm"
                               >
                                 {cell}
                               </td>
+
                             ))}
+
                           </tr>
+
                         ))}
+
                       </tbody>
+
                     </table>
+
                   </div>
+
                 ) : (
+
                   <p className="text-gray-400">
                     No specification table available
                   </p>
+
                 )}
+
               </div>
 
               {/* CLIENT INQUIRY FORM */}
 
               <div className="bg-brand-light p-6 rounded-xl mb-6">
-                <h3 className="font-bold text-lg mb-4">Send Inquiry</h3>
+
+                <h3 className="font-bold text-lg mb-4">
+                  Send Inquiry
+                </h3>
 
                 <div className="space-y-3">
+
                   <input
                     type="text"
                     placeholder="Your Name"
@@ -215,7 +285,9 @@ Thank you.
                       setClient({ ...client, city: e.target.value })
                     }
                   />
+
                 </div>
+
               </div>
 
               {/* WHATSAPP BUTTON */}
@@ -231,15 +303,22 @@ Thank you.
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
               >
+
                 <Phone className="w-5 h-5" />
+
                 Send Inquiry on WhatsApp
+
               </a>
+
             </div>
+
           </div>
+
         </div>
       </main>
 
       <Footer />
+
     </div>
   );
 }
