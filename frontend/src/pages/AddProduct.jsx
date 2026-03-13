@@ -23,6 +23,7 @@ function AddProduct() {
 
   const [images, setImages] = useState([]);
   const [preview, setPreview] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
 
@@ -30,10 +31,22 @@ function AddProduct() {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    setImages(files);
+
+    if (images.length + files.length > 5) {
+      alert("Maximum 5 images allowed.");
+      return;
+    }
+
+    setImages((prev) => [...prev, ...files]);
 
     const previewImages = files.map((file) => URL.createObjectURL(file));
-    setPreview(previewImages);
+
+    setPreview((prev) => [...prev, ...previewImages]);
+  };
+
+  const removeImage = (index) => {
+    setPreview((prev) => prev.filter((_, i) => i !== index));
+    setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   /* TABLE HANDLERS */
@@ -91,8 +104,6 @@ function AddProduct() {
       formData.append("category", product.category);
       formData.append("price", product.price);
 
-      /* CHECK TABLE DATA */
-
       const tableHasData = tableData.some((row) =>
         row.some((cell) => cell.trim() !== "")
       );
@@ -118,7 +129,6 @@ function AddProduct() {
       setStatus("success");
 
       setTimeout(() => navigate("/admin/products"), 2000);
-
     } catch (error) {
       console.error(error);
       alert("Error adding product.");
@@ -134,7 +144,6 @@ function AddProduct() {
         {/* HEADER */}
 
         <div className="flex items-center gap-4 mb-10">
-
           <Link
             to="/admin/products"
             className="w-12 h-12 bg-white rounded-xl border shadow-sm flex items-center justify-center"
@@ -151,23 +160,17 @@ function AddProduct() {
               Create a new product listing in your catalog.
             </p>
           </div>
-
         </div>
 
         {status === "success" && (
-
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-8 p-6 bg-green-50 rounded-2xl border flex items-center gap-4"
           >
-
             <CheckCircle2 className="text-green-600" />
-
             Product Added Successfully!
-
           </motion.div>
-
         )}
 
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
@@ -179,13 +182,10 @@ function AddProduct() {
             <div className="bg-white p-8 rounded-2xl shadow border">
 
               <div className="flex items-center gap-3 mb-6 border-b pb-4">
-
                 <Info className="text-orange-500" />
-
                 <h2 className="text-xl font-bold">
                   General Information
                 </h2>
-
               </div>
 
               <input
@@ -334,12 +334,37 @@ function AddProduct() {
               }
             />
 
-            <input type="file" multiple onChange={handleImageChange} />
+            <input
+              type="file"
+              multiple
+              onChange={handleImageChange}
+            />
+
+            {/* IMAGE PREVIEW */}
 
             <div className="grid grid-cols-3 gap-3">
+
               {preview.map((img, index) => (
-                <img key={index} src={img} className="rounded-lg" />
+
+                <div key={index} className="relative">
+
+                  <img
+                    src={img}
+                    className="rounded-lg"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute top-1 right-1 bg-red-500 text-white px-2 py-1 rounded text-xs"
+                  >
+                    ✕
+                  </button>
+
+                </div>
+
               ))}
+
             </div>
 
             <button
@@ -353,6 +378,7 @@ function AddProduct() {
           </div>
 
         </form>
+
       </div>
     </AdminLayout>
   );

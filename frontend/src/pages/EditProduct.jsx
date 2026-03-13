@@ -15,8 +15,9 @@ function EditProduct() {
     price: "",
   });
 
-  const [specifications, setSpecifications] = useState([
-    { key: "", value: "" },
+  const [tableData, setTableData] = useState([
+    ["", ""],
+    ["", ""],
   ]);
 
   const [images, setImages] = useState([]);
@@ -25,6 +26,8 @@ function EditProduct() {
 
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+
+  /* FETCH PRODUCT */
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -39,11 +42,7 @@ function EditProduct() {
           price: data.price || "",
         });
 
-        setSpecifications(
-          data.specifications?.length
-            ? data.specifications
-            : [{ key: "", value: "" }],
-        );
+        setTableData(data.table?.length ? data.table : [["", ""]]);
 
         setPreview(Array.isArray(data.images) ? data.images : []);
       } catch (error) {
@@ -56,23 +55,40 @@ function EditProduct() {
     fetchProduct();
   }, [id]);
 
-  const handleSpecChange = (index, field, value) => {
-    const updated = [...specifications];
+  /* TABLE FUNCTIONS */
 
-    updated[index][field] = value;
-
-    setSpecifications(updated);
+  const handleCellChange = (rowIndex, colIndex, value) => {
+    const updated = [...tableData];
+    updated[rowIndex][colIndex] = value;
+    setTableData(updated);
   };
 
-  const addSpecification = () => {
-    setSpecifications([...specifications, { key: "", value: "" }]);
+  const addRow = () => {
+    const cols = tableData[0].length;
+    setTableData([...tableData, Array(cols).fill("")]);
   };
 
-  const removeSpecification = (index) => {
-    const updated = specifications.filter((_, i) => i !== index);
-
-    setSpecifications(updated);
+  const addColumn = () => {
+    const updated = tableData.map((row) => [...row, ""]);
+    setTableData(updated);
   };
+
+  const deleteRow = (rowIndex) => {
+    if (tableData.length === 1) return;
+    setTableData(tableData.filter((_, i) => i !== rowIndex));
+  };
+
+  const deleteColumn = (colIndex) => {
+    if (tableData[0].length === 1) return;
+
+    const updated = tableData.map((row) =>
+      row.filter((_, i) => i !== colIndex),
+    );
+
+    setTableData(updated);
+  };
+
+  /* IMAGE */
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
@@ -88,7 +104,6 @@ function EditProduct() {
     try {
       if (imageUrl.startsWith("blob:")) {
         setNewPreview((prev) => prev.filter((img) => img !== imageUrl));
-
         return;
       }
 
@@ -99,10 +114,11 @@ function EditProduct() {
       setPreview((prev) => prev.filter((img) => img !== imageUrl));
     } catch (error) {
       console.error(error);
-
       setPreview((prev) => prev.filter((img) => img !== imageUrl));
     }
   };
+
+  /* SUBMIT */
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -117,11 +133,7 @@ function EditProduct() {
       formData.append("category", product.category);
       formData.append("price", product.price);
 
-      const filteredSpecs = specifications.filter(
-        (s) => s.key.trim() !== "" && s.value.trim() !== "",
-      );
-
-      formData.append("specifications", JSON.stringify(filteredSpecs));
+      formData.append("table", JSON.stringify(tableData));
 
       images.forEach((img) => formData.append("images", img));
 
@@ -191,52 +203,74 @@ function EditProduct() {
                 }
               />
 
-              {/* Specifications */}
+              {/* TABLE */}
 
-              <label className="font-bold block mt-6 mb-4">
-                Technical Specifications
+              <label className="font-bold block mt-6 mb-3">
+                Machine Specification Table
               </label>
 
-              <div className="space-y-3">
-                {specifications.map((spec, index) => (
-                  <div key={index} className="grid grid-cols-2 gap-3">
-                    <input
-                      placeholder="Key"
-                      value={spec.key}
-                      className="p-3 bg-brand-light rounded-lg"
-                      onChange={(e) =>
-                        handleSpecChange(index, "key", e.target.value)
-                      }
-                    />
-
-                    <div className="flex gap-2">
-                      <input
-                        placeholder="Value"
-                        value={spec.value}
-                        className="flex-1 p-3 bg-brand-light rounded-lg"
-                        onChange={(e) =>
-                          handleSpecChange(index, "value", e.target.value)
-                        }
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() => removeSpecification(index)}
-                        className="bg-red-500 text-white px-3 rounded"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex gap-3 mb-4">
+                <button
+                  type="button"
+                  onClick={addRow}
+                  className="bg-black text-white px-4 py-2 rounded"
+                >
+                  + Row
+                </button>
 
                 <button
                   type="button"
-                  onClick={addSpecification}
-                  className="text-brand-amber font-semibold"
+                  onClick={addColumn}
+                  className="bg-black text-white px-4 py-2 rounded"
                 >
-                  + Add Specification
+                  + Column
                 </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="border w-full">
+                  <tbody>
+                    {tableData.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {row.map((cell, colIndex) => (
+                          <td key={colIndex} className="border p-2">
+                            <div className="flex gap-2">
+                              <input
+                                value={cell}
+                                className="w-full p-2 bg-brand-light rounded"
+                                onChange={(e) =>
+                                  handleCellChange(
+                                    rowIndex,
+                                    colIndex,
+                                    e.target.value,
+                                  )
+                                }
+                              />
+
+                              <button
+                                type="button"
+                                onClick={() => deleteColumn(colIndex)}
+                                className="bg-red-400 text-white px-2 rounded"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </td>
+                        ))}
+
+                        <td className="border p-2">
+                          <button
+                            type="button"
+                            onClick={() => deleteRow(rowIndex)}
+                            className="bg-red-500 text-white px-2 py-1 rounded"
+                          >
+                            Delete Row
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
 
