@@ -82,31 +82,36 @@ function EditProduct() {
     if (tableData[0].length === 1) return;
 
     const updated = tableData.map((row) =>
-      row.filter((_, i) => i !== colIndex),
+      row.filter((_, i) => i !== colIndex)
     );
 
     setTableData(updated);
   };
 
-  /* IMAGE */
+  /* IMAGE HANDLER */
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
 
-    setImages(files);
+    if (images.length + files.length > 5) {
+      alert("Maximum 5 images allowed.");
+      return;
+    }
+
+    setImages((prev) => [...prev, ...files]);
 
     const previewImages = files.map((file) => URL.createObjectURL(file));
 
-    setNewPreview(previewImages);
+    setNewPreview((prev) => [...prev, ...previewImages]);
+  };
+
+  const removeNewImage = (index) => {
+    setNewPreview((prev) => prev.filter((_, i) => i !== index));
+    setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const deleteImage = async (imageUrl) => {
     try {
-      if (imageUrl.startsWith("blob:")) {
-        setNewPreview((prev) => prev.filter((img) => img !== imageUrl));
-        return;
-      }
-
       await API.delete(`/products/${id}/image`, {
         data: { imageUrl },
       });
@@ -142,6 +147,7 @@ function EditProduct() {
       navigate("/admin/products");
     } catch (error) {
       console.error(error);
+      alert("Error updating product.");
     } finally {
       setLoading(false);
     }
@@ -160,6 +166,9 @@ function EditProduct() {
   return (
     <AdminLayout>
       <div className="max-w-5xl mx-auto">
+
+        {/* HEADER */}
+
         <div className="flex items-center gap-4 mb-10">
           <Link
             to="/admin/products"
@@ -172,11 +181,16 @@ function EditProduct() {
         </div>
 
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
-          {/* LEFT */}
+
+          {/* LEFT SIDE */}
 
           <div className="lg:col-span-2 space-y-8">
+
             <div className="bg-white p-8 rounded-2xl shadow">
-              <label className="font-bold block mb-2">Machine Name</label>
+
+              <label className="font-bold block mb-2">
+                Machine Name
+              </label>
 
               <input
                 value={product.name}
@@ -189,7 +203,9 @@ function EditProduct() {
                 }
               />
 
-              <label className="font-bold block mt-6 mb-2">Description</label>
+              <label className="font-bold block mt-6 mb-2">
+                Description
+              </label>
 
               <textarea
                 rows="4"
@@ -210,6 +226,7 @@ function EditProduct() {
               </label>
 
               <div className="flex gap-3 mb-4">
+
                 <button
                   type="button"
                   onClick={addRow}
@@ -225,16 +242,25 @@ function EditProduct() {
                 >
                   + Column
                 </button>
+
               </div>
 
               <div className="overflow-x-auto">
+
                 <table className="border w-full">
+
                   <tbody>
+
                     {tableData.map((row, rowIndex) => (
+
                       <tr key={rowIndex}>
+
                         {row.map((cell, colIndex) => (
+
                           <td key={colIndex} className="border p-2">
+
                             <div className="flex gap-2">
+
                               <input
                                 value={cell}
                                 className="w-full p-2 bg-brand-light rounded"
@@ -242,7 +268,7 @@ function EditProduct() {
                                   handleCellChange(
                                     rowIndex,
                                     colIndex,
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                               />
@@ -254,11 +280,15 @@ function EditProduct() {
                               >
                                 ✕
                               </button>
+
                             </div>
+
                           </td>
+
                         ))}
 
                         <td className="border p-2">
+
                           <button
                             type="button"
                             onClick={() => deleteRow(rowIndex)}
@@ -266,16 +296,26 @@ function EditProduct() {
                           >
                             Delete Row
                           </button>
+
                         </td>
+
                       </tr>
+
                     ))}
+
                   </tbody>
+
                 </table>
+
               </div>
+
             </div>
 
             <div className="bg-white p-8 rounded-2xl shadow">
-              <label className="font-bold mb-2 block">Price</label>
+
+              <label className="font-bold mb-2 block">
+                Price
+              </label>
 
               <input
                 type="number"
@@ -288,14 +328,20 @@ function EditProduct() {
                   })
                 }
               />
+
             </div>
+
           </div>
 
-          {/* RIGHT */}
+          {/* RIGHT SIDE */}
 
           <div className="space-y-8">
+
             <div className="bg-white p-8 rounded-2xl shadow">
-              <label className="font-bold mb-2 block">Category</label>
+
+              <label className="font-bold mb-2 block">
+                Category
+              </label>
 
               <input
                 value={product.category}
@@ -307,19 +353,25 @@ function EditProduct() {
                   })
                 }
               />
+
             </div>
 
             <div className="bg-white p-8 rounded-2xl shadow">
+
               <input
                 type="file"
                 multiple
+                accept="image/*"
                 onChange={handleImageChange}
                 className="mb-4"
               />
 
               <div className="grid grid-cols-2 gap-3">
+
                 {preview.map((img, i) => (
+
                   <div key={i} className="relative">
+
                     <img src={img} className="rounded-lg" />
 
                     <button
@@ -329,13 +381,31 @@ function EditProduct() {
                     >
                       <Trash2 size={16} />
                     </button>
+
                   </div>
+
                 ))}
 
                 {newPreview.map((img, i) => (
-                  <img key={i} src={img} className="rounded-lg" />
+
+                  <div key={i} className="relative">
+
+                    <img src={img} className="rounded-lg" />
+
+                    <button
+                      type="button"
+                      onClick={() => removeNewImage(i)}
+                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+
+                  </div>
+
                 ))}
+
               </div>
+
             </div>
 
             <button
@@ -345,8 +415,11 @@ function EditProduct() {
               {loading ? <RefreshCw className="animate-spin" /> : <Save />}
               Save Updates
             </button>
+
           </div>
+
         </form>
+
       </div>
     </AdminLayout>
   );
