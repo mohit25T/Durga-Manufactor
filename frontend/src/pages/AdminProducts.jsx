@@ -208,7 +208,7 @@ function Products() {
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() =>
-                            window.open(`/products/${product._id}`, "_blank")
+                            window.open(`/#/products/${product._id}`, "_blank")
                           }
                           className="p-2 text-brand-gray hover:text-brand-slate"
                         >
