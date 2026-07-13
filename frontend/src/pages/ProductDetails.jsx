@@ -100,7 +100,7 @@ Thank you.
       <div className="min-h-screen flex flex-col bg-brand-cream">
         <Navbar />
         <div className="flex-grow flex flex-col justify-center items-center text-center p-6">
-          <h2 className="font-serif text-3xl font-bold text-brand-forest lowercase">Machine Not Found</h2>
+          <h2 className="font-serif text-3xl font-bold text-brand-forest">Machine Not Found</h2>
           <Link to="/products" className="mt-4 text-xs tracking-widest uppercase font-bold text-brand-forest underline">Back to Catalog</Link>
         </div>
         <Footer />
@@ -174,7 +174,7 @@ Thank you.
                     {product.category}
                   </span>
                 )}
-                <h1 className="font-serif text-2xl md:text-3xl font-bold text-brand-forest lowercase tracking-tight mb-3">
+                <h1 className="font-serif text-2xl md:text-3xl font-bold text-brand-forest tracking-tight mb-3">
                   {product.name}
                 </h1>
                 <p className="text-brand-gray font-semibold text-xs md:text-sm leading-relaxed">{product.description}</p>
@@ -182,9 +182,9 @@ Thank you.
 
               {/* MACHINE SPECIFICATION TABLE */}
               <div className="space-y-3">
-                <h3 className="font-serif text-lg font-bold text-brand-forest lowercase flex items-center gap-2">
+                <h3 className="font-serif text-lg font-bold text-brand-forest flex items-center gap-2">
                   <CheckCircle2 className="text-brand-forest w-4 h-4" />
-                  machine specifications
+                  Machine Specifications
                 </h3>
 
                 {product.table && product.table.length > 0 ? (
@@ -222,8 +222,8 @@ Thank you.
 
               {/* CLIENT INQUIRY FORM */}
               <div className="bg-brand-cream/40 border border-brand-sand p-4 space-y-3">
-                <h3 className="font-serif text-base font-bold text-brand-forest lowercase">
-                  send inquiry
+                <h3 className="font-serif text-base font-bold text-brand-forest">
+                  Send Inquiry
                 </h3>
 
                 <div className="space-y-2 font-semibold">

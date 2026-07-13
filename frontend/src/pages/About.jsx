@@ -15,9 +15,9 @@ function About() {
             <motion.h1 
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              className="font-serif text-3xl md:text-5xl font-bold mb-4 text-brand-forest lowercase tracking-tight"
+              className="font-serif text-3xl md:text-5xl font-bold mb-4 text-brand-forest tracking-tight"
             >
-              engineered for <span className="text-brand-charcoal">excellence</span>
+              Engineered for <span className="text-brand-charcoal">Excellence</span>
             </motion.h1>
             
             <motion.p 
@@ -40,8 +40,8 @@ function About() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <h2 className="font-serif text-2xl md:text-3xl font-bold text-brand-forest lowercase tracking-tight mb-6">
-                our legacy of <span className="border-b-2 border-brand-forest pb-1">precision</span>
+              <h2 className="font-serif text-2xl md:text-3xl font-bold text-brand-forest tracking-tight mb-6">
+                Our Legacy of <span className="border-b-2 border-brand-forest pb-1">Precision</span>
               </h2>
               <div className="space-y-4 text-sm font-semibold text-brand-gray leading-relaxed">
                 <p>
@@ -73,7 +73,7 @@ function About() {
         <section className="bg-white py-12 border-t border-b border-brand-sand">
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center mb-10">
-              <h2 className="font-serif text-2xl md:text-3xl font-bold text-brand-forest lowercase tracking-tight">why choose us</h2>
+              <h2 className="font-serif text-2xl md:text-3xl font-bold text-brand-forest tracking-tight">Why Choose Us</h2>
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -94,7 +94,7 @@ function About() {
                   <div className="w-12 h-12 bg-brand-sage/40 border border-brand-sand flex items-center justify-center mb-4 text-brand-forest group-hover:bg-brand-forest group-hover:text-white transition-all">
                     <item.icon className="w-5 h-5" />
                   </div>
-                  <h3 className="font-serif text-xl font-bold text-brand-forest lowercase mb-3">{item.title}</h3>
+                  <h3 className="font-serif text-xl font-bold text-brand-forest mb-3">{item.title}</h3>
                   <p className="text-brand-gray font-semibold text-xs md:text-sm leading-relaxed">{item.desc}</p>
                 </motion.div>
               ))}

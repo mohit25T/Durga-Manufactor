@@ -32,7 +32,7 @@ function ProductCard({ product, index = 0 }) {
 
       {/* Content Container */}
       <div className="p-8 flex flex-col flex-grow relative">
-        <h3 className="font-serif text-2xl font-bold text-brand-charcoal lowercase tracking-tight mb-3 group-hover:text-brand-red transition-colors duration-300">
+        <h3 className="font-serif text-2xl font-bold text-brand-charcoal tracking-tight mb-3 group-hover:text-brand-red transition-colors duration-300">
           {product.name}
         </h3>
         

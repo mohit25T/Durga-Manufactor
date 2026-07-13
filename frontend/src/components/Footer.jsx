@@ -123,7 +123,7 @@ function Footer() {
 
       <div className="max-w-7xl mx-auto px-6 mt-8 pt-6 border-t border-white/10 text-center text-white/50 text-xs font-semibold relative z-10 flex flex-col md:flex-row justify-between items-center gap-4">
         <p>&copy; {new Date().getFullYear()} durga manufactures. All rights reserved.</p>
-        <p className="lowercase font-serif text-brand-amber">engineered for excellence</p>
+        <p className="font-serif text-brand-amber">Engineered for Excellence</p>
       </div>
     </footer>
   );

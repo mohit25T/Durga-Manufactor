@@ -38,9 +38,9 @@ function Contact() {
             <motion.h1
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              className="font-serif text-3xl md:text-5xl font-bold mb-4 text-brand-forest lowercase tracking-tight"
+              className="font-serif text-3xl md:text-5xl font-bold mb-4 text-brand-forest tracking-tight"
             >
-              get in <span className="text-brand-charcoal">touch</span>
+              Get in <span className="text-brand-charcoal">Touch</span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 15 }}
@@ -60,8 +60,8 @@ function Contact() {
             {/* Info Side */}
             <div className="lg:col-span-2 bg-brand-sage/10 p-6 lg:p-8 border-r border-brand-sand flex flex-col justify-between">
               <div className="space-y-6">
-                <h3 className="font-serif text-xl font-bold text-brand-forest lowercase">
-                  contact details
+                <h3 className="font-serif text-xl font-bold text-brand-forest">
+                  Contact Details
                 </h3>
 
                 <div className="space-y-4 font-semibold">
@@ -138,8 +138,8 @@ function Contact() {
 
             {/* Form Side */}
             <div className="lg:col-span-3 p-6 lg:p-8 bg-white">
-              <h3 className="font-serif text-xl font-bold text-brand-forest lowercase mb-1">
-                send us a message
+              <h3 className="font-serif text-xl font-bold text-brand-forest mb-1">
+                Send Us a Message
               </h3>
               <p className="text-brand-gray mb-6 font-semibold text-xs md:text-sm">
                 We will get back to you within 24 hours.
