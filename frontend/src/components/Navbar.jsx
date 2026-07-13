@@ -53,7 +53,7 @@ function Navbar() {
         <motion.a
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          href="tel:+919825870821"
+          href="tel:+91 94281 56213"
           className="bg-brand-amber hover:bg-white border border-brand-amber hover:border-white text-brand-slateDark px-6 py-3 rounded-none font-bold font-sans text-[11px] tracking-widest uppercase transition-all duration-300 hidden sm:block"
         >
           Call Now
