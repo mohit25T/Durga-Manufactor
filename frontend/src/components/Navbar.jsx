@@ -13,7 +13,7 @@ function Navbar() {
     >
       {/* Announcement Bar */}
       <div className="bg-brand-amber text-brand-slateDark text-[11px] md:text-xs font-bold py-2.5 px-4 text-center tracking-widest uppercase border-b border-white/10">
-        Free Pan-India Delivery & Demo Support | Call +91 98258 70821
+        Free Pan-India Delivery & Demo Support | Call +91 94281 56213
       </div>
 
       <nav className="bg-brand-slateDark border-b border-white/10 flex justify-between items-center px-6 md:px-12 py-5">
