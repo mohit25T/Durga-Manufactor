@@ -8,6 +8,9 @@ import { motion } from "framer-motion";
 function AddProduct() {
   const navigate = useNavigate();
 
+  const DEFAULT_WHATSAPP_NUMBERS = "919825270821, 919428156213, 919909917008";
+  const [useDefaultWhatsApp, setUseDefaultWhatsApp] = useState(false);
+
   const [product, setProduct] = useState({
     name: "",
     description: "",
@@ -15,6 +18,15 @@ function AddProduct() {
     price: "",
     whatsappNumbers: "",
   });
+
+  const handleCheckboxChange = (e) => {
+    const checked = e.target.checked;
+    setUseDefaultWhatsApp(checked);
+    setProduct((prev) => ({
+      ...prev,
+      whatsappNumbers: checked ? DEFAULT_WHATSAPP_NUMBERS : "",
+    }));
+  };
 
   const [tableData, setTableData] = useState([
     ["", ""],
@@ -139,24 +151,24 @@ function AddProduct() {
 
   return (
     <AdminLayout>
-      <div className="max-w-5xl mx-auto">
+      <div className="w-full">
 
         {/* HEADER */}
 
         <div className="flex items-center gap-4 mb-10">
           <Link
             to="/admin/products"
-            className="w-12 h-12 bg-white rounded-xl border shadow-sm flex items-center justify-center"
+            className="w-12 h-12 bg-brand-light rounded-xl border border-brand-sand shadow-sm flex items-center justify-center"
           >
             <ArrowLeft className="w-6 h-6 text-black" />
           </Link>
 
           <div>
-            <h1 className="text-3xl font-extrabold">
+            <h1 className="text-2xl font-bold">
               Add New Machine
             </h1>
 
-            <p className="text-gray-500">
+            <p className="text-gray-500 text-sm">
               Create a new product listing in your catalog.
             </p>
           </div>
@@ -179,11 +191,11 @@ function AddProduct() {
 
           <div className="lg:col-span-2 space-y-8">
 
-            <div className="bg-white p-8 rounded-2xl shadow border">
+            <div className="bg-brand-light p-8 rounded-2xl shadow border border-brand-sand">
 
               <div className="flex items-center gap-3 mb-6 border-b pb-4">
                 <Info className="text-orange-500" />
-                <h2 className="text-xl font-bold">
+                <h2 className="text-lg font-bold">
                   General Information
                 </h2>
               </div>
@@ -191,7 +203,7 @@ function AddProduct() {
               <input
                 required
                 placeholder="Machine Name"
-                className="w-full px-4 py-3 bg-gray-100 rounded-lg mb-4"
+                className="w-full px-4 py-3 bg-stone-50 rounded-lg mb-4 border border-brand-sand/60"
                 onChange={(e) =>
                   setProduct({ ...product, name: e.target.value })
                 }
@@ -201,7 +213,7 @@ function AddProduct() {
                 required
                 rows="4"
                 placeholder="Description"
-                className="w-full px-4 py-3 bg-gray-100 rounded-lg mb-6"
+                className="w-full px-4 py-3 bg-stone-50 rounded-lg mb-6 border border-brand-sand/60"
                 onChange={(e) =>
                   setProduct({ ...product, description: e.target.value })
                 }
@@ -209,7 +221,7 @@ function AddProduct() {
 
               {/* TABLE */}
 
-              <label className="font-bold block mb-3">
+              <label className="text-sm font-bold block mb-2">
                 Machine Specification Table
               </label>
 
@@ -250,7 +262,7 @@ function AddProduct() {
                             <div className="flex gap-2">
 
                               <input
-                                className="w-full p-2 bg-gray-100 rounded"
+                                className="w-full p-2 bg-stone-50 rounded border border-brand-sand/60"
                                 value={cell}
                                 onChange={(e) =>
                                   handleCellChange(
@@ -264,7 +276,7 @@ function AddProduct() {
                               <button
                                 type="button"
                                 onClick={() => deleteColumn(colIndex)}
-                                className="bg-red-400 text-white px-2 rounded"
+                                className="bg-rose-50 text-rose-600 hover:bg-rose-100 px-2 rounded border border-rose-200/50"
                               >
                                 ✕
                               </button>
@@ -280,7 +292,7 @@ function AddProduct() {
                           <button
                             type="button"
                             onClick={() => deleteRow(rowIndex)}
-                            className="bg-red-500 text-white px-2 py-1 rounded"
+                            className="bg-rose-100 text-rose-700 hover:bg-rose-200 px-3 py-1 rounded border border-rose-200"
                           >
                             Delete Row
                           </button>
@@ -305,40 +317,68 @@ function AddProduct() {
 
           <div className="space-y-8">
 
-            <input
-              required
-              placeholder="Category"
-              className="w-full px-4 py-3 bg-gray-100 rounded-lg"
-              onChange={(e) =>
-                setProduct({ ...product, category: e.target.value })
-              }
-            />
+            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand">
+              <label className="text-sm font-bold block mb-1">Category</label>
+              <input
+                required
+                placeholder="Category"
+                className="w-full px-4 py-3 bg-stone-50 rounded-lg border border-brand-sand/60"
+                onChange={(e) =>
+                  setProduct({ ...product, category: e.target.value })
+                }
+              />
+            </div>
 
-            <input
-              type="number"
-              placeholder="Price"
-              className="w-full px-4 py-3 bg-gray-100 rounded-lg"
-              onChange={(e) =>
-                setProduct({ ...product, price: e.target.value })
-              }
-            />
+            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand">
+              <label className="text-sm font-bold block mb-1">Price</label>
+              <input
+                type="number"
+                placeholder="Price"
+                className="w-full px-4 py-3 bg-stone-50 rounded-lg border border-brand-sand/60"
+                onChange={(e) =>
+                  setProduct({ ...product, price: e.target.value })
+                }
+              />
+            </div>
 
-            <input
-              placeholder="WhatsApp Numbers"
-              className="w-full px-4 py-3 bg-gray-100 rounded-lg"
-              onChange={(e) =>
-                setProduct({
-                  ...product,
-                  whatsappNumbers: e.target.value,
-                })
-              }
-            />
+            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand space-y-3">
+              <label className="text-sm font-bold block">WhatsApp Contacts</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="useDefaultWhatsApp"
+                  checked={useDefaultWhatsApp}
+                  onChange={handleCheckboxChange}
+                  className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 cursor-pointer"
+                />
+                <label htmlFor="useDefaultWhatsApp" className="text-xs font-semibold text-gray-600 cursor-pointer select-none">
+                  Use default contact numbers
+                </label>
+              </div>
+              <input
+                placeholder="WhatsApp Numbers (comma-separated)"
+                value={product.whatsappNumbers}
+                className="w-full px-4 py-3 bg-stone-50 rounded-lg border border-brand-sand/60"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setProduct({
+                    ...product,
+                    whatsappNumbers: value,
+                  });
+                  setUseDefaultWhatsApp(value === DEFAULT_WHATSAPP_NUMBERS);
+                }}
+              />
+            </div>
 
-            <input
-              type="file"
-              multiple
-              onChange={handleImageChange}
-            />
+            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand space-y-4">
+              <label className="text-sm font-bold block">Product Images</label>
+              <input
+                type="file"
+                multiple
+                onChange={handleImageChange}
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+              />
+            </div>
 
             {/* IMAGE PREVIEW */}
 
@@ -356,7 +396,7 @@ function AddProduct() {
                   <button
                     type="button"
                     onClick={() => removeImage(index)}
-                    className="absolute top-1 right-1 bg-red-500 text-white px-2 py-1 rounded text-xs"
+                    className="absolute top-1 right-1 bg-rose-100 text-rose-700 hover:bg-rose-200 px-2 py-1 rounded text-xs border border-rose-200"
                   >
                     ✕
                   </button>

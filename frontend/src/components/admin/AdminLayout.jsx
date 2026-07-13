@@ -6,12 +6,12 @@ function AdminLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-brand-light flex">
+    <div className="min-h-screen bg-brand-cream flex">
       {/* Sidebar Component */}
       <AdminSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 lg:ml-72 transition-all duration-300">
+      <div className="flex-1 flex flex-col min-w-0 lg:ml-64 transition-all duration-300">
         
         {/* Mobile Header Bar */}
         <header className="lg:hidden bg-brand-slateDark text-white p-4 flex items-center justify-between sticky top-0 z-30 shadow-md border-b border-brand-amber/20">
@@ -25,9 +25,9 @@ function AdminLayout({ children }) {
             <Icons.Menu className="w-6 h-6" />
           </button>
         </header>
-
+ 
         {/* Dynamic Page Content */}
-        <main className="flex-1 p-6 lg:p-10 w-full max-w-[1600px] mx-auto overflow-x-hidden">
+        <main className="flex-1 p-4 lg:p-6 w-full max-w-[1600px] mx-auto overflow-x-hidden">
           {children}
         </main>
       </div>

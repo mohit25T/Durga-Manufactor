@@ -30,39 +30,39 @@ function Leads() {
 
   return (
     <AdminLayout>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-4xl font-extrabold text-brand-slateDark tracking-tight mb-2">Customer Inquiries</h1>
-          <p className="text-brand-gray text-lg">Manage and respond to machinery quotations and questions.</p>
+          <h1 className="text-2xl font-bold text-brand-slateDark tracking-tight mb-2">Customer Inquiries</h1>
+          <p className="text-brand-gray text-sm">Manage and respond to machinery quotations and questions.</p>
         </div>
         
         {/* Search Bar placeholder */}
         <div className="relative w-full md:w-auto">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-brand-gray">
-            <Search className="h-5 w-5" />
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-brand-gray">
+            <Search className="h-4 w-4" />
           </div>
           <input 
             type="text" 
             placeholder="Search leads..." 
-            className="w-full md:w-80 pl-12 pr-4 py-3 bg-white border border-black/5 rounded-xl shadow-sm outline-none focus:border-brand-amber focus:ring-4 focus:ring-brand-amber/10 transition-all font-medium text-brand-slateDark"
+            className="w-full md:w-80 pl-10 pr-4 py-2 bg-stone-50 border border-brand-sand rounded-lg shadow-sm outline-none focus:border-brand-amber focus:ring-4 focus:ring-brand-amber/10 transition-all font-semibold text-brand-slateDark text-sm"
           />
         </div>
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center h-64 bg-white rounded-3xl shadow-sm border border-black/5">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-amber"></div>
+        <div className="flex justify-center items-center h-64 bg-brand-light rounded-xl shadow-sm border border-brand-sand">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-brand-amber"></div>
         </div>
       ) : leads.length === 0 ? (
-        <div className="bg-white rounded-3xl shadow-sm border border-black/5 p-16 text-center flex flex-col items-center">
-          <div className="w-24 h-24 bg-brand-light rounded-full flex items-center justify-center mb-6 text-brand-gray">
-            <Inbox className="w-10 h-10" />
+        <div className="bg-brand-light rounded-xl shadow-sm border border-brand-sand p-10 text-center flex flex-col items-center">
+          <div className="w-16 h-16 bg-brand-light rounded-full flex items-center justify-center mb-4 text-brand-gray">
+            <Inbox className="w-8 h-8" />
           </div>
-          <h3 className="text-2xl font-bold text-brand-slateDark mb-2">No Inquiries Yet</h3>
-          <p className="text-brand-gray">Customer leads from the contact form will appear here.</p>
+          <h3 className="text-xl font-bold text-brand-slateDark mb-2">No Inquiries Yet</h3>
+          <p className="text-brand-gray text-sm">Customer leads from the contact form will appear here.</p>
         </div>
       ) : (
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-2 gap-4">
           <AnimatePresence>
             {leads.map((lead, index) => (
               <motion.div
@@ -70,40 +70,40 @@ function Leads() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl border border-black/5 hover:border-brand-amber/50 transition-all flex flex-col relative group"
+                className="bg-brand-light rounded-xl p-5 shadow-sm hover:shadow-md border border-brand-sand hover:border-brand-amber/50 transition-all flex flex-col relative group"
               >
                 {/* ID Tag */}
-                <div className="absolute top-8 right-8 flex items-center gap-1.5 px-3 py-1 bg-brand-light text-brand-gray rounded-full text-xs font-bold uppercase">
+                <div className="absolute top-5 right-5 flex items-center gap-1.5 px-3 py-1 bg-brand-light text-brand-gray rounded-full text-xs font-bold uppercase">
                   <Hash className="w-3 h-3" />
                   {lead._id.slice(-6)}
                 </div>
 
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-slateDark to-brand-slate text-white flex items-center justify-center font-bold text-2xl shadow-lg shadow-brand-slateDark/20">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-slateDark to-brand-slate text-white flex items-center justify-center font-bold text-lg shadow-md shadow-brand-slateDark/20">
                     {lead.name.charAt(0)}
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-brand-slateDark">{lead.name}</h3>
-                    <p className="text-sm text-brand-gray flex items-center gap-2 mt-1">
+                    <h3 className="text-base font-bold text-brand-slateDark">{lead.name}</h3>
+                    <p className="text-xs text-brand-gray flex items-center gap-2 mt-1">
                       <Calendar className="w-3.5 h-3.5" />
                       {new Date(lead.createdAt || Date.now()).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-6 flex-grow">
+                <div className="space-y-2 mb-4 flex-grow">
                   {lead.phone && (
-                    <div className="flex items-center gap-3 text-brand-slate font-medium">
-                      <div className="w-8 h-8 rounded-lg bg-brand-amber/10 flex items-center justify-center shrink-0">
-                        <Phone className="w-4 h-4 text-brand-amber" />
+                    <div className="flex items-center gap-3 text-brand-slate font-medium text-xs">
+                      <div className="w-7 h-7 rounded-md bg-brand-amber/10 flex items-center justify-center shrink-0">
+                        <Phone className="w-3 h-3 text-brand-amber" />
                       </div>
                       {lead.phone}
                     </div>
                   )}
                   {lead.email && (
-                    <div className="flex items-center gap-3 text-brand-slate font-medium">
-                      <div className="w-8 h-8 rounded-lg bg-brand-amber/10 flex items-center justify-center shrink-0">
-                        <Mail className="w-4 h-4 text-brand-amber" />
+                    <div className="flex items-center gap-3 text-brand-slate font-medium text-xs">
+                      <div className="w-7 h-7 rounded-md bg-brand-amber/10 flex items-center justify-center shrink-0">
+                        <Mail className="w-3 h-3 text-brand-amber" />
                       </div>
                       <a href={`mailto:${lead.email}`} className="hover:text-brand-amber underline decoration-transparent hover:decoration-brand-amber transition-colors break-all">
                         {lead.email}
@@ -112,9 +112,9 @@ function Leads() {
                   )}
                 </div>
 
-                <div className="bg-brand-light p-5 rounded-2xl relative">
-                   <div className="absolute top-0 left-5 -translate-y-1/2 w-4 h-4 bg-brand-light rotate-45 transform origin-center"></div>
-                  <p className="text-brand-slateDark italic text-sm leading-relaxed whitespace-pre-wrap">{lead.message}</p>
+                <div className="bg-brand-light p-4 rounded-xl border border-brand-sand/50 relative">
+                   <div className="absolute top-0 left-5 -translate-y-1/2 w-4 h-4 bg-brand-light rotate-45 transform origin-center border-t border-l border-brand-sand/50"></div>
+                  <p className="text-brand-slateDark italic text-xs leading-relaxed whitespace-pre-wrap">{lead.message}</p>
                 </div>
               </motion.div>
             ))}

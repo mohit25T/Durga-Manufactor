@@ -34,38 +34,34 @@ function Products() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-brand-light">
+    <div className="min-h-screen flex flex-col bg-brand-cream">
       <Navbar />
 
       <main className="flex-grow">
         {/* Premium Header */}
-        <section className="bg-brand-slateDark text-white pt-24 pb-32 relative overflow-hidden">
-          <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-amber/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4"></div>
-          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-white/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2"></div>
-          
+        <section className="bg-brand-sage/30 text-brand-charcoal py-10 relative overflow-hidden border-b border-brand-sand">
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <motion.div
-               initial={{ opacity: 0, scale: 0.9 }}
+               initial={{ opacity: 0, scale: 0.95 }}
                animate={{ opacity: 1, scale: 1 }}
-               className="inline-block px-4 py-1.5 rounded-full border border-brand-amber/30 text-brand-amber text-sm font-bold tracking-widest uppercase mb-6"
+               className="inline-block px-3 py-1 bg-white border border-brand-sand text-brand-forest text-[10px] font-bold tracking-widest uppercase mb-6"
             >
               Our Catalog
             </motion.div>
             
             <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight"
+              className="font-serif text-3xl md:text-5xl font-bold mb-4 text-brand-forest lowercase tracking-tight"
             >
-              Industrial <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-amber to-brand-amberHover">Machines</span>
+              shop <span className="text-brand-charcoal">machines</span>
             </motion.h1>
             
             <motion.p 
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-xl text-brand-gray max-w-2xl leading-relaxed"
+              className="text-sm md:text-base text-brand-gray max-w-xl leading-relaxed font-semibold"
             >
               Explore our comprehensive range of heavy-duty, commercial-grade food processing equipment engineered for reliability and high output.
             </motion.p>
@@ -73,11 +69,11 @@ function Products() {
         </section>
 
         {/* Products Grid Section */}
-        <section className="max-w-7xl mx-auto px-6 py-20 -mt-20 relative z-20">
+        <section className="max-w-7xl mx-auto px-6 py-10 relative z-20">
           
           {loading ? (
-            <div className="flex justify-center items-center h-[400px] bg-white rounded-3xl shadow-xl">
-              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-brand-amber"></div>
+            <div className="flex justify-center items-center h-[300px] bg-white border border-brand-sand shadow-sm">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-brand-forest"></div>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -88,10 +84,10 @@ function Products() {
           )}
 
           {!loading && products.length === 0 && (
-            <div className="text-center bg-white p-16 rounded-3xl shadow-xl border border-brand-slate/5">
-              <div className="text-6xl mb-4">⚙️</div>
-              <h3 className="text-3xl font-bold text-brand-slateDark mb-3">No machines available</h3>
-              <p className="text-brand-gray text-lg">Check back later or contact our sales team for custom inventory.</p>
+            <div className="text-center bg-white p-16 border border-brand-sand shadow-sm">
+              <div className="text-4xl mb-4">⚙️</div>
+              <h3 className="font-serif text-3xl font-bold text-brand-forest lowercase mb-3">No machines available</h3>
+              <p className="text-brand-gray text-sm font-semibold">Check back later or contact our sales team for custom inventory.</p>
             </div>
           )}
           

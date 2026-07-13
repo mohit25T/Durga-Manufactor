@@ -1,152 +1,196 @@
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Award, ShieldCheck, Factory } from "lucide-react";
+import API from "../services/api";
+import ProductCard from "../components/ProductCard";
 
 function Home() {
+  const [featured, setFeatured] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        const res = await API.get("/products");
+        setFeatured(res.data.data.slice(0, 3));
+      } catch (error) {
+        console.log(error);
+        setFeatured([
+          { _id: '1', name: 'Heavy Duty Potato Slicer HP-500', description: 'Cuts 500kg/hr. Stainless steel body with premium blades.', category: 'Slicers' },
+          { _id: '2', name: 'Commercial Flour Mill FM-X', description: 'High speed grinding with stone mechanism. 20HP motor.', category: 'Mills' },
+          { _id: '3', name: 'Industrial Veg Cutter V-300', description: 'Multifunctional cutting blades included. Continuous operation.', category: 'Cutters' }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFeatured();
+  }, []);
+
   return (
-    <div className="min-h-screen flex flex-col bg-brand-light">
+    <div className="min-h-screen flex flex-col bg-brand-cream text-brand-charcoal">
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden flex-grow bg-grid-pattern">
-        {/* Background Gradients - High Contrast Red and Black */}
-        <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-brand-red/10 via-brand-red/5 to-transparent pointer-events-none"></div>
-        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-brand-red/20 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
-        <div className="absolute -bottom-1/4 -left-1/4 w-[500px] h-[500px] bg-brand-black/5 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 items-center gap-16 relative z-10">
+      <section className="relative bg-brand-sage/30 py-12 lg:py-16 overflow-hidden border-b border-brand-sand">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 grid lg:grid-cols-2 items-center gap-16 relative z-10">
+          
           {/* Text Content */}
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
+            initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-black/5 border border-brand-black/10 text-brand-black font-semibold text-sm mb-8 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-brand-red animate-pulse shadow-[0_0_8px_rgba(230,35,37,0.8)]"></span>
-              Leading Manufacturer in India
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-brand-sand text-brand-forest font-bold font-sans text-[10px] tracking-widest uppercase mb-8">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-forest"></span>
+              Commercial grade manufacturing
             </div>
 
-            <h1 className="text-5xl lg:text-7xl font-extrabold text-brand-black leading-tight mb-6 tracking-tight">
+            <h1 className="font-serif text-3xl lg:text-5xl font-bold text-brand-forest leading-[1.1] mb-4 tracking-tight">
               Commercial <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-brand-redHover drop-shadow-sm">
-                Food Processing
-              </span>
-              <br />
+              <span className="text-brand-charcoal">Food Processing</span> <br />
               Machinery
             </h1>
 
-            <p className="text-xl text-brand-gray mb-10 max-w-lg leading-relaxed font-medium">
-              Engineered for absolute precision and maximum durability. We
-              manufacture high-capacity vegetable cutters, potato slicers, and
-              heavy-duty flour mills for commercial kitchens and industries.
+            <p className="text-sm md:text-base text-brand-gray mb-6 max-w-lg leading-relaxed font-semibold">
+              Engineered for absolute precision and maximum durability. We manufacture high-capacity vegetable cutters, potato slicers, and heavy-duty flour mills for commercial kitchens across India.
             </p>
 
-            <div className="flex flex-wrap items-center gap-5">
+            <div className="flex flex-wrap items-center gap-4">
               <Link
                 to="/products"
-                className="group relative inline-flex items-center gap-2 bg-brand-black text-white px-8 py-4 rounded-xl font-bold overflow-hidden shadow-2xl shadow-brand-black/30 hover:shadow-brand-red/20 transition-all duration-300"
+                className="bg-brand-forest hover:bg-transparent border border-brand-forest hover:text-brand-forest text-white px-8 py-4 rounded-none font-bold font-sans text-xs tracking-widest uppercase transition-all duration-300 shadow-sm"
               >
-                <span className="relative z-10 flex items-center gap-2">
-                  Explore Machines{" "}
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </span>
-                <div className="absolute inset-0 h-full w-full scale-0 rounded-xl transition-all duration-300 ease-out group-hover:scale-100 group-hover:bg-brand-red"></div>
+                Shop Machines
               </Link>
 
               <Link
                 to="/contact"
-                className="inline-flex items-center justify-center px-8 py-4 rounded-xl font-bold text-brand-black border-2 border-brand-black/10 hover:border-brand-red hover:text-brand-redHover hover:bg-white hover:shadow-xl hover:shadow-brand-red/10 transition-all duration-300"
+                className="border border-brand-forest text-brand-forest hover:bg-brand-forest hover:text-white px-8 py-4 rounded-none font-bold font-sans text-xs tracking-widest uppercase transition-all duration-300"
               >
                 Request Quote
               </Link>
             </div>
 
-            {/* Stats/Features Mini */}
-            <div className="mt-14 grid grid-cols-2 gap-8 pt-8 border-t border-brand-black/10">
-              <motion.div
-                whileHover={{ y: -5 }}
-                className="flex gap-4 items-start p-4 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 border border-transparent hover:border-brand-red/10"
-              >
-                <div className="bg-brand-red/10 p-2 rounded-lg">
-                  <CheckCircle2 className="w-6 h-6 text-brand-red shrink-0" />
-                </div>
+            {/* Core Stats Mini */}
+            <div className="mt-8 grid grid-cols-2 gap-8 pt-6 border-t border-brand-sand">
+              <div className="flex gap-3 items-start">
+                <CheckCircle2 className="w-4 h-4 text-brand-forest shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-extrabold text-brand-black text-lg">
-                    15+ Years
-                  </h4>
-                  <p className="text-sm text-brand-gray font-medium">
-                    Manufacturing Excellence
-                  </p>
+                  <h4 className="font-bold text-brand-forest text-sm uppercase tracking-wider font-sans">15+ Years</h4>
+                  <p className="text-xs text-brand-gray font-semibold">Manufacturing Excellence</p>
                 </div>
-              </motion.div>
-              <motion.div
-                whileHover={{ y: -5 }}
-                className="flex gap-4 items-start p-4 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 border border-transparent hover:border-brand-red/10"
-              >
-                <div className="bg-brand-red/10 p-2 rounded-lg">
-                  <CheckCircle2 className="w-6 h-6 text-brand-red shrink-0" />
-                </div>
+              </div>
+              <div className="flex gap-3 items-start">
+                <CheckCircle2 className="w-4 h-4 text-brand-forest shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-extrabold text-brand-black text-lg">
-                    Pan India
-                  </h4>
-                  <p className="text-sm text-brand-gray font-medium">
-                    Delivery & Support
-                  </p>
+                  <h4 className="font-bold text-brand-forest text-sm uppercase tracking-wider font-sans">Pan India</h4>
+                  <p className="text-xs text-brand-gray font-semibold">Delivery & Support</p>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </motion.div>
 
           {/* Image Content */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-            className="relative"
+            transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
+            className="relative flex justify-center lg:justify-end"
           >
-            {/* Decorative frame - Sharp Red Glow */}
-            <div className="absolute -inset-2 bg-gradient-to-tr from-brand-red/40 via-brand-red/10 to-transparent rounded-[2rem] transform rotate-2 blur-xl opacity-70"></div>
-            <div className="absolute -inset-4 bg-gradient-to-bl from-brand-black/20 to-transparent rounded-[2rem] transform -rotate-2 blur-lg opacity-50"></div>
-
-            <div className="relative glass-dark rounded-3xl p-3 overflow-hidden shadow-2xl group">
-              <div className="relative overflow-hidden rounded-2xl bg-brand-black">
+            <div className="relative bg-white border border-brand-sand p-4 w-full max-w-lg shadow-sm">
+              <div className="relative overflow-hidden bg-brand-cream aspect-square">
                 <img
                   src="https://www.azom.com/images/Article_Thumbs/ThumbForArticle_2867_16010306047694886.png"
                   alt="Industrial Machine"
-                  className="w-full h-[550px] object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110 mix-blend-luminosity hover:mix-blend-normal"
+                  className="w-full h-full object-cover grayscale opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-700"
                 />
-                {/* Overlay gradient for depth */}
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-transparent to-transparent opacity-60"></div>
               </div>
 
-              {/* Floating Badge */}
-              <motion.div
-                animate={{ y: [0, -12, 0] }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 4,
-                  ease: "easeInOut",
-                }}
-                className="absolute bottom-12 -left-8 glass px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-brand-red/20 backdrop-blur-xl"
-              >
-                <div className="w-14 h-14 bg-brand-black rounded-xl flex items-center justify-center text-2xl shadow-inner border border-brand-red/30 relative overflow-hidden">
-                  <span className="relative z-10 text-white">⚙️</span>
-                  <div className="absolute inset-0 bg-brand-red/20 animate-pulse"></div>
-                </div>
+              {/* Floating Minimal Badge */}
+              <div className="absolute -bottom-6 -left-6 bg-brand-sage text-brand-forest px-6 py-4 border border-brand-sand shadow-lg flex items-center gap-3">
+                <span className="text-xl">⚙️</span>
                 <div>
-                  <p className="font-extrabold text-brand-black text-lg tracking-tight">
-                    Heavy Duty
-                  </p>
-                  <p className="text-xs text-brand-red font-bold uppercase tracking-wider">
-                    304 Grade Stainless
-                  </p>
+                  <p className="font-bold text-xs uppercase tracking-wider font-sans">304 Grade</p>
+                  <p className="text-[10px] text-brand-gray font-bold uppercase tracking-widest">Stainless Steel</p>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </motion.div>
+
+        </div>
+      </section>
+
+      {/* Featured Products Section */}
+      <section className="py-12 bg-brand-cream">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="text-center mb-8">
+            <h2 className="font-serif text-2xl lg:text-3xl font-bold text-brand-forest tracking-tight mb-3">
+              Featured Machinery
+            </h2>
+            <p className="text-brand-gray max-w-md mx-auto text-sm font-semibold">
+              Explore our highest rated, commercial-grade food processing units.
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-brand-forest"></div>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-8">
+              {featured.map((product, index) => (
+                <ProductCard key={product._id} product={product} index={index} />
+              ))}
+            </div>
+          )}
+
+          <div className="text-center mt-8">
+            <Link
+              to="/products"
+              className="bg-brand-forest hover:bg-transparent border border-brand-forest hover:text-brand-forest text-white px-8 py-4 rounded-none font-bold font-sans text-xs tracking-widest uppercase transition-all duration-300 inline-flex items-center gap-2"
+            >
+              View Full Catalog <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Legacy/Trust Banner */}
+      <section className="py-12 bg-white border-t border-brand-sand">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 grid md:grid-cols-3 gap-8 text-center md:text-left">
+          <div className="space-y-2">
+            <div className="w-12 h-12 bg-brand-sage/40 border border-brand-sand flex items-center justify-center text-brand-forest mx-auto md:mx-0">
+              <Factory className="w-6 h-6" />
+            </div>
+            <h3 className="font-serif text-2xl font-bold text-brand-forest ">Rajkot Facility</h3>
+            <p className="text-xs text-brand-gray font-semibold leading-relaxed">
+              Every machine is precision-engineered in our advanced manufacturing facility based in Gujarat, India.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <div className="w-12 h-12 bg-brand-sage/40 border border-brand-sand flex items-center justify-center text-brand-forest mx-auto md:mx-0">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <h3 className="font-serif text-2xl font-bold text-brand-forest">Quality Assurance</h3>
+            <p className="text-xs text-brand-gray font-semibold leading-relaxed">
+              We construct using top-tier 304 food-grade stainless steel to ensure sanitation and absolute structural durability.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <div className="w-12 h-12 bg-brand-sage/40 border border-brand-sand flex items-center justify-center text-brand-forest mx-auto md:mx-0">
+              <Award className="w-6 h-6" />
+            </div>
+            <h3 className="font-serif text-2xl font-bold text-brand-forest">Pan India Service</h3>
+            <p className="text-xs text-brand-gray font-semibold leading-relaxed">
+              Trusted by 500+ commercial kitchens and food processing industries across the Indian subcontinent.
+            </p>
+          </div>
         </div>
       </section>
 

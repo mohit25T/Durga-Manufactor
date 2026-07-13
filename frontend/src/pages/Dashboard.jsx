@@ -95,36 +95,36 @@ function Dashboard() {
   return (
     <AdminLayout>
       <div className="mb-10">
-        <h1 className="text-4xl font-extrabold text-brand-slateDark mb-2 tracking-tight">
+        <h1 className="text-2xl font-bold text-brand-slateDark mb-2 tracking-tight">
           Dashboard Overview
         </h1>
-        <p className="text-brand-gray text-lg">
+        <p className="text-brand-gray text-sm">
           Welcome back. Here is what's happening today.
         </p>
       </div>
 
       {/* KPI Stats */}
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map((stat, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-white rounded-3xl p-6 shadow-xl shadow-brand-slateDark/5 border border-black/5 flex items-center gap-6 group hover:-translate-y-1 transition-transform"
+            className="bg-brand-light rounded-xl p-4 shadow-md shadow-brand-slateDark/5 border border-brand-sand flex items-center gap-4 group hover:-translate-y-1 transition-transform"
           >
             <div
-              className={`w-16 h-16 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}
+              className={`w-12 h-12 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}
             >
-              <stat.icon className="w-8 h-8" />
+              <stat.icon className="w-6 h-6" />
             </div>
 
             <div>
-              <p className="text-brand-gray font-bold text-sm uppercase tracking-wider mb-1">
+              <p className="text-brand-gray font-bold text-xs uppercase tracking-wider mb-1">
                 {stat.title}
               </p>
-              <h3 className="text-3xl font-extrabold text-brand-slateDark">
+              <h3 className="text-xl font-bold text-brand-slateDark">
                 {stat.value}
               </h3>
             </div>
@@ -141,17 +141,17 @@ function Dashboard() {
       <div className="grid md:grid-cols-3 gap-6">
         <Link
           to="/admin/add-product"
-          className="group relative overflow-hidden bg-brand-slateDark text-white rounded-3xl p-8 hover:shadow-2xl hover:shadow-brand-slateDark/20 transition-all flex flex-col items-start gap-4"
+          className="group relative overflow-hidden bg-brand-slateDark text-white rounded-xl p-6 hover:shadow-xl hover:shadow-brand-slateDark/20 transition-all flex flex-col items-start gap-3"
         >
           <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full blur-2xl group-hover:bg-brand-amber/20 transition-colors"></div>
 
-          <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
-            <PackagePlus className="w-7 h-7 text-brand-amber" />
+          <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md">
+            <PackagePlus className="w-5 h-5 text-brand-amber" />
           </div>
 
           <div>
-            <h3 className="text-xl font-bold mb-1">Add New Product</h3>
-            <p className="text-brand-gray text-sm">
+            <h3 className="text-base font-bold mb-1">Add New Product</h3>
+            <p className="text-brand-gray text-xs">
               Create a new machine listing
             </p>
           </div>
@@ -159,17 +159,17 @@ function Dashboard() {
 
         <Link
           to="/admin/products"
-          className="group relative overflow-hidden bg-white text-brand-slate rounded-3xl p-8 border border-black/5 hover:border-brand-amber hover:shadow-2xl hover:shadow-brand-amber/10 transition-all flex flex-col items-start gap-4"
+          className="group relative overflow-hidden bg-brand-light text-brand-slate rounded-xl p-6 border border-brand-sand hover:border-brand-amber hover:shadow-xl hover:shadow-brand-amber/10 transition-all flex flex-col items-start gap-3"
         >
-          <div className="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center group-hover:bg-brand-amber/10 transition-colors">
-            <PackageSearch className="w-7 h-7 text-brand-slateDark" />
+          <div className="w-10 h-10 bg-brand-light rounded-xl flex items-center justify-center group-hover:bg-brand-amber/10 transition-colors">
+            <PackageSearch className="w-5 h-5 text-brand-slateDark" />
           </div>
 
           <div>
-            <h3 className="text-xl font-bold mb-1 text-brand-slateDark">
+            <h3 className="text-base font-bold mb-1 text-brand-slateDark">
               Manage Inventory
             </h3>
-            <p className="text-brand-gray text-sm">
+            <p className="text-brand-gray text-xs">
               Edit or delete existing products
             </p>
           </div>
@@ -177,17 +177,17 @@ function Dashboard() {
 
         <Link
           to="/admin/leads"
-          className="group relative overflow-hidden bg-white text-brand-slate rounded-3xl p-8 border border-black/5 hover:border-brand-amber hover:shadow-2xl hover:shadow-brand-amber/10 transition-all flex flex-col items-start gap-4"
+          className="group relative overflow-hidden bg-brand-light text-brand-slate rounded-xl p-6 border border-brand-sand hover:border-brand-amber hover:shadow-xl hover:shadow-brand-amber/10 transition-all flex flex-col items-start gap-3"
         >
-          <div className="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center group-hover:bg-brand-amber/10 transition-colors">
-            <Users className="w-7 h-7 text-brand-slateDark" />
+          <div className="w-10 h-10 bg-brand-light rounded-xl flex items-center justify-center group-hover:bg-brand-amber/10 transition-colors">
+            <Users className="w-5 h-5 text-brand-slateDark" />
           </div>
 
           <div>
-            <h3 className="text-xl font-bold mb-1 text-brand-slateDark">
+            <h3 className="text-base font-bold mb-1 text-brand-slateDark">
               Customer Leads
             </h3>
-            <p className="text-brand-gray text-sm">View incoming inquiries</p>
+            <p className="text-brand-gray text-xs">View incoming inquiries</p>
           </div>
         </Link>
       </div>

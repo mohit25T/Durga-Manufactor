@@ -8,12 +8,25 @@ function EditProduct() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  const DEFAULT_WHATSAPP_NUMBERS = "919825270821, 919428156213, 919909917008";
+  const [useDefaultWhatsApp, setUseDefaultWhatsApp] = useState(false);
+
   const [product, setProduct] = useState({
     name: "",
     description: "",
     category: "",
     price: "",
+    whatsappNumbers: "",
   });
+
+  const handleCheckboxChange = (e) => {
+    const checked = e.target.checked;
+    setUseDefaultWhatsApp(checked);
+    setProduct((prev) => ({
+      ...prev,
+      whatsappNumbers: checked ? DEFAULT_WHATSAPP_NUMBERS : "",
+    }));
+  };
 
   const [tableData, setTableData] = useState([
     ["", ""],
@@ -35,12 +48,19 @@ function EditProduct() {
         const res = await API.get(`/products/${id}`);
         const data = res.data.data;
 
+        const whatsappStr = Array.isArray(data.whatsappNumbers)
+          ? data.whatsappNumbers.join(", ")
+          : "";
+
         setProduct({
           name: data.name || "",
           description: data.description || "",
           category: data.category || "",
           price: data.price || "",
+          whatsappNumbers: whatsappStr,
         });
+
+        setUseDefaultWhatsApp(whatsappStr === DEFAULT_WHATSAPP_NUMBERS);
 
         setTableData(data.table?.length ? data.table : [["", ""]]);
 
@@ -138,6 +158,11 @@ function EditProduct() {
       formData.append("category", product.category);
       formData.append("price", product.price);
 
+      const numbers = product.whatsappNumbers
+        ? product.whatsappNumbers.split(",").map((num) => num.trim()).filter((num) => num !== "")
+        : [];
+      formData.append("whatsappNumbers", JSON.stringify(numbers));
+
       formData.append("table", JSON.stringify(tableData));
 
       images.forEach((img) => formData.append("images", img));
@@ -165,30 +190,30 @@ function EditProduct() {
 
   return (
     <AdminLayout>
-      <div className="max-w-5xl mx-auto">
+      <div className="w-full">
         {/* HEADER */}
 
         <div className="flex items-center gap-4 mb-10">
           <Link
             to="/admin/products"
-            className="w-12 h-12 bg-white rounded-xl border flex items-center justify-center"
+            className="w-12 h-12 bg-brand-light rounded-xl border border-brand-sand flex items-center justify-center"
           >
             <ArrowLeft className="w-6 h-6" />
           </Link>
 
-          <h1 className="text-3xl font-extrabold">Edit Machine</h1>
+          <h1 className="text-2xl font-bold">Edit Machine</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
           {/* LEFT SIDE */}
 
           <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white p-8 rounded-2xl shadow">
-              <label className="font-bold block mb-2">Machine Name</label>
+            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand">
+              <label className="text-sm font-bold block mb-1">Machine Name</label>
 
               <input
                 value={product.name}
-                className="w-full p-3 bg-brand-light rounded-lg"
+                className="w-full py-2 px-3 text-sm bg-stone-50 rounded-lg border border-brand-sand/60"
                 onChange={(e) =>
                   setProduct({
                     ...product,
@@ -197,12 +222,12 @@ function EditProduct() {
                 }
               />
 
-              <label className="font-bold block mt-6 mb-2">Description</label>
+              <label className="text-sm font-bold block mt-4 mb-1">Description</label>
 
               <textarea
                 rows="4"
                 value={product.description}
-                className="w-full p-3 bg-brand-light rounded-lg"
+                className="w-full py-2 px-3 text-sm bg-stone-50 rounded-lg border border-brand-sand/60"
                 onChange={(e) =>
                   setProduct({
                     ...product,
@@ -245,7 +270,7 @@ function EditProduct() {
                             <div className="flex gap-2">
                               <input
                                 value={cell}
-                                className="w-full p-2 bg-brand-light rounded"
+                                className="w-full p-2 bg-gray-100 rounded border border-brand-sand/60"
                                 onChange={(e) =>
                                   handleCellChange(
                                     rowIndex,
@@ -258,7 +283,7 @@ function EditProduct() {
                               <button
                                 type="button"
                                 onClick={() => deleteColumn(colIndex)}
-                                className="bg-red-400 text-white px-2 rounded"
+                                className="bg-rose-50 text-rose-600 hover:bg-rose-100 px-2 rounded border border-rose-200/50"
                               >
                                 ✕
                               </button>
@@ -270,7 +295,7 @@ function EditProduct() {
                           <button
                             type="button"
                             onClick={() => deleteRow(rowIndex)}
-                            className="bg-red-500 text-white px-2 py-1 rounded"
+                            className="bg-rose-100 text-rose-700 hover:bg-rose-200 px-3 py-1 rounded border border-rose-200"
                           >
                             Delete Row
                           </button>
@@ -282,13 +307,13 @@ function EditProduct() {
               </div>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl shadow">
-              <label className="font-bold mb-2 block">Price</label>
+            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand">
+              <label className="text-sm font-bold mb-1 block">Price</label>
 
               <input
                 type="number"
                 value={product.price}
-                className="w-full p-3 bg-brand-light rounded-lg"
+                className="w-full py-2 px-3 text-sm bg-stone-50 rounded-lg border border-brand-sand/60"
                 onChange={(e) =>
                   setProduct({
                     ...product,
@@ -302,12 +327,12 @@ function EditProduct() {
           {/* RIGHT SIDE */}
 
           <div className="space-y-8">
-            <div className="bg-white p-8 rounded-2xl shadow">
-              <label className="font-bold mb-2 block">Category</label>
+            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand">
+              <label className="text-sm font-bold mb-1 block">Category</label>
 
               <input
                 value={product.category}
-                className="w-full p-3 bg-brand-light rounded-lg"
+                className="w-full py-2 px-3 text-sm bg-stone-50 rounded-lg border border-brand-sand/60"
                 onChange={(e) =>
                   setProduct({
                     ...product,
@@ -317,7 +342,36 @@ function EditProduct() {
               />
             </div>
 
-            <div className="bg-white p-8 rounded-2xl shadow">
+            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand">
+              <label className="text-sm font-bold mb-1 block">WhatsApp Contacts</label>
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="checkbox"
+                  id="useDefaultWhatsApp"
+                  checked={useDefaultWhatsApp}
+                  onChange={handleCheckboxChange}
+                  className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 cursor-pointer"
+                />
+                <label htmlFor="useDefaultWhatsApp" className="text-xs font-semibold text-gray-600 cursor-pointer select-none">
+                  Use default contact numbers
+                </label>
+              </div>
+              <input
+                value={product.whatsappNumbers}
+                className="w-full py-2 px-3 text-sm bg-stone-50 rounded-lg border border-brand-sand/60"
+                placeholder="WhatsApp Numbers (comma separated)"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setProduct({
+                    ...product,
+                    whatsappNumbers: value,
+                  });
+                  setUseDefaultWhatsApp(value === DEFAULT_WHATSAPP_NUMBERS);
+                }}
+              />
+            </div>
+
+            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand">
               <input
                 type="file"
                 multiple
@@ -334,7 +388,7 @@ function EditProduct() {
                     <button
                       type="button"
                       onClick={() => deleteImage(img)}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded"
+                      className="absolute top-2 right-2 bg-rose-100 text-rose-700 hover:bg-rose-200 p-1.5 rounded border border-rose-200"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -348,7 +402,7 @@ function EditProduct() {
                     <button
                       type="button"
                       onClick={() => removeNewImage(i)}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded"
+                      className="absolute top-2 right-2 bg-rose-100 text-rose-700 hover:bg-rose-200 p-1.5 rounded border border-rose-200"
                     >
                       <Trash2 size={16} />
                     </button>

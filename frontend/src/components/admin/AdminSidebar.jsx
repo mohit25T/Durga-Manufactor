@@ -36,7 +36,7 @@ function AdminSidebar({ isOpen, setIsOpen }) {
 
       {/* Sidebar */}
       <motion.aside
-        className={`fixed top-0 left-0 h-screen w-72 bg-brand-slateDark text-white z-50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 border-r border-brand-amber/20 ${
+        className={`fixed top-0 left-0 h-screen w-50 bg-brand-slateDark text-white z-50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 border-r border-brand-amber/20 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

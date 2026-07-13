@@ -84,12 +84,12 @@ function Products() {
   return (
     <AdminLayout>
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-4xl font-extrabold text-brand-slateDark mb-2">
+          <h1 className="text-2xl font-bold text-brand-slateDark mb-2">
             Manage Inventory
           </h1>
-          <p className="text-brand-gray text-lg">
+          <p className="text-brand-gray text-sm">
             View, edit, or remove machines from your catalog.
           </p>
         </div>
@@ -97,50 +97,50 @@ function Products() {
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
           <div className="relative w-full sm:w-64">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-brand-gray">
-              <Search className="h-5 w-5" />
+              <Search className="h-4 w-4" />
             </div>
 
             <input
               type="text"
               placeholder="Search products..."
-              className="w-full pl-12 pr-4 py-3 bg-white border border-black/5 rounded-xl outline-none focus:border-brand-amber"
+              className="w-full pl-10 pr-4 py-2 bg-stone-50 border border-brand-sand rounded-lg outline-none focus:border-brand-amber text-sm font-semibold"
             />
           </div>
 
           <button
             onClick={() => navigate("/admin/add-product")}
-            className="flex items-center gap-2 bg-brand-slateDark text-white px-6 py-3 rounded-xl font-bold"
+            className="flex items-center gap-2 bg-brand-slateDark text-white px-4 py-2 rounded-lg font-bold text-sm"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
             Add Product
           </button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-[2rem] shadow-xl border border-black/5 overflow-hidden">
+      <div className="bg-brand-light rounded-xl shadow-md border border-brand-sand overflow-hidden">
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-amber"></div>
+            <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-brand-amber"></div>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-brand-light/50 border-b border-black/5">
-                  <th className="px-8 py-5 text-xs font-bold uppercase">
+                  <th className="px-6 py-3 text-xs font-bold uppercase">
                     Product
                   </th>
-                  <th className="px-8 py-5 text-xs font-bold uppercase">
+                  <th className="px-6 py-3 text-xs font-bold uppercase">
                     Category
                   </th>
-                  <th className="px-8 py-5 text-xs font-bold uppercase">
+                  <th className="px-6 py-3 text-xs font-bold uppercase">
                     Price (₹)
                   </th>
-                  <th className="px-8 py-5 text-xs font-bold uppercase">
+                  <th className="px-6 py-3 text-xs font-bold uppercase">
                     Views
                   </th>
-                  <th className="px-8 py-5 text-xs font-bold uppercase text-right">
+                  <th className="px-6 py-3 text-xs font-bold uppercase text-right">
                     Actions
                   </th>
                 </tr>
@@ -153,9 +153,9 @@ function Products() {
                     className="hover:bg-brand-light/20 transition-colors"
                   >
                     {/* PRODUCT */}
-                    <td className="px-8 py-5">
+                    <td className="px-6 py-3">
                       <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-xl bg-brand-light border overflow-hidden">
+                        <div className="w-12 h-12 rounded-lg bg-brand-light border overflow-hidden">
                           {product.images?.[0] ? (
                             <img
                               src={product.images[0]}
@@ -164,17 +164,17 @@ function Products() {
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-brand-gray">
-                              <PackageSearch className="w-6 h-6" />
+                              <PackageSearch className="w-5 h-5" />
                             </div>
                           )}
                         </div>
 
                         <div>
-                          <p className="font-bold text-brand-slateDark">
+                          <p className="font-bold text-brand-slateDark text-sm">
                             {product.name}
                           </p>
 
-                          <p className="text-xs text-brand-gray font-mono">
+                          <p className="text-[10px] text-brand-gray font-mono">
                             ID: {product._id.slice(-6)}
                           </p>
                         </div>
@@ -182,29 +182,29 @@ function Products() {
                     </td>
 
                     {/* CATEGORY */}
-                    <td className="px-8 py-5">
+                    <td className="px-6 py-3">
                       <span className="px-3 py-1 bg-brand-amber/10 text-brand-amber text-xs font-bold rounded-full">
                         {product.category || "N/A"}
                       </span>
                     </td>
 
                     {/* PRICE */}
-                    <td className="px-8 py-5 font-bold">
+                    <td className="px-6 py-3 font-bold text-xs">
                       {product.price
                         ? parseInt(product.price).toLocaleString("en-IN")
                         : "N/A"}
                     </td>
 
                     {/* VIEWS */}
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-2 text-brand-slateDark font-semibold">
+                    <td className="px-6 py-3">
+                      <div className="flex items-center gap-2 text-brand-slateDark font-semibold text-xs">
                         <Eye className="w-4 h-4 text-brand-gray" />
                         {product.views}
                       </div>
                     </td>
 
                     {/* ACTIONS */}
-                    <td className="px-8 py-5 text-right">
+                    <td className="px-6 py-3 text-right">
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() =>
@@ -226,7 +226,7 @@ function Products() {
 
                         <button
                           onClick={() => deleteProduct(product._id)}
-                          className="p-2 text-red-500"
+                          className="p-2 text-rose-600 hover:text-rose-800"
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>

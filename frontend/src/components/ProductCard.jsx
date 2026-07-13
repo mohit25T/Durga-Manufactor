@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 function ProductCard({ product, index = 0 }) {
   // Simple fallback image if not provided
@@ -8,23 +8,23 @@ function ProductCard({ product, index = 0 }) {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 50 }}
+      initial={{ opacity: 0, y: 25 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="group bg-white rounded-3xl shadow-sm border border-black/5 hover:shadow-2xl hover:shadow-brand-amber/10 transition-all duration-300 overflow-hidden flex flex-col"
+      transition={{ duration: 0.8, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ y: -6, transition: { duration: 0.3, ease: "easeOut" } }}
+      className="group bg-white rounded-none border border-brand-sand hover:border-brand-forest/40 hover:shadow-lg hover:shadow-brand-forest/5 transition-all duration-500 overflow-hidden flex flex-col"
     >
       {/* Image Container */}
-      <div className="relative h-64 overflow-hidden bg-brand-light">
-        <div className="absolute inset-0 bg-brand-slateDark/10 group-hover:bg-transparent transition-colors z-10 duration-500"></div>
+      <div className="relative h-72 overflow-hidden bg-brand-cream border-b border-brand-sand">
         <img
           src={imageUrl}
           alt={product.name}
-          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
+          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
         />
         {/* Category Tag */}
         {product.category && (
-          <div className="absolute top-4 left-4 z-20 glass px-3 py-1 rounded-full text-xs font-bold text-brand-slateDark uppercase tracking-wider backdrop-blur-md">
+          <div className="absolute top-4 left-4 z-20 bg-brand-sage/90 text-brand-forest border border-brand-sand px-3 py-1 text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm">
             {product.category}
           </div>
         )}
@@ -32,23 +32,21 @@ function ProductCard({ product, index = 0 }) {
 
       {/* Content Container */}
       <div className="p-8 flex flex-col flex-grow relative">
-        <h3 className="text-2xl font-extrabold text-brand-slateDark mb-3 group-hover:text-brand-amber transition-colors">
+        <h3 className="font-serif text-2xl font-bold text-brand-charcoal lowercase tracking-tight mb-3 group-hover:text-brand-red transition-colors duration-300">
           {product.name}
         </h3>
         
-        <p className="text-brand-gray font-medium leading-relaxed line-clamp-2 mb-8 flex-grow">
+        <p className="text-brand-gray font-medium text-sm leading-relaxed line-clamp-2 mb-8 flex-grow">
           {product.description || "Industrial grade machine designed for optimal performance and durability in commercial kitchens."}
         </p>
         
-        <div className="pt-6 border-t border-brand-slate/10">
+        <div className="pt-6 border-t border-brand-sand/60">
           <Link
             to={`/products/${product._id}`}
-            className="inline-flex items-center justify-between w-full font-bold text-brand-slateDark group-hover:text-brand-amber transition-colors"
+            className="inline-flex items-center justify-between w-full font-sans text-xs uppercase tracking-widest font-bold text-brand-forest group-hover:underline transition-all"
           >
             <span>View Specifications</span>
-            <div className="w-10 h-10 rounded-full bg-brand-light flex items-center justify-center group-hover:bg-brand-amber group-hover:text-white transition-all transform group-hover:rotate-45">
-              <ArrowUpRight className="w-5 h-5" />
-            </div>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
           </Link>
         </div>
       </div>

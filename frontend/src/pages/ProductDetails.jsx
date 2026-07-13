@@ -85,10 +85,10 @@ Thank you.
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-brand-light">
+      <div className="min-h-screen flex flex-col bg-brand-cream">
         <Navbar />
         <div className="flex-grow flex justify-center items-center">
-          <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-brand-amber"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-brand-forest"></div>
         </div>
         <Footer />
       </div>
@@ -97,10 +97,11 @@ Thank you.
 
   if (!product) {
     return (
-      <div className="min-h-screen flex flex-col bg-brand-light">
+      <div className="min-h-screen flex flex-col bg-brand-cream">
         <Navbar />
         <div className="flex-grow flex flex-col justify-center items-center text-center p-6">
-          <h2 className="text-3xl font-bold">Machine Not Found</h2>
+          <h2 className="font-serif text-3xl font-bold text-brand-forest lowercase">Machine Not Found</h2>
+          <Link to="/products" className="mt-4 text-xs tracking-widest uppercase font-bold text-brand-forest underline">Back to Catalog</Link>
         </div>
         <Footer />
       </div>
@@ -108,90 +109,101 @@ Thank you.
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-brand-light">
+    <div className="min-h-screen flex flex-col bg-brand-cream text-brand-charcoal">
       <Navbar />
 
-      <main className="flex-grow py-12">
+      <main className="flex-grow py-6">
         <div className="max-w-7xl mx-auto px-6">
           {/* Breadcrumb */}
-
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex items-center gap-2 text-sm text-brand-gray mb-10"
+            className="flex items-center gap-2 text-xs font-bold text-brand-gray/80 mb-6 font-sans uppercase tracking-wider"
           >
-            <Link to="/">Home</Link>
-            <ChevronRight className="w-4 h-4" />
-            <Link to="/products">Machines</Link>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-brand-amber">{product.category}</span>
+            <Link to="/" className="hover:text-brand-forest transition">Home</Link>
+            <ChevronRight className="w-3.5 h-3.5 text-brand-gray/40" />
+            <Link to="/products" className="hover:text-brand-forest transition">Machines</Link>
+            <ChevronRight className="w-3.5 h-3.5 text-brand-gray/40" />
+            <span className="text-brand-forest">{product.category}</span>
           </motion.div>
 
-          <div className="bg-white rounded-3xl p-8 shadow-xl grid lg:grid-cols-2 gap-16">
+          <div className="grid lg:grid-cols-2 gap-8 items-start">
+            
             {/* PRODUCT IMAGE GALLERY */}
-
-            <div>
-              {/* MAIN IMAGE */}
-
-              <img
-                src={
-                  selectedImage ||
-                  "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158"
-                }
-                alt={product.name}
-                className="rounded-2xl w-full mb-4"
-              />
+            <div className="space-y-4">
+              <div className="bg-white border border-brand-sand p-3 shadow-sm">
+                <img
+                  src={
+                    selectedImage ||
+                    "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158"
+                  }
+                  alt={product.name}
+                  className="w-full h-auto object-contain bg-brand-cream aspect-square border border-brand-sand/40"
+                />
+              </div>
 
               {/* THUMBNAILS */}
-
               {product.images?.length > 1 && (
                 <div className="grid grid-cols-5 gap-3">
                   {product.images.map((img, index) => (
-                    <img
+                    <button
                       key={index}
-                      src={img}
                       onClick={() => setSelectedImage(img)}
-                      className={`cursor-pointer rounded-lg border-2 ${
+                      className={`cursor-pointer bg-white p-1 border aspect-square transition-all ${
                         selectedImage === img
-                          ? "border-brand-amber"
-                          : "border-transparent"
+                          ? "border-brand-forest"
+                          : "border-brand-sand hover:border-brand-gray"
                       }`}
-                    />
+                    >
+                      <img
+                        src={img}
+                        alt={`${product.name} thumbnail ${index}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
                   ))}
                 </div>
               )}
             </div>
 
             {/* PRODUCT INFO */}
-
-            <div>
-              <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
-
-              <p className="text-gray-600 mb-8">{product.description}</p>
+            <div className="bg-white border border-brand-sand p-6 md:p-8 shadow-sm space-y-6">
+              <div>
+                {product.category && (
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-brand-forest bg-brand-sage/40 border border-brand-sand px-2.5 py-1 inline-block mb-4">
+                    {product.category}
+                  </span>
+                )}
+                <h1 className="font-serif text-2xl md:text-3xl font-bold text-brand-forest lowercase tracking-tight mb-3">
+                  {product.name}
+                </h1>
+                <p className="text-brand-gray font-semibold text-xs md:text-sm leading-relaxed">{product.description}</p>
+              </div>
 
               {/* MACHINE SPECIFICATION TABLE */}
-
-              <div className="space-y-4 mb-8">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <CheckCircle2 className="text-brand-amber" />
-                  Machine Specifications
+              <div className="space-y-3">
+                <h3 className="font-serif text-lg font-bold text-brand-forest lowercase flex items-center gap-2">
+                  <CheckCircle2 className="text-brand-forest w-4 h-4" />
+                  machine specifications
                 </h3>
 
                 {product.table && product.table.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto border border-brand-sand">
+                    <table className="w-full border-collapse">
                       <tbody>
                         {product.table.map((row, rowIndex) => (
                           <tr
                             key={rowIndex}
-                            className={`border-b ${
-                              rowIndex === 0 ? "bg-gray-100 font-semibold" : ""
+                            className={`border-b border-brand-sand last:border-0 ${
+                              rowIndex === 0 ? "bg-brand-sage/20 font-bold font-sans text-brand-forest" : "text-brand-charcoal"
                             }`}
                           >
                             {row.map((cell, colIndex) => (
                               <td
                                 key={colIndex}
-                                className="px-4 py-3 border-r text-sm"
+                                className={`px-3 py-2 text-xs font-semibold border-r border-brand-sand last:border-r-0 ${
+                                  rowIndex === 0 ? "uppercase tracking-wider font-sans text-[10px]" : ""
+                                }`}
                               >
                                 {cell}
                               </td>
@@ -202,22 +214,23 @@ Thank you.
                     </table>
                   </div>
                 ) : (
-                  <p className="text-gray-400">
-                    No specification table available
+                  <p className="text-brand-gray text-xs font-semibold">
+                    No specifications list available for this unit.
                   </p>
                 )}
               </div>
 
               {/* CLIENT INQUIRY FORM */}
+              <div className="bg-brand-cream/40 border border-brand-sand p-4 space-y-3">
+                <h3 className="font-serif text-base font-bold text-brand-forest lowercase">
+                  send inquiry
+                </h3>
 
-              <div className="bg-brand-light p-6 rounded-xl mb-6">
-                <h3 className="font-bold text-lg mb-4">Send Inquiry</h3>
-
-                <div className="space-y-3">
+                <div className="space-y-2 font-semibold">
                   <input
                     type="text"
                     placeholder="Your Name"
-                    className="w-full p-3 border rounded-lg"
+                    className="w-full py-2 px-3 border border-brand-sand focus:border-brand-forest bg-white outline-none rounded-none text-xs placeholder:text-brand-gray/50 transition-all font-semibold"
                     value={client.name}
                     onChange={(e) =>
                       setClient({ ...client, name: e.target.value })
@@ -230,7 +243,7 @@ Thank you.
                     maxLength={10}
                     pattern="[0-9]{10}"
                     placeholder="Mobile Number"
-                    className="w-full p-3 border rounded-lg"
+                    className="w-full py-2 px-3 border border-brand-sand focus:border-brand-forest bg-white outline-none rounded-none text-xs placeholder:text-brand-gray/50 transition-all font-semibold"
                     value={client.phone}
                     onChange={(e) =>
                       setClient({ ...client, phone: e.target.value })
@@ -240,7 +253,7 @@ Thank you.
                   <input
                     type="text"
                     placeholder="City"
-                    className="w-full p-3 border rounded-lg"
+                    className="w-full py-2 px-3 border border-brand-sand focus:border-brand-forest bg-white outline-none rounded-none text-xs placeholder:text-brand-gray/50 transition-all font-semibold"
                     value={client.city}
                     onChange={(e) =>
                       setClient({ ...client, city: e.target.value })
@@ -250,22 +263,22 @@ Thank you.
               </div>
 
               {/* WHATSAPP BUTTON */}
-
               <a
                 href={isFormValid ? generateWhatsAppLink() : "#"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-bold transition
+                className={`flex items-center justify-center gap-3 px-6 py-4.5 rounded-none font-bold uppercase tracking-widest text-xs font-sans border transition-all duration-300
                 ${
                   isFormValid
-                    ? "bg-green-600 text-white hover:bg-green-700"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    ? "bg-green-600 border-green-600 text-white hover:bg-transparent hover:text-green-600"
+                    : "bg-brand-cream border-brand-sand text-brand-gray/40 cursor-not-allowed"
                 }`}
               >
-                <Phone className="w-5 h-5" />
-                Send Inquiry on WhatsApp
+                <Phone className="w-4 h-4 shrink-0" />
+                Inquire on WhatsApp
               </a>
             </div>
+            
           </div>
         </div>
       </main>
