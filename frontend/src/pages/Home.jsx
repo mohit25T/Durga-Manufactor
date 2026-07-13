@@ -80,7 +80,7 @@ function Home() {
               <div className="flex gap-3 items-start">
                 <CheckCircle2 className="w-4 h-4 text-brand-forest shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-bold text-brand-forest text-sm uppercase tracking-wider font-sans">15+ Years</h4>
+                  <h4 className="font-bold text-brand-forest text-sm uppercase tracking-wider font-sans">22+ Years</h4>
                   <p className="text-xs text-brand-gray font-semibold">Manufacturing Excellence</p>
                 </div>
               </div>
