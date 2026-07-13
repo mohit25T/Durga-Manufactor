@@ -13,7 +13,7 @@ function Navbar() {
     >
       {/* Announcement Bar */}
       <div className="bg-brand-amber text-brand-slateDark text-[11px] md:text-xs font-bold py-2.5 px-4 text-center tracking-widest uppercase border-b border-white/10">
-        Free Pan-India Delivery & Demo Support | Call +91 98298 70821
+        Free Pan-India Delivery & Demo Support | Call +91 98258 70821
       </div>
 
       <nav className="bg-brand-slateDark border-b border-white/10 flex justify-between items-center px-6 md:px-12 py-5">
@@ -53,7 +53,7 @@ function Navbar() {
         <motion.a
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          href="tel:+919829870821"
+          href="tel:+919825870821"
           className="bg-brand-amber hover:bg-white border border-brand-amber hover:border-white text-brand-slateDark px-6 py-3 rounded-none font-bold font-sans text-[11px] tracking-widest uppercase transition-all duration-300 hidden sm:block"
         >
           Call Now

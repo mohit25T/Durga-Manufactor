@@ -8,7 +8,7 @@ function EditProduct() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const DEFAULT_WHATSAPP_NUMBERS = "919829870821, 919428156213, 919909917008";
+  const DEFAULT_WHATSAPP_NUMBERS = "919825870821, 919428156213, 919909917008";
   const [useDefaultWhatsApp, setUseDefaultWhatsApp] = useState(false);
 
   const [product, setProduct] = useState({

@@ -74,10 +74,10 @@ function Contact() {
                         Sales & Support
                       </p>
                       <a
-                        href="tel:+919829870821"
+                        href="tel:+919825870821"
                         className="text-base font-bold text-brand-forest hover:underline block"
                       >
-                        +91 98298 70821
+                        +91 98258 70821
                       </a>
                       <a
                         href="tel:+919428156213"
