@@ -87,10 +87,10 @@ function Footer() {
               </div>
               <div className="flex flex-col space-y-1">
                 <a
-                  href="tel:+919825270821"
+                  href="tel:+919829870821"
                   className="text-white/70 hover:text-brand-amber font-bold transition"
                 >
-                  +91 98252 70821
+                  +91 98298 70821
                 </a>
                 <a
                   href="tel:+919428156213"
