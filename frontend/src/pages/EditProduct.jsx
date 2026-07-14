@@ -196,24 +196,27 @@ function EditProduct() {
         <div className="flex items-center gap-4 mb-10">
           <Link
             to="/admin/products"
-            className="w-12 h-12 bg-brand-light rounded-xl border border-brand-sand flex items-center justify-center"
+            className="w-12 h-12 bg-brand-light rounded-none border border-brand-sand flex items-center justify-center"
           >
             <ArrowLeft className="w-6 h-6" />
           </Link>
 
-          <h1 className="text-2xl font-bold">Edit Machine</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-brand-slateDark mb-2 tracking-tight">Edit Machine</h1>
+            <p className="text-brand-gray text-sm">Update the machine specifications and details.</p>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
           {/* LEFT SIDE */}
 
           <div className="lg:col-span-2 space-y-8">
-            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand">
+            <div className="bg-brand-light p-6 rounded-none shadow border border-brand-sand">
               <label className="text-sm font-bold block mb-1">Machine Name</label>
 
               <input
                 value={product.name}
-                className="w-full py-2 px-3 text-sm bg-stone-50 rounded-lg border border-brand-sand/60"
+                className="w-full py-2 px-3 text-sm bg-stone-50 rounded-none border border-brand-sand/60"
                 onChange={(e) =>
                   setProduct({
                     ...product,
@@ -227,7 +230,7 @@ function EditProduct() {
               <textarea
                 rows="4"
                 value={product.description}
-                className="w-full py-2 px-3 text-sm bg-stone-50 rounded-lg border border-brand-sand/60"
+                className="w-full py-2 px-3 text-sm bg-stone-50 rounded-none border border-brand-sand/60"
                 onChange={(e) =>
                   setProduct({
                     ...product,
@@ -246,7 +249,7 @@ function EditProduct() {
                 <button
                   type="button"
                   onClick={addRow}
-                  className="bg-black text-white px-4 py-2 rounded"
+                  className="bg-black text-white px-4 py-2 rounded-none"
                 >
                   + Row
                 </button>
@@ -254,48 +257,60 @@ function EditProduct() {
                 <button
                   type="button"
                   onClick={addColumn}
-                  className="bg-black text-white px-4 py-2 rounded"
+                  className="bg-black text-white px-4 py-2 rounded-none"
                 >
                   + Column
                 </button>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="border w-full">
+                <table className="border w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-stone-100/50 border-b">
+                      {tableData[0]?.map((_, colIndex) => (
+                        <th key={colIndex} className="border p-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          <div className="flex items-center justify-between gap-2">
+                            <span>Col {colIndex + 1}</span>
+                            <button
+                              type="button"
+                              onClick={() => deleteColumn(colIndex)}
+                              className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/50 px-2 py-1 rounded-none text-[10px] font-bold tracking-wide uppercase transition-all duration-200 hover:shadow-sm"
+                              title={`Delete Column ${colIndex + 1}`}
+                            >
+                              ✕ Col
+                            </button>
+                          </div>
+                        </th>
+                      ))}
+                      <th className="border p-2 text-xs font-bold text-gray-500 uppercase tracking-wider w-32 text-center">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {tableData.map((row, rowIndex) => (
                       <tr key={rowIndex}>
                         {row.map((cell, colIndex) => (
                           <td key={colIndex} className="border p-2">
-                            <div className="flex gap-2">
-                              <input
-                                value={cell}
-                                className="w-full p-2 bg-gray-100 rounded border border-brand-sand/60"
-                                onChange={(e) =>
-                                  handleCellChange(
-                                    rowIndex,
-                                    colIndex,
-                                    e.target.value,
-                                  )
-                                }
-                              />
-
-                              <button
-                                type="button"
-                                onClick={() => deleteColumn(colIndex)}
-                                className="bg-rose-50 text-rose-600 hover:bg-rose-100 px-2 rounded border border-rose-200/50"
-                              >
-                                ✕
-                              </button>
-                            </div>
+                            <input
+                              value={cell}
+                              className="w-full p-2 bg-gray-100 rounded-none border border-brand-sand/60 focus:outline-none focus:ring-1 focus:ring-brand-amber/80 focus:border-brand-amber/80 transition-all duration-150"
+                              onChange={(e) =>
+                                handleCellChange(
+                                  rowIndex,
+                                  colIndex,
+                                  e.target.value,
+                                )
+                              }
+                            />
                           </td>
                         ))}
 
-                        <td className="border p-2">
+                        <td className="border p-2 text-center">
                           <button
                             type="button"
                             onClick={() => deleteRow(rowIndex)}
-                            className="bg-rose-100 text-rose-700 hover:bg-rose-200 px-3 py-1 rounded border border-rose-200"
+                            className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/60 px-3 py-1.5 rounded-none text-xs font-semibold tracking-wide transition-all duration-200 hover:shadow-sm"
                           >
                             Delete Row
                           </button>
@@ -307,13 +322,13 @@ function EditProduct() {
               </div>
             </div>
 
-            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand">
+            <div className="bg-brand-light p-6 rounded-none shadow border border-brand-sand">
               <label className="text-sm font-bold mb-1 block">Price</label>
 
               <input
                 type="number"
                 value={product.price}
-                className="w-full py-2 px-3 text-sm bg-stone-50 rounded-lg border border-brand-sand/60"
+                className="w-full py-2 px-3 text-sm bg-stone-50 rounded-none border border-brand-sand/60"
                 onChange={(e) =>
                   setProduct({
                     ...product,
@@ -327,12 +342,12 @@ function EditProduct() {
           {/* RIGHT SIDE */}
 
           <div className="space-y-8">
-            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand">
+            <div className="bg-brand-light p-6 rounded-none shadow border border-brand-sand">
               <label className="text-sm font-bold mb-1 block">Category</label>
 
               <input
                 value={product.category}
-                className="w-full py-2 px-3 text-sm bg-stone-50 rounded-lg border border-brand-sand/60"
+                className="w-full py-2 px-3 text-sm bg-stone-50 rounded-none border border-brand-sand/60"
                 onChange={(e) =>
                   setProduct({
                     ...product,
@@ -342,7 +357,7 @@ function EditProduct() {
               />
             </div>
 
-            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand">
+            <div className="bg-brand-light p-6 rounded-none shadow border border-brand-sand">
               <label className="text-sm font-bold mb-1 block">WhatsApp Contacts</label>
               <div className="flex items-center gap-2 mb-2">
                 <input
@@ -350,7 +365,7 @@ function EditProduct() {
                   id="useDefaultWhatsApp"
                   checked={useDefaultWhatsApp}
                   onChange={handleCheckboxChange}
-                  className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 cursor-pointer"
+                  className="w-4 h-4 text-orange-500 border-gray-300 rounded-none focus:ring-orange-500 cursor-pointer"
                 />
                 <label htmlFor="useDefaultWhatsApp" className="text-xs font-semibold text-gray-600 cursor-pointer select-none">
                   Use default contact numbers
@@ -358,7 +373,7 @@ function EditProduct() {
               </div>
               <input
                 value={product.whatsappNumbers}
-                className="w-full py-2 px-3 text-sm bg-stone-50 rounded-lg border border-brand-sand/60"
+                className="w-full py-2 px-3 text-sm bg-stone-50 rounded-none border border-brand-sand/60"
                 placeholder="WhatsApp Numbers (comma separated)"
                 onChange={(e) => {
                   const value = e.target.value;
@@ -371,7 +386,7 @@ function EditProduct() {
               />
             </div>
 
-            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand">
+            <div className="bg-brand-light p-6 rounded-none shadow border border-brand-sand">
               <input
                 type="file"
                 multiple
@@ -383,12 +398,12 @@ function EditProduct() {
               <div className="grid grid-cols-2 gap-3">
                 {preview.map((img, i) => (
                   <div key={i} className="relative">
-                    <img src={img} className="rounded-lg" />
+                    <img src={img} className="rounded-none" />
 
                     <button
                       type="button"
                       onClick={() => deleteImage(img)}
-                      className="absolute top-2 right-2 bg-rose-100 text-rose-700 hover:bg-rose-200 p-1.5 rounded border border-rose-200"
+                      className="absolute top-2 right-2 bg-rose-100 text-rose-700 hover:bg-rose-200 p-1.5 rounded-none border border-rose-200"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -397,12 +412,12 @@ function EditProduct() {
 
                 {newPreview.map((img, i) => (
                   <div key={i} className="relative">
-                    <img src={img} className="rounded-lg" />
+                    <img src={img} className="rounded-none" />
 
                     <button
                       type="button"
                       onClick={() => removeNewImage(i)}
-                      className="absolute top-2 right-2 bg-rose-100 text-rose-700 hover:bg-rose-200 p-1.5 rounded border border-rose-200"
+                      className="absolute top-2 right-2 bg-rose-100 text-rose-700 hover:bg-rose-200 p-1.5 rounded-none border border-rose-200"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -413,7 +428,7 @@ function EditProduct() {
 
             <button
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2"
+              className="w-full bg-orange-500 text-white py-4 rounded-none font-bold flex items-center justify-center gap-2"
             >
               {loading ? <RefreshCw className="animate-spin" /> : <Save />}
               Save Updates

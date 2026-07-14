@@ -44,17 +44,17 @@ function Leads() {
           <input 
             type="text" 
             placeholder="Search leads..." 
-            className="w-full md:w-80 pl-10 pr-4 py-2 bg-stone-50 border border-brand-sand rounded-lg shadow-sm outline-none focus:border-brand-amber focus:ring-4 focus:ring-brand-amber/10 transition-all font-semibold text-brand-slateDark text-sm"
+            className="w-full md:w-80 pl-10 pr-4 py-2 bg-stone-50 border border-brand-sand rounded-none shadow-sm outline-none focus:border-brand-amber focus:ring-4 focus:ring-brand-amber/10 transition-all font-semibold text-brand-slateDark text-sm"
           />
         </div>
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center h-64 bg-brand-light rounded-xl shadow-sm border border-brand-sand">
+        <div className="flex justify-center items-center h-64 bg-brand-light rounded-none shadow-sm border border-brand-sand">
           <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-brand-amber"></div>
         </div>
       ) : leads.length === 0 ? (
-        <div className="bg-brand-light rounded-xl shadow-sm border border-brand-sand p-10 text-center flex flex-col items-center">
+        <div className="bg-brand-light rounded-none shadow-sm border border-brand-sand p-10 text-center flex flex-col items-center">
           <div className="w-16 h-16 bg-brand-light rounded-full flex items-center justify-center mb-4 text-brand-gray">
             <Inbox className="w-8 h-8" />
           </div>
@@ -70,16 +70,16 @@ function Leads() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-brand-light rounded-xl p-5 shadow-sm hover:shadow-md border border-brand-sand hover:border-brand-amber/50 transition-all flex flex-col relative group"
+                className="bg-brand-light rounded-none p-5 shadow-sm hover:shadow-md border border-brand-sand hover:border-brand-amber/50 transition-all flex flex-col relative group"
               >
                 {/* ID Tag */}
-                <div className="absolute top-5 right-5 flex items-center gap-1.5 px-3 py-1 bg-brand-light text-brand-gray rounded-full text-xs font-bold uppercase">
+                <div className="absolute top-5 right-5 flex items-center gap-1.5 px-3 py-1 bg-brand-light text-brand-gray rounded-none text-xs font-bold uppercase">
                   <Hash className="w-3 h-3" />
                   {lead._id.slice(-6)}
                 </div>
 
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-slateDark to-brand-slate text-white flex items-center justify-center font-bold text-lg shadow-md shadow-brand-slateDark/20">
+                  <div className="w-10 h-10 rounded-none bg-gradient-to-br from-brand-slateDark to-brand-slate text-white flex items-center justify-center font-bold text-lg shadow-md shadow-brand-slateDark/20">
                     {lead.name.charAt(0)}
                   </div>
                   <div>
@@ -94,7 +94,7 @@ function Leads() {
                 <div className="space-y-2 mb-4 flex-grow">
                   {lead.phone && (
                     <div className="flex items-center gap-3 text-brand-slate font-medium text-xs">
-                      <div className="w-7 h-7 rounded-md bg-brand-amber/10 flex items-center justify-center shrink-0">
+                      <div className="w-7 h-7 rounded-none bg-brand-amber/10 flex items-center justify-center shrink-0">
                         <Phone className="w-3 h-3 text-brand-amber" />
                       </div>
                       {lead.phone}
@@ -102,7 +102,7 @@ function Leads() {
                   )}
                   {lead.email && (
                     <div className="flex items-center gap-3 text-brand-slate font-medium text-xs">
-                      <div className="w-7 h-7 rounded-md bg-brand-amber/10 flex items-center justify-center shrink-0">
+                      <div className="w-7 h-7 rounded-none bg-brand-amber/10 flex items-center justify-center shrink-0">
                         <Mail className="w-3 h-3 text-brand-amber" />
                       </div>
                       <a href={`mailto:${lead.email}`} className="hover:text-brand-amber underline decoration-transparent hover:decoration-brand-amber transition-colors break-all">
@@ -112,7 +112,7 @@ function Leads() {
                   )}
                 </div>
 
-                <div className="bg-brand-light p-4 rounded-xl border border-brand-sand/50 relative">
+                <div className="bg-brand-light p-4 rounded-none border border-brand-sand/50 relative">
                    <div className="absolute top-0 left-5 -translate-y-1/2 w-4 h-4 bg-brand-light rotate-45 transform origin-center border-t border-l border-brand-sand/50"></div>
                   <p className="text-brand-slateDark italic text-xs leading-relaxed whitespace-pre-wrap">{lead.message}</p>
                 </div>

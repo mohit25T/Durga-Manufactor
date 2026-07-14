@@ -16,12 +16,12 @@ function AdminLayout({ children }) {
         {/* Mobile Header Bar */}
         <header className="lg:hidden bg-brand-slateDark text-white p-4 flex items-center justify-between sticky top-0 z-30 shadow-md border-b border-brand-amber/20">
           <div className="flex items-center gap-2">
-             <div className="w-8 h-8 bg-brand-amber rounded-lg flex items-center justify-center">
+             <div className="w-8 h-8 bg-brand-amber rounded-none flex items-center justify-center">
                 <span className="text-brand-slateDark font-extrabold text-sm">D</span>
               </div>
              <span className="font-bold">Admin Portal</span>
           </div>
-          <button onClick={() => setIsSidebarOpen(true)} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+          <button onClick={() => setIsSidebarOpen(true)} className="p-1 hover:bg-white/10 rounded-none transition-colors">
             <Icons.Menu className="w-6 h-6" />
           </button>
         </header>

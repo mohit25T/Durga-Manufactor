@@ -158,17 +158,17 @@ function AddProduct() {
         <div className="flex items-center gap-4 mb-10">
           <Link
             to="/admin/products"
-            className="w-12 h-12 bg-brand-light rounded-xl border border-brand-sand shadow-sm flex items-center justify-center"
+            className="w-12 h-12 bg-brand-light rounded-none border border-brand-sand shadow-sm flex items-center justify-center"
           >
             <ArrowLeft className="w-6 h-6 text-black" />
           </Link>
 
           <div>
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-2xl font-bold text-brand-slateDark mb-2 tracking-tight">
               Add New Machine
             </h1>
 
-            <p className="text-gray-500 text-sm">
+            <p className="text-brand-gray text-sm">
               Create a new product listing in your catalog.
             </p>
           </div>
@@ -178,7 +178,7 @@ function AddProduct() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 p-6 bg-green-50 rounded-2xl border flex items-center gap-4"
+            className="mb-8 p-6 bg-green-50 rounded-none border flex items-center gap-4"
           >
             <CheckCircle2 className="text-green-600" />
             Product Added Successfully!
@@ -191,7 +191,7 @@ function AddProduct() {
 
           <div className="lg:col-span-2 space-y-8">
 
-            <div className="bg-brand-light p-8 rounded-2xl shadow border border-brand-sand">
+            <div className="bg-brand-light p-8 rounded-none shadow border border-brand-sand">
 
               <div className="flex items-center gap-3 mb-6 border-b pb-4">
                 <Info className="text-orange-500" />
@@ -203,7 +203,7 @@ function AddProduct() {
               <input
                 required
                 placeholder="Machine Name"
-                className="w-full px-4 py-3 bg-stone-50 rounded-lg mb-4 border border-brand-sand/60"
+                className="w-full px-4 py-3 bg-stone-50 rounded-none mb-4 border border-brand-sand/60"
                 onChange={(e) =>
                   setProduct({ ...product, name: e.target.value })
                 }
@@ -213,7 +213,7 @@ function AddProduct() {
                 required
                 rows="4"
                 placeholder="Description"
-                className="w-full px-4 py-3 bg-stone-50 rounded-lg mb-6 border border-brand-sand/60"
+                className="w-full px-4 py-3 bg-stone-50 rounded-none mb-6 border border-brand-sand/60"
                 onChange={(e) =>
                   setProduct({ ...product, description: e.target.value })
                 }
@@ -230,7 +230,7 @@ function AddProduct() {
                 <button
                   type="button"
                   onClick={addRow}
-                  className="bg-black text-white px-4 py-2 rounded"
+                  className="bg-black text-white px-4 py-2 rounded-none"
                 >
                   + Add Row
                 </button>
@@ -238,7 +238,7 @@ function AddProduct() {
                 <button
                   type="button"
                   onClick={addColumn}
-                  className="bg-black text-white px-4 py-2 rounded"
+                  className="bg-black text-white px-4 py-2 rounded-none"
                 >
                   + Add Column
                 </button>
@@ -246,67 +246,60 @@ function AddProduct() {
               </div>
 
               <div className="overflow-x-auto">
-
-                <table className="border w-full">
-
+                <table className="border w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-stone-100/50 border-b">
+                      {tableData[0]?.map((_, colIndex) => (
+                        <th key={colIndex} className="border p-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          <div className="flex items-center justify-between gap-2">
+                            <span>Col {colIndex + 1}</span>
+                            <button
+                              type="button"
+                              onClick={() => deleteColumn(colIndex)}
+                              className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/50 px-2 py-1 rounded-none text-[10px] font-bold tracking-wide uppercase transition-all duration-200 hover:shadow-sm"
+                              title={`Delete Column ${colIndex + 1}`}
+                            >
+                              ✕ Col
+                            </button>
+                          </div>
+                        </th>
+                      ))}
+                      <th className="border p-2 text-xs font-bold text-gray-500 uppercase tracking-wider w-32 text-center">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
                   <tbody>
-
                     {tableData.map((row, rowIndex) => (
-
                       <tr key={rowIndex}>
-
                         {row.map((cell, colIndex) => (
-
                           <td key={colIndex} className="border p-2">
-
-                            <div className="flex gap-2">
-
-                              <input
-                                className="w-full p-2 bg-stone-50 rounded border border-brand-sand/60"
-                                value={cell}
-                                onChange={(e) =>
-                                  handleCellChange(
-                                    rowIndex,
-                                    colIndex,
-                                    e.target.value
-                                  )
-                                }
-                              />
-
-                              <button
-                                type="button"
-                                onClick={() => deleteColumn(colIndex)}
-                                className="bg-rose-50 text-rose-600 hover:bg-rose-100 px-2 rounded border border-rose-200/50"
-                              >
-                                ✕
-                              </button>
-
-                            </div>
-
+                            <input
+                              className="w-full p-2 bg-stone-50 rounded-none border border-brand-sand/60 focus:outline-none focus:ring-1 focus:ring-brand-amber/80 focus:border-brand-amber/80 transition-all duration-150"
+                              value={cell}
+                              onChange={(e) =>
+                                handleCellChange(
+                                  rowIndex,
+                                  colIndex,
+                                  e.target.value
+                                )
+                              }
+                            />
                           </td>
-
                         ))}
-
-                        <td className="border p-2">
-
+                        <td className="border p-2 text-center">
                           <button
                             type="button"
                             onClick={() => deleteRow(rowIndex)}
-                            className="bg-rose-100 text-rose-700 hover:bg-rose-200 px-3 py-1 rounded border border-rose-200"
+                            className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/60 px-3 py-1.5 rounded-none text-xs font-semibold tracking-wide transition-all duration-200 hover:shadow-sm"
                           >
                             Delete Row
                           </button>
-
                         </td>
-
                       </tr>
-
                     ))}
-
                   </tbody>
-
                 </table>
-
               </div>
 
             </div>
@@ -317,31 +310,31 @@ function AddProduct() {
 
           <div className="space-y-8">
 
-            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand">
+            <div className="bg-brand-light p-6 rounded-none shadow border border-brand-sand">
               <label className="text-sm font-bold block mb-1">Category</label>
               <input
                 required
                 placeholder="Category"
-                className="w-full px-4 py-3 bg-stone-50 rounded-lg border border-brand-sand/60"
+                className="w-full px-4 py-3 bg-stone-50 rounded-none border border-brand-sand/60"
                 onChange={(e) =>
                   setProduct({ ...product, category: e.target.value })
                 }
               />
             </div>
 
-            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand">
+            <div className="bg-brand-light p-6 rounded-none shadow border border-brand-sand">
               <label className="text-sm font-bold block mb-1">Price</label>
               <input
                 type="number"
                 placeholder="Price"
-                className="w-full px-4 py-3 bg-stone-50 rounded-lg border border-brand-sand/60"
+                className="w-full px-4 py-3 bg-stone-50 rounded-none border border-brand-sand/60"
                 onChange={(e) =>
                   setProduct({ ...product, price: e.target.value })
                 }
               />
             </div>
 
-            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand space-y-3">
+            <div className="bg-brand-light p-6 rounded-none shadow border border-brand-sand space-y-3">
               <label className="text-sm font-bold block">WhatsApp Contacts</label>
               <div className="flex items-center gap-2">
                 <input
@@ -349,7 +342,7 @@ function AddProduct() {
                   id="useDefaultWhatsApp"
                   checked={useDefaultWhatsApp}
                   onChange={handleCheckboxChange}
-                  className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 cursor-pointer"
+                  className="w-4 h-4 text-orange-500 border-gray-300 rounded-none focus:ring-orange-500 cursor-pointer"
                 />
                 <label htmlFor="useDefaultWhatsApp" className="text-xs font-semibold text-gray-600 cursor-pointer select-none">
                   Use default contact numbers
@@ -358,7 +351,7 @@ function AddProduct() {
               <input
                 placeholder="WhatsApp Numbers (comma-separated)"
                 value={product.whatsappNumbers}
-                className="w-full px-4 py-3 bg-stone-50 rounded-lg border border-brand-sand/60"
+                className="w-full px-4 py-3 bg-stone-50 rounded-none border border-brand-sand/60"
                 onChange={(e) => {
                   const value = e.target.value;
                   setProduct({
@@ -370,13 +363,13 @@ function AddProduct() {
               />
             </div>
 
-            <div className="bg-brand-light p-6 rounded-2xl shadow border border-brand-sand space-y-4">
+            <div className="bg-brand-light p-6 rounded-none shadow border border-brand-sand space-y-4">
               <label className="text-sm font-bold block">Product Images</label>
               <input
                 type="file"
                 multiple
                 onChange={handleImageChange}
-                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
               />
             </div>
 
@@ -390,13 +383,13 @@ function AddProduct() {
 
                   <img
                     src={img}
-                    className="rounded-lg"
+                    className="rounded-none"
                   />
 
                   <button
                     type="button"
                     onClick={() => removeImage(index)}
-                    className="absolute top-1 right-1 bg-rose-100 text-rose-700 hover:bg-rose-200 px-2 py-1 rounded text-xs border border-rose-200"
+                    className="absolute top-1 right-1 bg-rose-100 text-rose-700 hover:bg-rose-200 px-2 py-1 rounded-none text-xs border border-rose-200"
                   >
                     ✕
                   </button>
@@ -410,7 +403,7 @@ function AddProduct() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange-500 text-white py-4 rounded-xl font-bold text-lg"
+              className="w-full bg-orange-500 text-white py-4 rounded-none font-bold text-lg"
             >
               {loading ? "Saving..." : "Publish Product"}
             </button>

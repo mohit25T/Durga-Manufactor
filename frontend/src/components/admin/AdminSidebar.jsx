@@ -36,14 +36,14 @@ function AdminSidebar({ isOpen, setIsOpen }) {
 
       {/* Sidebar */}
       <motion.aside
-        className={`fixed top-0 left-0 h-screen w-50 bg-brand-slateDark text-white z-50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 border-r border-brand-amber/20 ${
+        className={`fixed top-0 left-0 h-screen w-64 bg-brand-slateDark text-white z-50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 border-r border-brand-amber/20 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Header */}
         <div className="p-6 flex items-center justify-between border-b border-white/10">
           <Link to="/admin/dashboard" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-brand-amber rounded-xl flex items-center justify-center shadow-lg shadow-brand-amber/20">
+            <div className="w-10 h-10 bg-brand-amber rounded-none flex items-center justify-center shadow-lg shadow-brand-amber/20">
               <span className="text-brand-slateDark font-extrabold text-xl">D</span>
             </div>
             <div>
@@ -67,7 +67,7 @@ function AdminSidebar({ isOpen, setIsOpen }) {
                 key={item.path}
                 to={item.path}
                 onClick={() => setIsOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-none transition-all duration-200 group relative overflow-hidden ${
                   isActive ? "text-brand-slateDark font-bold bg-brand-amber shadow-lg shadow-brand-amber/20" : "text-brand-gray hover:text-white hover:bg-white/5"
                 }`}
               >
@@ -82,7 +82,7 @@ function AdminSidebar({ isOpen, setIsOpen }) {
         <div className="p-4 border-t border-white/10">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full text-left text-brand-gray hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-colors font-medium"
+            className="flex items-center gap-3 px-4 py-3 w-full text-left text-brand-gray hover:text-red-400 hover:bg-red-400/10 rounded-none transition-colors font-medium"
           >
             <Icons.LogOut className="w-5 h-5" />
             Sign Out

@@ -48,7 +48,7 @@ function Login() {
 
         <div className="relative z-20">
           <div className="flex items-center gap-3 mb-16">
-            <div className="w-12 h-12 bg-brand-amber rounded-xl flex items-center justify-center shadow-lg shadow-brand-amber/20">
+            <div className="w-12 h-12 bg-brand-amber rounded-none flex items-center justify-center shadow-lg shadow-brand-amber/20">
               <span className="text-brand-slateDark font-extrabold text-2xl">D</span>
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight">Durga Manufactures</h1>
@@ -73,10 +73,10 @@ function Login() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md bg-white rounded-[2rem] p-10 shadow-2xl shadow-brand-slateDark/5 border border-brand-slate/5 relative z-10"
+          className="w-full max-w-md bg-white rounded-none p-10 shadow-2xl shadow-brand-slateDark/5 border border-brand-slate/5 relative z-10"
         >
           <div className="lg:hidden flex items-center gap-3 mb-10 justify-center">
-            <div className="w-12 h-12 bg-brand-amber rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-brand-amber rounded-none flex items-center justify-center shadow-lg">
               <span className="text-brand-slateDark font-extrabold text-2xl">D</span>
             </div>
           </div>
@@ -87,7 +87,7 @@ function Login() {
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-semibold text-center">
+            <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-none text-sm font-semibold text-center">
               {error}
             </div>
           )}
@@ -103,7 +103,7 @@ function Login() {
                   type="email"
                   required
                   placeholder="admin@durgamanufactures.com"
-                  className="w-full pl-12 pr-4 py-4 bg-brand-light border-2 border-transparent focus:border-brand-amber rounded-xl outline-none transition-all font-medium text-brand-slateDark focus:bg-white focus:shadow-lg focus:shadow-brand-amber/10 placeholder:text-brand-gray/60"
+                  className="w-full pl-12 pr-4 py-4 bg-brand-light border-2 border-transparent focus:border-brand-amber rounded-none outline-none transition-all font-medium text-brand-slateDark focus:bg-white focus:shadow-lg focus:shadow-brand-amber/10 placeholder:text-brand-gray/60"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                 />
@@ -120,7 +120,7 @@ function Login() {
                   type="password"
                   required
                   placeholder="••••••••"
-                  className="w-full pl-12 pr-4 py-4 bg-brand-light border-2 border-transparent focus:border-brand-amber rounded-xl outline-none transition-all font-medium text-brand-slateDark focus:bg-white focus:shadow-lg focus:shadow-brand-amber/10 placeholder:text-brand-gray/60"
+                  className="w-full pl-12 pr-4 py-4 bg-brand-light border-2 border-transparent focus:border-brand-amber rounded-none outline-none transition-all font-medium text-brand-slateDark focus:bg-white focus:shadow-lg focus:shadow-brand-amber/10 placeholder:text-brand-gray/60"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                 />
@@ -129,7 +129,7 @@ function Login() {
 
             <button 
               disabled={loading}
-              className="w-full py-4 mt-4 bg-brand-slateDark hover:bg-brand-slate text-white font-bold rounded-xl shadow-xl shadow-brand-slateDark/20 hover:shadow-brand-slateDark/40 transition-all flex items-center justify-center gap-2 group disabled:opacity-70"
+              className="w-full py-4 mt-4 bg-brand-slateDark hover:bg-brand-slate text-white font-bold rounded-none shadow-xl shadow-brand-slateDark/20 hover:shadow-brand-slateDark/40 transition-all flex items-center justify-center gap-2 group disabled:opacity-70"
             >
               {loading ? (
                 <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

@@ -103,13 +103,13 @@ function Products() {
             <input
               type="text"
               placeholder="Search products..."
-              className="w-full pl-10 pr-4 py-2 bg-stone-50 border border-brand-sand rounded-lg outline-none focus:border-brand-amber text-sm font-semibold"
+              className="w-full pl-10 pr-4 py-2 bg-stone-50 border border-brand-sand rounded-none outline-none focus:border-brand-amber text-sm font-semibold"
             />
           </div>
 
           <button
             onClick={() => navigate("/admin/add-product")}
-            className="flex items-center gap-2 bg-brand-slateDark text-white px-4 py-2 rounded-lg font-bold text-sm"
+            className="flex items-center gap-2 bg-brand-slateDark text-white px-4 py-2 rounded-none font-bold text-sm"
           >
             <Plus className="w-4 h-4" />
             Add Product
@@ -118,7 +118,7 @@ function Products() {
       </div>
 
       {/* Table */}
-      <div className="bg-brand-light rounded-xl shadow-md border border-brand-sand overflow-hidden">
+      <div className="bg-brand-light rounded-none shadow-md border border-brand-sand overflow-hidden">
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-brand-amber"></div>
@@ -155,7 +155,7 @@ function Products() {
                     {/* PRODUCT */}
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-brand-light border overflow-hidden">
+                        <div className="w-12 h-12 rounded-none bg-brand-light border overflow-hidden">
                           {product.images?.[0] ? (
                             <img
                               src={product.images[0]}
@@ -183,7 +183,7 @@ function Products() {
 
                     {/* CATEGORY */}
                     <td className="px-6 py-3">
-                      <span className="px-3 py-1 bg-brand-amber/10 text-brand-amber text-xs font-bold rounded-full">
+                      <span className="px-3 py-1 bg-brand-amber/10 text-brand-amber text-xs font-bold rounded-none">
                         {product.category || "N/A"}
                       </span>
                     </td>

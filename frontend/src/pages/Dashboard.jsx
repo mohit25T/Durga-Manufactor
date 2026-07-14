@@ -112,10 +112,10 @@ function Dashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-brand-light rounded-xl p-4 shadow-md shadow-brand-slateDark/5 border border-brand-sand flex items-center gap-4 group hover:-translate-y-1 transition-transform"
+            className="bg-brand-light rounded-none p-4 shadow-md shadow-brand-slateDark/5 border border-brand-sand flex items-center gap-4 group hover:-translate-y-1 transition-transform"
           >
             <div
-              className={`w-12 h-12 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}
+              className={`w-12 h-12 rounded-none ${stat.bg} ${stat.color} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}
             >
               <stat.icon className="w-6 h-6" />
             </div>
@@ -141,11 +141,11 @@ function Dashboard() {
       <div className="grid md:grid-cols-3 gap-6">
         <Link
           to="/admin/add-product"
-          className="group relative overflow-hidden bg-brand-slateDark text-white rounded-xl p-6 hover:shadow-xl hover:shadow-brand-slateDark/20 transition-all flex flex-col items-start gap-3"
+          className="group relative overflow-hidden bg-brand-slateDark text-white rounded-none p-6 hover:shadow-xl hover:shadow-brand-slateDark/20 transition-all flex flex-col items-start gap-3"
         >
           <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full blur-2xl group-hover:bg-brand-amber/20 transition-colors"></div>
 
-          <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md">
+          <div className="w-10 h-10 bg-white/10 rounded-none flex items-center justify-center backdrop-blur-md">
             <PackagePlus className="w-5 h-5 text-brand-amber" />
           </div>
 
@@ -159,9 +159,9 @@ function Dashboard() {
 
         <Link
           to="/admin/products"
-          className="group relative overflow-hidden bg-brand-light text-brand-slate rounded-xl p-6 border border-brand-sand hover:border-brand-amber hover:shadow-xl hover:shadow-brand-amber/10 transition-all flex flex-col items-start gap-3"
+          className="group relative overflow-hidden bg-brand-light text-brand-slate rounded-none p-6 border border-brand-sand hover:border-brand-amber hover:shadow-xl hover:shadow-brand-amber/10 transition-all flex flex-col items-start gap-3"
         >
-          <div className="w-10 h-10 bg-brand-light rounded-xl flex items-center justify-center group-hover:bg-brand-amber/10 transition-colors">
+          <div className="w-10 h-10 bg-brand-light rounded-none flex items-center justify-center group-hover:bg-brand-amber/10 transition-colors">
             <PackageSearch className="w-5 h-5 text-brand-slateDark" />
           </div>
 
@@ -177,9 +177,9 @@ function Dashboard() {
 
         <Link
           to="/admin/leads"
-          className="group relative overflow-hidden bg-brand-light text-brand-slate rounded-xl p-6 border border-brand-sand hover:border-brand-amber hover:shadow-xl hover:shadow-brand-amber/10 transition-all flex flex-col items-start gap-3"
+          className="group relative overflow-hidden bg-brand-light text-brand-slate rounded-none p-6 border border-brand-sand hover:border-brand-amber hover:shadow-xl hover:shadow-brand-amber/10 transition-all flex flex-col items-start gap-3"
         >
-          <div className="w-10 h-10 bg-brand-light rounded-xl flex items-center justify-center group-hover:bg-brand-amber/10 transition-colors">
+          <div className="w-10 h-10 bg-brand-light rounded-none flex items-center justify-center group-hover:bg-brand-amber/10 transition-colors">
             <Users className="w-5 h-5 text-brand-slateDark" />
           </div>
 
