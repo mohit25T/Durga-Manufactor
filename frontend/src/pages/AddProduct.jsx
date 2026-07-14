@@ -185,11 +185,11 @@ function AddProduct() {
           </motion.div>
         )}
 
-        <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
+        <form onSubmit={handleSubmit} className="grid lg:grid-cols-4 gap-8">
 
           {/* LEFT SIDE */}
 
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-3 space-y-8">
 
             <div className="bg-brand-light p-8 rounded-none shadow border border-brand-sand">
 

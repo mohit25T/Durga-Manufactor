@@ -127,10 +127,10 @@ Thank you.
             <span className="text-brand-forest">{product.category}</span>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-8 items-start">
+          <div className="grid lg:grid-cols-5 gap-8 items-start">
             
             {/* PRODUCT IMAGE GALLERY */}
-            <div className="space-y-4">
+            <div className="lg:col-span-2 space-y-4">
               <div className="bg-white border border-brand-sand p-3 shadow-sm">
                 <img
                   src={
@@ -167,7 +167,7 @@ Thank you.
             </div>
 
             {/* PRODUCT INFO */}
-            <div className="bg-white border border-brand-sand p-6 md:p-8 shadow-sm space-y-6">
+            <div className="lg:col-span-3 bg-white border border-brand-sand p-6 md:p-8 shadow-sm space-y-6">
               <div>
                 {product.category && (
                   <span className="text-[10px] font-bold uppercase tracking-widest text-brand-forest bg-brand-sage/40 border border-brand-sand px-2.5 py-1 inline-block mb-4">

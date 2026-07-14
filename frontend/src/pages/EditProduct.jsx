@@ -207,10 +207,10 @@ function EditProduct() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
+        <form onSubmit={handleSubmit} className="grid lg:grid-cols-4 gap-8">
           {/* LEFT SIDE */}
 
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-3 space-y-8">
             <div className="bg-brand-light p-6 rounded-none shadow border border-brand-sand">
               <label className="text-sm font-bold block mb-1">Machine Name</label>
 

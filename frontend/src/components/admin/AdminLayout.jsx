@@ -27,7 +27,7 @@ function AdminLayout({ children }) {
         </header>
  
         {/* Dynamic Page Content */}
-        <main className="flex-1 p-4 lg:p-6 w-full max-w-[1600px] mx-auto overflow-x-hidden">
+        <main className="flex-1 p-4 lg:p-6 w-full max-w-full mx-auto overflow-x-hidden">
           {children}
         </main>
       </div>
