@@ -11,6 +11,9 @@ import {
   Trash2,
   ExternalLink,
   Eye,
+  ArrowUp,
+  ArrowDown,
+  X,
 } from "lucide-react";
 
 function Products() {
@@ -18,7 +21,80 @@ function Products() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const [categoryOrder, setCategoryOrder] = useState([]);
+  const [priorityLoading, setPriorityLoading] = useState(false);
+  const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
+  const [modalCategories, setModalCategories] = useState([]);
+
   const fetched = useRef(false);
+
+  useEffect(() => {
+    const fetchCategoryOrder = async () => {
+      try {
+        const res = await API.get("/settings/categoryOrder");
+        if (res.data?.success && res.data.data) {
+          try {
+            setCategoryOrder(JSON.parse(res.data.data));
+          } catch (e) {
+            console.error("Failed to parse categoryOrder:", e);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading category order:", error);
+      }
+    };
+    fetchCategoryOrder();
+  }, []);
+
+  const handleOpenReorderModal = () => {
+    const uniqueCats = [...new Set(products.map((p) => p.category).filter(Boolean))];
+    
+    // Sort uniqueCats using current categoryOrder
+    const sorted = uniqueCats.sort((a, b) => {
+      const idxA = categoryOrder.indexOf(a);
+      const idxB = categoryOrder.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+
+    setModalCategories(sorted);
+    setIsReorderModalOpen(true);
+  };
+
+  const moveUp = (index) => {
+    if (index === 0) return;
+    const updated = [...modalCategories];
+    const temp = updated[index];
+    updated[index] = updated[index - 1];
+    updated[index - 1] = temp;
+    setModalCategories(updated);
+  };
+
+  const moveDown = (index) => {
+    if (index === modalCategories.length - 1) return;
+    const updated = [...modalCategories];
+    const temp = updated[index];
+    updated[index] = updated[index + 1];
+    updated[index + 1] = temp;
+    setModalCategories(updated);
+  };
+
+  const handleSaveOrder = async () => {
+    setPriorityLoading(true);
+    try {
+      await API.put("/settings/categoryOrder", { value: JSON.stringify(modalCategories) });
+      setCategoryOrder(modalCategories);
+      setIsReorderModalOpen(false);
+      alert("Category order saved successfully!");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to save category order.");
+    } finally {
+      setPriorityLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (fetched.current) return;
@@ -117,6 +193,116 @@ function Products() {
           </button>
         </div>
       </div>
+
+      {/* Priority Display Setting */}
+      <div className="bg-brand-light p-6 rounded-none shadow-md border border-brand-sand mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+          <h2 className="text-base font-bold text-brand-slateDark mb-1">
+            Category Display Order
+          </h2>
+          <p className="text-brand-gray text-xs font-semibold">
+            Customize the order in which categories appear in the customer catalog.
+          </p>
+        </div>
+
+        <button
+          onClick={handleOpenReorderModal}
+          className="flex items-center gap-2 bg-brand-slateDark hover:bg-black text-white px-5 py-2.5 text-xs font-bold uppercase tracking-widest transition-all rounded-none duration-150"
+        >
+          Reorder Categories
+        </button>
+      </div>
+
+      {/* Reorder Modal */}
+      {isReorderModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white max-w-md w-full border border-brand-sand shadow-2xl p-6 relative rounded-none flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center pb-4 border-b border-brand-sand mb-4 shrink-0">
+              <h3 className="font-serif text-lg font-bold text-brand-forest">
+                Set Category Order
+              </h3>
+              <button
+                onClick={() => setIsReorderModalOpen(false)}
+                className="text-brand-gray hover:text-black transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-grow overflow-y-auto py-2 pr-1 space-y-3">
+              <p className="text-brand-gray text-xs font-semibold mb-4 leading-relaxed">
+                Use the Move Up and Move Down buttons to prioritize categories. Categories at the top will be displayed first in the catalog.
+              </p>
+
+              {modalCategories.length === 0 ? (
+                <div className="text-center py-6 text-brand-gray text-xs font-semibold">
+                  No active categories found in inventory.
+                </div>
+              ) : (
+                <div className="divide-y border border-brand-sand/60 divide-brand-sand/40">
+                  {modalCategories.map((cat, idx) => (
+                    <div
+                      key={cat}
+                      className="flex justify-between items-center py-3 px-4 bg-stone-50 hover:bg-stone-100/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="w-6 h-6 flex items-center justify-center bg-brand-forest/10 border border-brand-forest/20 text-brand-forest font-bold text-xs">
+                          {idx + 1}
+                        </span>
+                        <span className="font-bold text-xs uppercase tracking-wider text-brand-slateDark">
+                          {cat}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => moveUp(idx)}
+                          disabled={idx === 0}
+                          className="w-8 h-8 flex items-center justify-center border border-brand-sand hover:border-brand-forest hover:bg-brand-sage/10 text-brand-slate disabled:opacity-30 disabled:pointer-events-none transition-all"
+                          title="Move Up"
+                        >
+                          <ArrowUp className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveDown(idx)}
+                          disabled={idx === modalCategories.length - 1}
+                          className="w-8 h-8 flex items-center justify-center border border-brand-sand hover:border-brand-forest hover:bg-brand-sage/10 text-brand-slate disabled:opacity-30 disabled:pointer-events-none transition-all"
+                          title="Move Down"
+                        >
+                          <ArrowDown className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-4 border-t border-brand-sand mt-4 flex gap-3 justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsReorderModalOpen(false)}
+                className="px-4 py-2 border border-brand-sand text-xs font-bold uppercase tracking-widest text-brand-slate hover:bg-stone-50 transition-all rounded-none"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveOrder}
+                disabled={priorityLoading}
+                className="px-5 py-2 bg-brand-forest text-white border border-brand-forest text-xs font-bold uppercase tracking-widest hover:bg-brand-forest/90 transition-all rounded-none disabled:opacity-50"
+              >
+                {priorityLoading ? "Saving..." : "Save Order"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-brand-light rounded-none shadow-md border border-brand-sand overflow-hidden">

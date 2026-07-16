@@ -12,11 +12,24 @@ function Products() {
   const [selectedHP, setSelectedHP] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [categoryOrder, setCategoryOrder] = useState([]);
+
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchProductsAndSettings = async () => {
       try {
-        const res = await API.get("/products");
-        setProducts(res.data.data);
+        const [productsRes, settingsRes] = await Promise.all([
+          API.get("/products"),
+          API.get("/settings/categoryOrder").catch(() => null)
+        ]);
+
+        setProducts(productsRes.data.data || []);
+        if (settingsRes?.data?.success && settingsRes.data.data) {
+          try {
+            setCategoryOrder(JSON.parse(settingsRes.data.data));
+          } catch (e) {
+            console.error("Failed to parse categoryOrder:", e);
+          }
+        }
       } catch (error) {
         console.log(error);
         // Fallback for UI visualization if API fails or backend is down
@@ -33,7 +46,7 @@ function Products() {
       }
     };
 
-    fetchProducts();
+    fetchProductsAndSettings();
   }, []);
 
   // Extract horsepower helper
@@ -72,7 +85,14 @@ function Products() {
   };
 
   // Derive dynamic options for filters
-  const categories = [...new Set(products.map(p => p.category).filter(Boolean))].sort();
+  const categories = [...new Set(products.map(p => p.category).filter(Boolean))].sort((a, b) => {
+    const indexA = categoryOrder.indexOf(a);
+    const indexB = categoryOrder.indexOf(b);
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    return a.localeCompare(b);
+  });
   const hpOptions = [...new Set(products.map(p => extractHP(p)).filter(Boolean))].sort((a, b) => {
     return parseFloat(a) - parseFloat(b);
   });
@@ -93,6 +113,17 @@ function Products() {
       
     return matchesCategory && matchesHP && matchesSearch;
   });
+
+  // Apply Custom Category Order Sorting
+  if (categoryOrder && categoryOrder.length > 0 && selectedCategory === "ALL") {
+    filteredProducts.sort((a, b) => {
+      const getCategoryIndex = (cat) => {
+        const index = categoryOrder.indexOf(cat);
+        return index === -1 ? Infinity : index;
+      };
+      return getCategoryIndex(a.category) - getCategoryIndex(b.category);
+    });
+  }
 
   const clearFilters = () => {
     setSelectedCategory("ALL");

@@ -14,8 +14,32 @@ function Home() {
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
-        const res = await API.get("/products");
-        setFeatured(res.data.data.slice(0, 3));
+        const [productsRes, settingsRes] = await Promise.all([
+          API.get("/products"),
+          API.get("/settings/categoryOrder").catch(() => null)
+        ]);
+
+        let products = productsRes.data.data || [];
+        const categoryOrderSetting = settingsRes?.data?.success && settingsRes.data.data;
+
+        if (categoryOrderSetting) {
+          try {
+            const categoryOrder = JSON.parse(categoryOrderSetting);
+            if (categoryOrder && categoryOrder.length > 0) {
+              const getCategoryIndex = (cat) => {
+                const index = categoryOrder.indexOf(cat);
+                return index === -1 ? Infinity : index;
+              };
+              products = [...products].sort((a, b) => {
+                return getCategoryIndex(a.category) - getCategoryIndex(b.category);
+              });
+            }
+          } catch (e) {
+            console.error("Failed to parse categoryOrder:", e);
+          }
+        }
+
+        setFeatured(products.slice(0, 3));
       } catch (error) {
         console.log(error);
         setFeatured([

@@ -7,6 +7,7 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import productRoutes from "./routes/product.routes.js";
 import leadRoutes from "./routes/lead.routes.js";
+import settingsRoutes from "./routes/settings.routes.js";
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/leads", leadRoutes);
+app.use("/api/settings", settingsRoutes);
 
 /* Health Check */
 
