@@ -17,6 +17,42 @@ function ProductDetails() {
 
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+
+  const isDragging = useRef(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (zoomScale <= 1) {
+      setPanOffset({ x: 0, y: 0 });
+    }
+  }, [zoomScale]);
+
+  const handleZoomDragStart = (e) => {
+    if (zoomScale <= 1) return;
+    isDragging.current = true;
+    dragStartPos.current = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (err) {}
+  };
+
+  const handleZoomDragMove = (e) => {
+    if (!isDragging.current || zoomScale <= 1) return;
+    // Panning bounds grow with zoomScale level
+    const limitX = 350 * (zoomScale - 1);
+    const limitY = 250 * (zoomScale - 1);
+    const newX = Math.max(-limitX, Math.min(limitX, e.clientX - dragStartPos.current.x));
+    const newY = Math.max(-limitY, Math.min(limitY, e.clientY - dragStartPos.current.y));
+    setPanOffset({ x: newX, y: newY });
+  };
+
+  const handleZoomDragEnd = (e) => {
+    isDragging.current = false;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch (err) {}
+  };
 
   const viewTracked = useRef(false);
 
@@ -410,30 +446,27 @@ Thank you.
             </button>
           </div>
 
-          {/* Image Pan & Zoom Scroll area */}
-          <div className="flex-grow w-full overflow-auto my-4 select-none relative">
-            <div 
-              className="p-8 flex items-center justify-center"
+          {/* Image Drag-to-Pan area */}
+          <div 
+            className="flex-grow w-full overflow-hidden my-4 select-none relative flex items-center justify-center cursor-default touch-none"
+            onPointerDown={handleZoomDragStart}
+            onPointerMove={handleZoomDragMove}
+            onPointerUp={handleZoomDragEnd}
+            onPointerCancel={handleZoomDragEnd}
+          >
+            <img
+              src={selectedImage || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158"}
+              alt={product.name}
+              className="object-contain shadow-2xl bg-white/5 border border-white/5 p-2 select-none pointer-events-none"
               style={{
-                width: `${100 * zoomScale}%`,
-                height: `${100 * zoomScale}%`,
-                minWidth: "100%",
-                minHeight: "100%",
-                transition: "width 0.15s ease-out, height 0.15s ease-out"
+                transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomScale})`,
+                transformOrigin: "center center",
+                maxWidth: "90vw",
+                maxHeight: "80vh",
+                transition: isDragging.current ? "none" : "transform 0.15s ease-out",
+                cursor: zoomScale > 1 ? (isDragging.current ? "grabbing" : "grab") : "default"
               }}
-            >
-              <img
-                src={selectedImage || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158"}
-                alt={product.name}
-                className="object-contain shadow-2xl bg-white/5 border border-white/5 p-2 transition-transform duration-150"
-                style={{
-                  transform: `scale(${zoomScale})`,
-                  transformOrigin: "center center",
-                  maxWidth: "90vw",
-                  maxHeight: "80vh",
-                }}
-              />
-            </div>
+            />
           </div>
 
           {/* Zoom Control Bar */}
