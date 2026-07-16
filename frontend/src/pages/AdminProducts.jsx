@@ -63,21 +63,17 @@ function Products() {
     setIsReorderModalOpen(true);
   };
 
-  const moveUp = (index) => {
-    if (index === 0) return;
-    const updated = [...modalCategories];
-    const temp = updated[index];
-    updated[index] = updated[index - 1];
-    updated[index - 1] = temp;
-    setModalCategories(updated);
-  };
+  const handlePositionChange = (currentIndex, val) => {
+    const targetPos = parseInt(val, 10);
+    if (isNaN(targetPos) || targetPos < 1 || targetPos > modalCategories.length) {
+      return;
+    }
+    const newIndex = targetPos - 1;
+    if (newIndex === currentIndex) return;
 
-  const moveDown = (index) => {
-    if (index === modalCategories.length - 1) return;
     const updated = [...modalCategories];
-    const temp = updated[index];
-    updated[index] = updated[index + 1];
-    updated[index + 1] = temp;
+    const [item] = updated.splice(currentIndex, 1);
+    updated.splice(newIndex, 0, item);
     setModalCategories(updated);
   };
 
@@ -256,25 +252,24 @@ function Products() {
                         </span>
                       </div>
 
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => moveUp(idx)}
-                          disabled={idx === 0}
-                          className="w-8 h-8 flex items-center justify-center border border-brand-sand hover:border-brand-forest hover:bg-brand-sage/10 text-brand-slate disabled:opacity-30 disabled:pointer-events-none transition-all"
-                          title="Move Up"
-                        >
-                          <ArrowUp className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => moveDown(idx)}
-                          disabled={idx === modalCategories.length - 1}
-                          className="w-8 h-8 flex items-center justify-center border border-brand-sand hover:border-brand-forest hover:bg-brand-sage/10 text-brand-slate disabled:opacity-30 disabled:pointer-events-none transition-all"
-                          title="Move Down"
-                        >
-                          <ArrowDown className="w-4 h-4" />
-                        </button>
+                      <div className="flex items-center gap-2">
+                        <label className="text-[10px] font-bold text-brand-gray uppercase tracking-wider">
+                          Position:
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max={modalCategories.length}
+                          key={`${cat}-${idx}`}
+                          defaultValue={idx + 1}
+                          onBlur={(e) => handlePositionChange(idx, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.target.blur();
+                            }
+                          }}
+                          className="w-16 px-2 py-1 text-center border border-brand-sand bg-white font-bold text-xs outline-none focus:border-brand-amber rounded-none"
+                        />
                       </div>
                     </div>
                   ))}
