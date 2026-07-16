@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import API from "../services/api";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, ChevronRight, Phone, X, ZoomIn, ZoomOut } from "lucide-react";
 import ProgressiveImage from "../components/ProgressiveImage";
 import { getOptimizedImageUrl } from "../utils/image";
@@ -250,9 +250,9 @@ Thank you.
                 </div>
                 <motion.div
                   key={selectedImage}
-                  initial={{ opacity: 0, x: swipeDirection.current === "left" ? 40 : swipeDirection.current === "right" ? -40 : 0 }}
+                  initial={{ opacity: 0, x: swipeDirection.current === "left" ? 50 : swipeDirection.current === "right" ? -50 : 0 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
                   className="w-full h-full"
                 >
                   <ProgressiveImage
@@ -427,95 +427,124 @@ Thank you.
       </main>
 
       {/* Fullscreen Zoom Modal */}
-      {isZoomOpen && (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex flex-col justify-between p-4 md:p-6">
-          {/* Header */}
-          <div className="flex justify-between items-center w-full z-10 shrink-0">
-            <h3 className="font-serif text-base font-bold text-white tracking-wide">
-              {product.name}
-            </h3>
-            <button
-              onClick={() => {
-                setIsZoomOpen(false);
-                setZoomScale(1);
-              }}
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center border border-white/10 backdrop-blur-md transition-all duration-150"
-              title="Close Zoom"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Image Drag-to-Pan area */}
-          <div 
-            className="flex-grow w-full overflow-hidden my-4 select-none relative flex items-center justify-center cursor-default touch-none"
-            onPointerDown={handleZoomDragStart}
-            onPointerMove={handleZoomDragMove}
-            onPointerUp={handleZoomDragEnd}
-            onPointerCancel={handleZoomDragEnd}
+      <AnimatePresence>
+        {isZoomOpen && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
+            className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex flex-col justify-between p-4 md:p-6"
           >
-            <img
-              src={selectedImage || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158"}
-              alt={product.name}
-              className="object-contain shadow-2xl bg-white/5 border border-white/5 p-2 select-none pointer-events-none"
-              style={{
-                transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomScale})`,
-                transformOrigin: "center center",
-                maxWidth: "90vw",
-                maxHeight: "80vh",
-                transition: isDragging.current ? "none" : "transform 0.15s ease-out",
-                cursor: zoomScale > 1 ? (isDragging.current ? "grabbing" : "grab") : "default"
-              }}
-            />
-          </div>
-
-          {/* Zoom Control Bar */}
-          <div className="flex justify-center items-center w-full shrink-0 z-10">
-            <div className="bg-white/10 backdrop-blur-md px-6 py-3 border border-white/20 rounded-full flex items-center gap-4">
+            {/* Header */}
+            <div className="flex justify-between items-center w-full z-10 shrink-0">
+              <h3 className="font-serif text-base font-bold text-white tracking-wide">
+                {product.name}
+              </h3>
               <button
-                onClick={() => setZoomScale(prev => Math.max(1, prev - 0.5))}
-                className="text-white hover:text-brand-amber transition-colors disabled:opacity-30 cursor-pointer"
-                disabled={zoomScale <= 1}
-                title="Zoom Out"
+                onClick={() => {
+                  setIsZoomOpen(false);
+                  setZoomScale(1);
+                }}
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center border border-white/10 backdrop-blur-md transition-all duration-150"
+                title="Close Zoom"
               >
-                <ZoomOut className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
-
-              <input
-                type="range"
-                min="1"
-                max="6"
-                step="0.1"
-                value={zoomScale}
-                onChange={(e) => setZoomScale(parseFloat(e.target.value))}
-                className="w-32 md:w-48 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-brand-amber"
-              />
-
-              <button
-                onClick={() => setZoomScale(prev => Math.min(6, prev + 0.5))}
-                className="text-white hover:text-brand-amber transition-colors disabled:opacity-30 cursor-pointer"
-                disabled={zoomScale >= 6}
-                title="Zoom In"
-              >
-                <ZoomIn className="w-4 h-4" />
-              </button>
-
-              <span className="text-white text-xs font-bold font-sans w-12 text-center select-none border-l border-white/10 pl-2">
-                {Math.round(zoomScale * 100)}%
-              </span>
-
-              {zoomScale > 1 && (
-                <button
-                  onClick={() => setZoomScale(1)}
-                  className="bg-brand-amber text-brand-slateDark px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-white transition-colors cursor-pointer"
-                >
-                  Reset
-                </button>
-              )}
             </div>
-          </div>
-        </div>
-      )}
+
+            {/* Image Drag-to-Pan area */}
+            <div 
+              className="flex-grow w-full overflow-hidden my-4 select-none relative flex items-center justify-center cursor-default touch-none"
+              onPointerDown={handleZoomDragStart}
+              onPointerMove={handleZoomDragMove}
+              onPointerUp={handleZoomDragEnd}
+              onPointerCancel={handleZoomDragEnd}
+            >
+              <img
+                src={selectedImage || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158"}
+                alt={product.name}
+                className="object-contain shadow-2xl bg-white/5 border border-white/5 p-2 select-none pointer-events-none"
+                style={{
+                  transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomScale})`,
+                  transformOrigin: "center center",
+                  maxWidth: "90vw",
+                  maxHeight: "80vh",
+                  transition: isDragging.current ? "none" : "transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)",
+                  cursor: zoomScale > 1 ? (isDragging.current ? "grabbing" : "grab") : "default"
+                }}
+              />
+            </div>
+
+            {/* Zoom Control Bar */}
+            <div className="flex justify-center items-center w-full shrink-0 z-10">
+              <div className="bg-white/10 backdrop-blur-md px-6 py-3 border border-white/20 rounded-full flex items-center gap-4">
+                <button
+                  onClick={() => {
+                    const newScale = Math.max(1, zoomScale - 0.5);
+                    setPanOffset(prev => {
+                      const ratio = newScale / zoomScale;
+                      return { x: prev.x * ratio, y: prev.y * ratio };
+                    });
+                    setZoomScale(newScale);
+                  }}
+                  className="text-white hover:text-brand-amber transition-colors disabled:opacity-30 cursor-pointer"
+                  disabled={zoomScale <= 1}
+                  title="Zoom Out"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+
+                <input
+                  type="range"
+                  min="1"
+                  max="6"
+                  step="0.1"
+                  value={zoomScale}
+                  onChange={(e) => {
+                    const newScale = parseFloat(e.target.value);
+                    setPanOffset(prev => {
+                      const ratio = newScale / zoomScale;
+                      return { x: prev.x * ratio, y: prev.y * ratio };
+                    });
+                    setZoomScale(newScale);
+                  }}
+                  className="w-32 md:w-48 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-brand-amber"
+                />
+
+                <button
+                  onClick={() => {
+                    const newScale = Math.min(6, zoomScale + 0.5);
+                    setPanOffset(prev => {
+                      const ratio = newScale / zoomScale;
+                      return { x: prev.x * ratio, y: prev.y * ratio };
+                    });
+                    setZoomScale(newScale);
+                  }}
+                  className="text-white hover:text-brand-amber transition-colors disabled:opacity-30 cursor-pointer"
+                  disabled={zoomScale >= 6}
+                  title="Zoom In"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+
+                <span className="text-white text-xs font-bold font-sans w-12 text-center select-none border-l border-white/10 pl-2">
+                  {Math.round(zoomScale * 100)}%
+                </span>
+
+                {zoomScale > 1 && (
+                  <button
+                    onClick={() => setZoomScale(1)}
+                    className="bg-brand-amber text-brand-slateDark px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-white transition-colors cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Footer />
     </div>
