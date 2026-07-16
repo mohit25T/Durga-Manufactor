@@ -67,7 +67,7 @@ export const getProducts = async (req, res) => {
     });
 
   } catch (error) {
-
+    console.error("GET PRODUCTS ERROR:", error);
     res.status(500).json({
       success: false,
       message: error.message
@@ -99,7 +99,7 @@ export const getProductById = async (req, res) => {
     });
 
   } catch (error) {
-
+    console.error("GET PRODUCT BY ID ERROR:", error);
     res.status(500).json({
       success: false,
       message: error.message
@@ -136,7 +136,7 @@ export const increaseProductView = async (req, res) => {
     });
 
   } catch (error) {
-
+    console.error("INCREASE PRODUCT VIEW ERROR:", error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -233,7 +233,7 @@ export const deleteProduct = async (req, res) => {
     });
 
   } catch (error) {
-
+    console.error("DELETE PRODUCT ERROR:", error);
     res.status(500).json({
       success: false,
       message: error.message
@@ -273,7 +273,7 @@ export const deleteProductImage = async (req, res) => {
     });
 
   } catch (error) {
-
+    console.error("DELETE PRODUCT IMAGE ERROR:", error);
     res.status(500).json({
       success: false,
       message: error.message

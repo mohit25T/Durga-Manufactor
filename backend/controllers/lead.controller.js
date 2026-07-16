@@ -15,7 +15,7 @@ export const createLead = async (req, res) => {
         });
 
     } catch (error) {
-
+        console.error("CREATE LEAD ERROR:", error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -38,7 +38,7 @@ export const getLeads = async (req, res) => {
         });
 
     } catch (error) {
-
+        console.error("GET LEADS ERROR:", error);
         res.status(500).json({
             success: false,
             message: error.message

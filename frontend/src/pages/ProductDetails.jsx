@@ -177,7 +177,9 @@ Thank you.
                 <h1 className="font-serif text-2xl md:text-3xl font-bold text-brand-forest tracking-tight mb-3">
                   {product.name}
                 </h1>
-                <p className="text-brand-gray font-semibold text-xs md:text-sm leading-relaxed">{product.description}</p>
+                {product.description && (
+                  <p className="text-brand-gray font-semibold text-xs md:text-sm leading-relaxed">{product.description}</p>
+                )}
               </div>
 
               {/* MACHINE SPECIFICATION TABLE */}
@@ -187,7 +189,7 @@ Thank you.
                   Machine Specifications
                 </h3>
 
-                {product.table && product.table.length > 0 ? (
+                {product.table && product.table.length > 0 && product.table.some(row => row.some(cell => cell && cell.trim() !== "")) ? (
                   <div className="overflow-x-auto border border-brand-sand">
                     <table className="w-full border-collapse">
                       <tbody>

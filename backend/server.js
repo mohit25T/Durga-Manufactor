@@ -33,6 +33,16 @@ app.get("/", (req, res) => {
     res.send("API is running...");
 });
 
+/* Global Error Handler */
+
+app.use((err, req, res, next) => {
+    console.error("❌ UNHANDLED BACKEND ERROR:", err);
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || "Internal Server Error"
+    });
+});
+
 /* Start Server */
 
 const PORT = process.env.PORT || 5000;

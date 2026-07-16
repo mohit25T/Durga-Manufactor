@@ -20,6 +20,7 @@ function Login() {
       localStorage.setItem("token", res.data.token);
       navigate("/admin/dashboard");
     } catch (err) {
+      console.error("Login API Error:", err.response?.data || err.message || err);
       // Mock login for demo if API fails
       if(form.email === 'admin@durgamanufactures.com' && form.password === 'admin123') {
         localStorage.setItem("token", "demo-token");

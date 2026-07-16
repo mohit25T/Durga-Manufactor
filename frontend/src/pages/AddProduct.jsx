@@ -70,36 +70,33 @@ function AddProduct() {
   };
 
   const addRow = () => {
-    const cols = tableData[0].length;
+    const cols = tableData[0]?.length || 2;
     setTableData([...tableData, Array(cols).fill("")]);
   };
 
   const addColumn = () => {
-    const updated = tableData.map((row) => [...row, ""]);
-    setTableData(updated);
+    if (tableData.length === 0) {
+      setTableData([[""]]);
+    } else {
+      const updated = tableData.map((row) => [...row, ""]);
+      setTableData(updated);
+    }
   };
 
   const deleteRow = (rowIndex) => {
-    if (tableData.length === 1) {
-      alert("At least one row is required.");
-      return;
-    }
-
     const updated = tableData.filter((_, i) => i !== rowIndex);
     setTableData(updated);
   };
 
   const deleteColumn = (colIndex) => {
-    if (tableData[0].length === 1) {
-      alert("At least one column is required.");
-      return;
-    }
-
     const updated = tableData.map((row) =>
       row.filter((_, i) => i !== colIndex)
     );
-
-    setTableData(updated);
+    if (updated[0]?.length === 0) {
+      setTableData([]);
+    } else {
+      setTableData(updated);
+    }
   };
 
   /* SUBMIT */
@@ -117,16 +114,13 @@ function AddProduct() {
       formData.append("price", product.price);
 
       const tableHasData = tableData.some((row) =>
-        row.some((cell) => cell.trim() !== "")
+        row.some((cell) => cell && cell.trim() !== "")
       );
 
-      if (!tableHasData) {
-        alert("Please add at least one table value.");
-        setLoading(false);
-        return;
-      }
-
-      formData.append("table", JSON.stringify(tableData));
+      formData.append(
+        "table",
+        JSON.stringify(tableHasData ? tableData : [])
+      );
 
       const numbers = product.whatsappNumbers
         .split(",")
@@ -142,8 +136,12 @@ function AddProduct() {
 
       setTimeout(() => navigate("/admin/products"), 2000);
     } catch (error) {
-      console.error(error);
-      alert("Error adding product.");
+      console.error("API Error Details Object:", error.response?.data);
+      console.error("API Error message:", error.message);
+      if (error.response?.data?.message) {
+        console.error("API Server message:", error.response.data.message);
+      }
+      alert("Error adding product: " + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
@@ -210,7 +208,6 @@ function AddProduct() {
               />
 
               <textarea
-                required
                 rows="4"
                 placeholder="Description"
                 className="w-full px-4 py-3 bg-stone-50 rounded-none mb-6 border border-brand-sand/60"
@@ -245,62 +242,68 @@ function AddProduct() {
 
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="border w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-stone-100/50 border-b">
-                      {tableData[0]?.map((_, colIndex) => (
-                        <th key={colIndex} className="border p-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                          <div className="flex items-center justify-between gap-2">
-                            <span>Col {colIndex + 1}</span>
+              {tableData.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="border w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-stone-100/50 border-b">
+                        {tableData[0]?.map((_, colIndex) => (
+                          <th key={colIndex} className="border p-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            <div className="flex items-center justify-between gap-2">
+                              <span>Col {colIndex + 1}</span>
+                              <button
+                                type="button"
+                                onClick={() => deleteColumn(colIndex)}
+                                className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/50 px-2 py-1 rounded-none text-[10px] font-bold tracking-wide uppercase transition-all duration-200 hover:shadow-sm"
+                                title={`Delete Column ${colIndex + 1}`}
+                              >
+                                ✕ Col
+                              </button>
+                            </div>
+                          </th>
+                        ))}
+                        <th className="border p-2 text-xs font-bold text-gray-500 uppercase tracking-wider w-32 text-center">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tableData.map((row, rowIndex) => (
+                        <tr key={rowIndex}>
+                          {row.map((cell, colIndex) => (
+                            <td key={colIndex} className="border p-2">
+                              <input
+                                className="w-full p-2 bg-stone-50 rounded-none border border-brand-sand/60 focus:outline-none focus:ring-1 focus:ring-brand-amber/80 focus:border-brand-amber/80 transition-all duration-150"
+                                value={cell}
+                                onChange={(e) =>
+                                  handleCellChange(
+                                    rowIndex,
+                                    colIndex,
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </td>
+                          ))}
+                          <td className="border p-2 text-center">
                             <button
                               type="button"
-                              onClick={() => deleteColumn(colIndex)}
-                              className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/50 px-2 py-1 rounded-none text-[10px] font-bold tracking-wide uppercase transition-all duration-200 hover:shadow-sm"
-                              title={`Delete Column ${colIndex + 1}`}
+                              onClick={() => deleteRow(rowIndex)}
+                              className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/60 px-3 py-1.5 rounded-none text-xs font-semibold tracking-wide transition-all duration-200 hover:shadow-sm"
                             >
-                              ✕ Col
+                              Delete Row
                             </button>
-                          </div>
-                        </th>
-                      ))}
-                      <th className="border p-2 text-xs font-bold text-gray-500 uppercase tracking-wider w-32 text-center">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tableData.map((row, rowIndex) => (
-                      <tr key={rowIndex}>
-                        {row.map((cell, colIndex) => (
-                          <td key={colIndex} className="border p-2">
-                            <input
-                              className="w-full p-2 bg-stone-50 rounded-none border border-brand-sand/60 focus:outline-none focus:ring-1 focus:ring-brand-amber/80 focus:border-brand-amber/80 transition-all duration-150"
-                              value={cell}
-                              onChange={(e) =>
-                                handleCellChange(
-                                  rowIndex,
-                                  colIndex,
-                                  e.target.value
-                                )
-                              }
-                            />
                           </td>
-                        ))}
-                        <td className="border p-2 text-center">
-                          <button
-                            type="button"
-                            onClick={() => deleteRow(rowIndex)}
-                            className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/60 px-3 py-1.5 rounded-none text-xs font-semibold tracking-wide transition-all duration-200 hover:shadow-sm"
-                          >
-                            Delete Row
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8 border border-dashed border-brand-sand/60 text-brand-gray text-sm">
+                  No specifications added. Click "+ Add Row" or "+ Add Column" to start building the table.
+                </div>
+              )}
 
             </div>
 
