@@ -63,10 +63,14 @@ function Products() {
         if (Array.isArray(row) && row.length >= 2) {
           const key = row[0]?.toUpperCase().trim();
           const value = row[1];
-          if (key === "MOTOR" || key === "POWER" || key === "MOTOR POWER") {
+          if (key === "MOTOR" || key === "POWER" || key === "MOTOR POWER" || key === "HP" || key === "H.P.") {
             const match = value?.match(/(\d+(\.\d+)?)\s*(?:H\.P\.|HP)(?!\w)/i);
             if (match) {
               return `${match[1]} HP`;
+            }
+            const rawNumberMatch = value?.match(/(\d+(\.\d+)?)/);
+            if (rawNumberMatch) {
+              return `${rawNumberMatch[1]} HP`;
             }
           }
         }

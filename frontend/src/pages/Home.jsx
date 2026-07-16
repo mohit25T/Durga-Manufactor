@@ -27,24 +27,29 @@ function Home() {
             const categoryOrder = JSON.parse(categoryOrderSetting);
             
             const getHPNumeric = (product) => {
-              if (product.specs && Array.isArray(product.specs)) {
-                const hpSpec = product.specs.find(
-                  (spec) =>
-                    spec.key?.toLowerCase() === "motor" ||
-                    spec.key?.toLowerCase() === "hp" ||
-                    spec.key?.toLowerCase() === "power" ||
-                    spec.key?.toLowerCase() === "horsepower"
-                );
-                if (hpSpec && hpSpec.value) {
-                  const match = hpSpec.value.match(/(\d+(\.\d+)?)\s*HP/i);
-                  if (match) return parseFloat(match[1]);
+              const nameMatch = product.name?.match(/(\d+(\.\d+)?)\s*(?:H\.P\.|HP)(?!\w)/i);
+              if (nameMatch) return parseFloat(nameMatch[1]);
+              
+              if (product.table && Array.isArray(product.table)) {
+                for (const row of product.table) {
+                  if (Array.isArray(row) && row.length >= 2) {
+                    const key = row[0]?.toUpperCase().trim();
+                    const value = row[1];
+                    if (key === "MOTOR" || key === "POWER" || key === "MOTOR POWER" || key === "HP" || key === "H.P.") {
+                      const match = value?.match(/(\d+(\.\d+)?)\s*(?:H\.P\.|HP)(?!\w)/i);
+                      if (match) return parseFloat(match[1]);
+                      const rawNumberMatch = value?.match(/(\d+(\.\d+)?)/);
+                      if (rawNumberMatch) return parseFloat(rawNumberMatch[1]);
+                    }
+                  }
                 }
               }
-              const searchString = `${product.name} ${product.description || ""}`;
-              const hpMatch = searchString.match(/(\d+(\.\d+)?)\s*HP/i);
-              if (hpMatch) return parseFloat(hpMatch[1]);
-              const descMatch = searchString.match(/(\d+(\.\d+)?)\s*horsepower/i);
-              if (descMatch) return parseFloat(descMatch[1]);
+              
+              if (product.description) {
+                const descMatch = product.description.match(/(\d+(\.\d+)?)\s*(?:H\.P\.|HP)(?!\w)/i);
+                if (descMatch) return parseFloat(descMatch[1]);
+              }
+              
               return Infinity;
             };
 
