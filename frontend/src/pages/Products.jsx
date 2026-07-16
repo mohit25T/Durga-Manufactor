@@ -114,16 +114,32 @@ function Products() {
     return matchesCategory && matchesHP && matchesSearch;
   });
 
-  // Apply Custom Category Order Sorting
-  if (categoryOrder && categoryOrder.length > 0 && selectedCategory === "ALL") {
-    filteredProducts.sort((a, b) => {
+  const getHPNumeric = (product) => {
+    const hpString = extractHP(product);
+    if (!hpString) return Infinity;
+    const match = hpString.match(/(\d+(\.\d+)?)/);
+    return match ? parseFloat(match[1]) : Infinity;
+  };
+
+  // Apply sorting: Category display order (if ALL) first, then HP Low to High
+  filteredProducts.sort((a, b) => {
+    if (selectedCategory === "ALL") {
       const getCategoryIndex = (cat) => {
         const index = categoryOrder.indexOf(cat);
         return index === -1 ? Infinity : index;
       };
-      return getCategoryIndex(a.category) - getCategoryIndex(b.category);
-    });
-  }
+      const catIndexA = getCategoryIndex(a.category);
+      const catIndexB = getCategoryIndex(b.category);
+      
+      if (catIndexA !== catIndexB) {
+        return catIndexA - catIndexB;
+      }
+    }
+    
+    const hpA = getHPNumeric(a);
+    const hpB = getHPNumeric(b);
+    return hpA - hpB;
+  });
 
   const clearFilters = () => {
     setSelectedCategory("ALL");

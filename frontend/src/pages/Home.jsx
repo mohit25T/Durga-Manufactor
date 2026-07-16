@@ -25,15 +25,43 @@ function Home() {
         if (categoryOrderSetting) {
           try {
             const categoryOrder = JSON.parse(categoryOrderSetting);
-            if (categoryOrder && categoryOrder.length > 0) {
+            
+            const getHPNumeric = (product) => {
+              if (product.specs && Array.isArray(product.specs)) {
+                const hpSpec = product.specs.find(
+                  (spec) =>
+                    spec.key?.toLowerCase() === "motor" ||
+                    spec.key?.toLowerCase() === "hp" ||
+                    spec.key?.toLowerCase() === "power" ||
+                    spec.key?.toLowerCase() === "horsepower"
+                );
+                if (hpSpec && hpSpec.value) {
+                  const match = hpSpec.value.match(/(\d+(\.\d+)?)\s*HP/i);
+                  if (match) return parseFloat(match[1]);
+                }
+              }
+              const searchString = `${product.name} ${product.description || ""}`;
+              const hpMatch = searchString.match(/(\d+(\.\d+)?)\s*HP/i);
+              if (hpMatch) return parseFloat(hpMatch[1]);
+              const descMatch = searchString.match(/(\d+(\.\d+)?)\s*horsepower/i);
+              if (descMatch) return parseFloat(descMatch[1]);
+              return Infinity;
+            };
+
+            products = [...products].sort((a, b) => {
               const getCategoryIndex = (cat) => {
                 const index = categoryOrder.indexOf(cat);
                 return index === -1 ? Infinity : index;
               };
-              products = [...products].sort((a, b) => {
-                return getCategoryIndex(a.category) - getCategoryIndex(b.category);
-              });
-            }
+              const catIndexA = getCategoryIndex(a.category);
+              const catIndexB = getCategoryIndex(b.category);
+              
+              if (catIndexA !== catIndexB) {
+                return catIndexA - catIndexB;
+              }
+              
+              return getHPNumeric(a) - getHPNumeric(b);
+            });
           } catch (e) {
             console.error("Failed to parse categoryOrder:", e);
           }
