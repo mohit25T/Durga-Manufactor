@@ -4,7 +4,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import API from "../services/api";
 import { motion } from "framer-motion";
-import { CheckCircle2, ChevronRight, Phone } from "lucide-react";
+import { CheckCircle2, ChevronRight, Phone, X, ZoomIn, ZoomOut } from "lucide-react";
 import ProgressiveImage from "../components/ProgressiveImage";
 import { getOptimizedImageUrl } from "../utils/image";
 
@@ -14,6 +14,9 @@ function ProductDetails() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
+
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const [zoomScale, setZoomScale] = useState(1);
 
   const viewTracked = useRef(false);
 
@@ -48,6 +51,66 @@ function ProductDetails() {
 
     fetchProduct();
   }, [id]);
+
+  // Auto scroll/slide images
+  const swipeDirection = useRef("");
+
+  useEffect(() => {
+    if (!product || !product.images || product.images.length <= 1 || isZoomOpen) return;
+
+    const interval = setInterval(() => {
+      setSelectedImage((current) => {
+        const images = product.images;
+        const currentIndex = images.indexOf(current);
+        const nextIndex = (currentIndex + 1) % images.length;
+        swipeDirection.current = "left";
+        return images[nextIndex];
+      });
+    }, 4000); // cycle every 4 seconds
+
+    return () => clearInterval(interval);
+  }, [product, isZoomOpen, selectedImage]);
+
+  // Gesture Swipe State Management
+  const swipeStartX = useRef(0);
+  const hasSwiped = useRef(false);
+
+  const handleDragStart = (clientX) => {
+    swipeStartX.current = clientX;
+    hasSwiped.current = false;
+  };
+
+  const handleDragMove = (clientX) => {
+    if (hasSwiped.current) return;
+    if (!product?.images || product.images.length <= 1) return;
+
+    const diff = swipeStartX.current - clientX;
+    const threshold = 40; // pixels to trigger swipe (40px is highly responsive)
+
+    if (Math.abs(diff) > threshold) {
+      hasSwiped.current = true;
+      const currentIndex = product.images.indexOf(selectedImage);
+      if (diff > 0) {
+        swipeDirection.current = "left";
+        const nextIdx = (currentIndex + 1) % product.images.length;
+        setSelectedImage(product.images[nextIdx]);
+      } else {
+        swipeDirection.current = "right";
+        const prevIdx = (currentIndex - 1 + product.images.length) % product.images.length;
+        setSelectedImage(product.images[prevIdx]);
+      }
+    }
+  };
+
+  const handleImageClick = (e) => {
+    if (hasSwiped.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    setZoomScale(1);
+    setIsZoomOpen(true);
+  };
 
   const generateWhatsAppLink = () => {
     if (!product?.whatsappNumbers?.length) return "#";
@@ -133,22 +196,45 @@ Thank you.
             
             {/* PRODUCT IMAGE GALLERY */}
             <div className="lg:col-span-2 space-y-4">
-              <div className="bg-white border border-brand-sand p-3 shadow-sm">
-                <ProgressiveImage
-                  src={getOptimizedImageUrl(
-                    selectedImage ||
-                      "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-                    1200
-                  )}
-                  placeholderSrc={getOptimizedImageUrl(
-                    selectedImage ||
-                      "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-                    100,
-                    20
-                  )}
-                  alt={product.name}
-                  className="w-full h-auto object-contain bg-brand-cream aspect-square border border-brand-sand/40"
-                />
+              <div 
+                className="bg-white border border-brand-sand p-3 shadow-sm cursor-zoom-in relative group/img overflow-hidden select-none touch-pan-y"
+                onClick={handleImageClick}
+                onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+                onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
+                onPointerDown={(e) => handleDragStart(e.clientX)}
+                onPointerMove={(e) => {
+                  if (e.buttons === 1) handleDragMove(e.clientX);
+                }}
+              >
+                {/* Hover zoom cue */}
+                <div className="absolute inset-0 bg-black/5 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center z-10 pointer-events-none">
+                  <span className="bg-white/80 backdrop-blur-sm border border-brand-sand/80 px-4 py-2 font-bold text-xs uppercase tracking-widest text-brand-forest shadow-md">
+                    Click to Zoom
+                  </span>
+                </div>
+                <motion.div
+                  key={selectedImage}
+                  initial={{ opacity: 0, x: swipeDirection.current === "left" ? 40 : swipeDirection.current === "right" ? -40 : 0 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="w-full h-full"
+                >
+                  <ProgressiveImage
+                    src={getOptimizedImageUrl(
+                      selectedImage ||
+                        "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
+                      1200
+                    )}
+                    placeholderSrc={getOptimizedImageUrl(
+                      selectedImage ||
+                        "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
+                      100,
+                      20
+                    )}
+                    alt={product.name}
+                    className="w-full h-auto object-contain bg-brand-cream aspect-square border border-brand-sand/40"
+                  />
+                </motion.div>
               </div>
 
               {/* THUMBNAILS */}
@@ -157,7 +243,17 @@ Thank you.
                   {product.images.map((img, index) => (
                     <button
                       key={index}
-                      onClick={() => setSelectedImage(img)}
+                      onClick={() => {
+                        const currIdx = product.images.indexOf(selectedImage);
+                        if (index > currIdx) {
+                          swipeDirection.current = "left";
+                        } else if (index < currIdx) {
+                          swipeDirection.current = "right";
+                        } else {
+                          swipeDirection.current = "";
+                        }
+                        setSelectedImage(img);
+                      }}
                       className={`cursor-pointer bg-white p-1 border aspect-square transition-all ${
                         selectedImage === img
                           ? "border-brand-forest"
@@ -293,6 +389,100 @@ Thank you.
           </div>
         </div>
       </main>
+
+      {/* Fullscreen Zoom Modal */}
+      {isZoomOpen && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex flex-col justify-between p-4 md:p-6">
+          {/* Header */}
+          <div className="flex justify-between items-center w-full z-10 shrink-0">
+            <h3 className="font-serif text-base font-bold text-white tracking-wide">
+              {product.name}
+            </h3>
+            <button
+              onClick={() => {
+                setIsZoomOpen(false);
+                setZoomScale(1);
+              }}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center border border-white/10 backdrop-blur-md transition-all duration-150"
+              title="Close Zoom"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Image Pan & Zoom Scroll area */}
+          <div className="flex-grow w-full overflow-auto my-4 select-none relative">
+            <div 
+              className="p-8 flex items-center justify-center"
+              style={{
+                width: `${100 * zoomScale}%`,
+                height: `${100 * zoomScale}%`,
+                minWidth: "100%",
+                minHeight: "100%",
+                transition: "width 0.15s ease-out, height 0.15s ease-out"
+              }}
+            >
+              <img
+                src={selectedImage || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158"}
+                alt={product.name}
+                className="object-contain shadow-2xl bg-white/5 border border-white/5 p-2 transition-transform duration-150"
+                style={{
+                  transform: `scale(${zoomScale})`,
+                  transformOrigin: "center center",
+                  maxWidth: "90vw",
+                  maxHeight: "80vh",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Zoom Control Bar */}
+          <div className="flex justify-center items-center w-full shrink-0 z-10">
+            <div className="bg-white/10 backdrop-blur-md px-6 py-3 border border-white/20 rounded-full flex items-center gap-4">
+              <button
+                onClick={() => setZoomScale(prev => Math.max(1, prev - 0.5))}
+                className="text-white hover:text-brand-amber transition-colors disabled:opacity-30 cursor-pointer"
+                disabled={zoomScale <= 1}
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </button>
+
+              <input
+                type="range"
+                min="1"
+                max="6"
+                step="0.1"
+                value={zoomScale}
+                onChange={(e) => setZoomScale(parseFloat(e.target.value))}
+                className="w-32 md:w-48 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-brand-amber"
+              />
+
+              <button
+                onClick={() => setZoomScale(prev => Math.min(6, prev + 0.5))}
+                className="text-white hover:text-brand-amber transition-colors disabled:opacity-30 cursor-pointer"
+                disabled={zoomScale >= 6}
+                title="Zoom In"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+
+              <span className="text-white text-xs font-bold font-sans w-12 text-center select-none border-l border-white/10 pl-2">
+                {Math.round(zoomScale * 100)}%
+              </span>
+
+              {zoomScale > 1 && (
+                <button
+                  onClick={() => setZoomScale(1)}
+                  className="bg-brand-amber text-brand-slateDark px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-white transition-colors cursor-pointer"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
