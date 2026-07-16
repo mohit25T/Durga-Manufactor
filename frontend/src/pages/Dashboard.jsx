@@ -53,6 +53,8 @@ function Dashboard() {
         const leads = leadsRes.data.data || [];
 
         const categories = new Set(products.map((p) => p.category));
+        const actualViews = products.reduce((sum, p) => sum + (p.views || 0), 0);
+        const totalViews = actualViews + 1240; // 1240 is the fake base views
 
         setStats([
           {
@@ -78,7 +80,7 @@ function Dashboard() {
           },
           {
             title: "Profile Views",
-            value: "1.2k",
+            value: totalViews.toLocaleString(),
             icon: TrendingUp,
             color: "text-purple-500",
             bg: "bg-purple-500/10",

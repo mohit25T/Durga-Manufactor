@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../components/admin/AdminLayout";
 import API from "../services/api";
+import { getOptimizedImageUrl } from "../utils/image";
 import {
   PackageSearch,
   Plus,
@@ -158,7 +159,7 @@ function Products() {
                         <div className="w-12 h-12 rounded-none bg-brand-light border overflow-hidden">
                           {product.images?.[0] ? (
                             <img
-                              src={product.images[0]}
+                              src={getOptimizedImageUrl(product.images[0], 100, 70)}
                               alt={product.name}
                               className="w-full h-full object-cover"
                             />

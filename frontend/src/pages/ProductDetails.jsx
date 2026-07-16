@@ -5,6 +5,8 @@ import Footer from "../components/Footer";
 import API from "../services/api";
 import { motion } from "framer-motion";
 import { CheckCircle2, ChevronRight, Phone } from "lucide-react";
+import ProgressiveImage from "../components/ProgressiveImage";
+import { getOptimizedImageUrl } from "../utils/image";
 
 function ProductDetails() {
   const { id } = useParams();
@@ -132,11 +134,18 @@ Thank you.
             {/* PRODUCT IMAGE GALLERY */}
             <div className="lg:col-span-2 space-y-4">
               <div className="bg-white border border-brand-sand p-3 shadow-sm">
-                <img
-                  src={
+                <ProgressiveImage
+                  src={getOptimizedImageUrl(
                     selectedImage ||
-                    "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158"
-                  }
+                      "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
+                    1200
+                  )}
+                  placeholderSrc={getOptimizedImageUrl(
+                    selectedImage ||
+                      "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
+                    100,
+                    20
+                  )}
                   alt={product.name}
                   className="w-full h-auto object-contain bg-brand-cream aspect-square border border-brand-sand/40"
                 />
@@ -156,7 +165,7 @@ Thank you.
                       }`}
                     >
                       <img
-                        src={img}
+                        src={getOptimizedImageUrl(img, 150, 70)}
                         alt={`${product.name} thumbnail ${index}`}
                         className="w-full h-full object-cover"
                       />

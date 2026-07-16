@@ -1,10 +1,14 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import ProgressiveImage from "./ProgressiveImage";
+import { getOptimizedImageUrl } from "../utils/image";
 
 function ProductCard({ product, index = 0 }) {
   // Simple fallback image if not provided
-  const imageUrl = product.images?.[0] || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800';
+  const originalUrl = product.images?.[0] || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158';
+  const placeholderUrl = getOptimizedImageUrl(originalUrl, 80, 20); // very small preview
+  const previewUrl = getOptimizedImageUrl(originalUrl, 500, 80); // optimized card image
 
   return (
     <motion.div 
@@ -17,8 +21,9 @@ function ProductCard({ product, index = 0 }) {
     >
       {/* Image Container */}
       <div className="relative h-72 overflow-hidden bg-brand-cream border-b border-brand-sand">
-        <img
-          src={imageUrl}
+        <ProgressiveImage
+          src={previewUrl}
+          placeholderSrc={placeholderUrl}
           alt={product.name}
           className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
         />
