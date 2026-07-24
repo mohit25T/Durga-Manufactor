@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Star } from "lucide-react";
 import ProgressiveImage from "./ProgressiveImage";
 import { getOptimizedImageUrl } from "../utils/image";
 
@@ -9,6 +9,9 @@ function ProductCard({ product, index = 0 }) {
   const originalUrl = product.images?.[0] || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158';
   const placeholderUrl = getOptimizedImageUrl(originalUrl, 80, 20); // very small preview
   const previewUrl = getOptimizedImageUrl(originalUrl, 500, 80); // optimized card image
+
+  const rating = product.averageRating || 0;
+  const numReviews = product.numReviews || 0;
 
   return (
     <motion.div 
@@ -31,6 +34,14 @@ function ProductCard({ product, index = 0 }) {
         {product.category && (
           <div className="absolute top-4 left-4 z-20 bg-brand-sage/90 text-brand-forest border border-brand-sand px-3 py-1 text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm">
             {product.category}
+          </div>
+        )}
+        {/* Rating Tag if available */}
+        {numReviews > 0 && (
+          <div className="absolute top-4 right-4 z-20 bg-white/90 text-brand-charcoal border border-brand-sand px-2.5 py-1 text-xs font-bold flex items-center gap-1 backdrop-blur-sm shadow-sm">
+            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+            <span>{rating.toFixed(1)}</span>
+            <span className="text-brand-gray font-normal text-[10px]">({numReviews})</span>
           </div>
         )}
       </div>

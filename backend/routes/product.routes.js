@@ -7,7 +7,9 @@ import {
   updateProduct,
   deleteProduct,
   deleteProductImage,
-  increaseProductView
+  increaseProductView,
+  createProductReview,
+  deleteProductReview
 } from "../controllers/product.controller.js";
 
 import { verifyAdmin } from "../middleware/auth.middleware.js";
@@ -42,6 +44,20 @@ router.post(
 );
 
 router.post("/:id/view", increaseProductView);
+
+/*
+  @route   POST /api/products/:id/reviews
+  @desc    Create product review
+  @access  Public
+*/
+router.post("/:id/reviews", createProductReview);
+
+/*
+  @route   DELETE /api/products/:id/reviews/:reviewId
+  @desc    Delete product review
+  @access  Admin
+*/
+router.delete("/:id/reviews/:reviewId", verifyAdmin, deleteProductReview);
 
 /*
   @route   PUT /api/products/:id

@@ -14,6 +14,8 @@ import {
   ArrowUp,
   ArrowDown,
   X,
+  Star,
+  MessageSquare,
 } from "lucide-react";
 
 function Products() {
@@ -25,6 +27,9 @@ function Products() {
   const [priorityLoading, setPriorityLoading] = useState(false);
   const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
   const [modalCategories, setModalCategories] = useState([]);
+
+  const [selectedReviewProduct, setSelectedReviewProduct] = useState(null);
+  const [deletingReviewId, setDeletingReviewId] = useState(null);
 
   const fetched = useRef(false);
 
@@ -151,6 +156,26 @@ function Products() {
     } catch (error) {
       console.error(error);
       setProducts((prev) => prev.filter((p) => p._id !== id));
+    }
+  };
+
+  const handleDeleteReview = async (productId, reviewId) => {
+    if (!window.confirm("Are you sure you want to delete this review?")) return;
+    setDeletingReviewId(reviewId);
+    try {
+      const res = await API.delete(`/products/${productId}/reviews/${reviewId}`);
+      if (res.data?.success) {
+        const updatedProduct = res.data.data;
+        setSelectedReviewProduct(updatedProduct);
+        setProducts((prev) =>
+          prev.map((p) => (p._id === productId ? updatedProduct : p))
+        );
+      }
+    } catch (error) {
+      console.error("Delete review error:", error);
+      alert("Failed to delete review.");
+    } finally {
+      setDeletingReviewId(null);
     }
   };
 
@@ -322,6 +347,9 @@ function Products() {
                   <th className="px-6 py-3 text-xs font-bold uppercase">
                     Views
                   </th>
+                  <th className="px-6 py-3 text-xs font-bold uppercase">
+                    Rating / Reviews
+                  </th>
                   <th className="px-6 py-3 text-xs font-bold uppercase text-right">
                     Actions
                   </th>
@@ -385,13 +413,34 @@ function Products() {
                       </div>
                     </td>
 
+                    {/* REVIEWS */}
+                    <td className="px-6 py-3">
+                      <button
+                        onClick={() => setSelectedReviewProduct(product)}
+                        className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-200/60 text-amber-800 text-xs font-bold transition-colors cursor-pointer"
+                      >
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <span>{(product.averageRating || 0).toFixed(1)}</span>
+                        <span className="text-gray-500 font-normal">({product.numReviews || 0})</span>
+                      </button>
+                    </td>
+
                     {/* ACTIONS */}
                     <td className="px-6 py-3 text-right">
                       <div className="flex justify-end gap-2">
                         <button
+                          onClick={() => setSelectedReviewProduct(product)}
+                          title="Manage Reviews"
+                          className="p-2 text-amber-600 hover:text-amber-800"
+                        >
+                          <MessageSquare className="w-5 h-5" />
+                        </button>
+
+                        <button
                           onClick={() =>
                             window.open(`/#/products/${product._id}`, "_blank")
                           }
+                          title="View on Site"
                           className="p-2 text-brand-gray hover:text-brand-slate"
                         >
                           <ExternalLink className="w-5 h-5" />
@@ -401,6 +450,7 @@ function Products() {
                           onClick={() =>
                             navigate(`/admin/edit-product/${product._id}`)
                           }
+                          title="Edit Product"
                           className="p-2 text-blue-500"
                         >
                           <Edit2 className="w-5 h-5" />
@@ -408,6 +458,7 @@ function Products() {
 
                         <button
                           onClick={() => deleteProduct(product._id)}
+                          title="Delete Product"
                           className="p-2 text-rose-600 hover:text-rose-800"
                         >
                           <Trash2 className="w-5 h-5" />
@@ -427,6 +478,89 @@ function Products() {
           </div>
         )}
       </div>
+
+      {/* MANAGE REVIEWS MODAL */}
+      {selectedReviewProduct && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white max-w-2xl w-full border border-brand-sand shadow-2xl p-6 relative rounded-none flex flex-col max-h-[85vh]">
+            <div className="flex justify-between items-start pb-4 border-b border-brand-sand mb-4 shrink-0">
+              <div>
+                <h3 className="font-serif text-lg font-bold text-brand-forest">
+                  Product Reviews Moderation
+                </h3>
+                <p className="text-xs font-semibold text-brand-gray mt-0.5">
+                  {selectedReviewProduct.name} &bull; Average Rating: ⭐ {(selectedReviewProduct.averageRating || 0).toFixed(1)} ({selectedReviewProduct.numReviews || 0} reviews)
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedReviewProduct(null)}
+                className="text-brand-gray hover:text-black transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-grow overflow-y-auto pr-1 space-y-3">
+              {selectedReviewProduct.reviews && selectedReviewProduct.reviews.length > 0 ? (
+                selectedReviewProduct.reviews.map((rev) => (
+                  <div
+                    key={rev._id}
+                    className="p-4 bg-stone-50 border border-brand-sand flex justify-between items-start gap-4"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-xs text-brand-slateDark">{rev.name}</span>
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`w-3 h-3 ${
+                                star <= rev.rating
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "fill-gray-200 text-gray-200"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-[10px] text-brand-gray">
+                          {new Date(rev.createdAt || Date.now()).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-xs font-semibold text-brand-gray leading-relaxed">
+                        "{rev.comment}"
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => handleDeleteReview(selectedReviewProduct._id, rev._id)}
+                      disabled={deletingReviewId === rev._id}
+                      className="p-1.5 text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors disabled:opacity-50"
+                      title="Delete Review"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-10 text-brand-gray text-xs font-semibold space-y-2">
+                  <MessageSquare className="w-8 h-8 mx-auto opacity-30" />
+                  <p>No customer reviews submitted yet for this product.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-4 border-t border-brand-sand mt-4 flex justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedReviewProduct(null)}
+                className="px-5 py-2 bg-brand-slateDark text-white text-xs font-bold uppercase tracking-widest hover:bg-black transition-all rounded-none"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }

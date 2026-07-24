@@ -281,3 +281,105 @@ export const deleteProductImage = async (req, res) => {
 
   }
 };
+
+/* =========================
+   CREATE PRODUCT REVIEW
+========================= */
+
+export const createProductReview = async (req, res) => {
+  try {
+    const { name, rating, comment } = req.body;
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    if (!name || !rating || !comment) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide name, rating and comment"
+      });
+    }
+
+    const numRating = Number(rating);
+    if (isNaN(numRating) || numRating < 1 || numRating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: "Rating must be between 1 and 5"
+      });
+    }
+
+    const review = {
+      name: name.trim(),
+      rating: numRating,
+      comment: comment.trim()
+    };
+
+    product.reviews.push(review);
+    product.numReviews = product.reviews.length;
+    product.averageRating =
+      product.reviews.reduce((acc, item) => item.rating + acc, 0) / product.reviews.length;
+
+    await product.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Review added successfully",
+      data: product
+    });
+
+  } catch (error) {
+    console.error("CREATE PRODUCT REVIEW ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/* =========================
+   DELETE PRODUCT REVIEW
+========================= */
+
+export const deleteProductReview = async (req, res) => {
+  try {
+    const { id, reviewId } = req.params;
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    product.reviews = product.reviews.filter(
+      (r) => r._id.toString() !== reviewId
+    );
+
+    product.numReviews = product.reviews.length;
+    product.averageRating =
+      product.reviews.length === 0
+        ? 0
+        : product.reviews.reduce((acc, item) => item.rating + acc, 0) / product.reviews.length;
+
+    await product.save();
+
+    res.json({
+      success: true,
+      message: "Review deleted successfully",
+      data: product
+    });
+
+  } catch (error) {
+    console.error("DELETE PRODUCT REVIEW ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
