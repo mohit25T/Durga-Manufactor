@@ -288,7 +288,7 @@ export const deleteProductImage = async (req, res) => {
 
 export const createProductReview = async (req, res) => {
   try {
-    const { name, rating, comment } = req.body;
+    const { name, city, rating, comment } = req.body;
     const product = await Product.findById(req.params.id);
 
     if (!product) {
@@ -298,10 +298,10 @@ export const createProductReview = async (req, res) => {
       });
     }
 
-    if (!name || !rating || !comment) {
+    if (!name || !city || !rating || !comment) {
       return res.status(400).json({
         success: false,
-        message: "Please provide name, rating and comment"
+        message: "Please provide name, city, rating and comment"
       });
     }
 
@@ -315,6 +315,7 @@ export const createProductReview = async (req, res) => {
 
     const review = {
       name: name.trim(),
+      city: city.trim(),
       rating: numRating,
       comment: comment.trim()
     };

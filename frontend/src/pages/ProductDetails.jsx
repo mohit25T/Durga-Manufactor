@@ -21,6 +21,7 @@ function ProductDetails() {
 
   const [reviewForm, setReviewForm] = useState({
     name: "",
+    city: "",
     rating: 5,
     comment: "",
   });
@@ -35,8 +36,8 @@ function ProductDetails() {
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
-    if (!reviewForm.name.trim() || !reviewForm.comment.trim()) {
-      setReviewError("Please fill in both your name and comment.");
+    if (!reviewForm.name.trim() || !reviewForm.city.trim() || !reviewForm.comment.trim()) {
+      setReviewError("Please fill in your name, city, and comment.");
       return;
     }
     setReviewSubmitting(true);
@@ -47,7 +48,7 @@ function ProductDetails() {
       const res = await API.post(`/products/${id}/reviews`, reviewForm);
       if (res.data?.success) {
         setProduct(res.data.data);
-        setReviewForm({ name: "", rating: 5, comment: "" });
+        setReviewForm({ name: "", city: "", rating: 5, comment: "" });
         setReviewSuccess("Thank you! Your review has been posted.");
         setIsWritingReview(false);
       }
@@ -535,7 +536,7 @@ Thank you.
                     </div>
                   )}
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid md:grid-cols-3 gap-6">
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-brand-forest mb-2">
                         Your Name / Business Name *
@@ -546,6 +547,20 @@ Thank you.
                         placeholder="e.g. Rajesh Kumar"
                         value={reviewForm.name}
                         onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
+                        className="w-full py-2.5 px-3 border border-brand-sand focus:border-brand-forest bg-white outline-none rounded-none text-xs font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-brand-forest mb-2">
+                        City *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Jaipur"
+                        value={reviewForm.city}
+                        onChange={(e) => setReviewForm({ ...reviewForm, city: e.target.value })}
                         className="w-full py-2.5 px-3 border border-brand-sand focus:border-brand-forest bg-white outline-none rounded-none text-xs font-semibold"
                       />
                     </div>
