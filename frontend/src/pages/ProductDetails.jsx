@@ -698,7 +698,14 @@ Thank you.
                             {rev.name ? rev.name.charAt(0).toUpperCase() : "U"}
                           </div>
                           <div>
-                            <h4 className="font-bold text-sm text-brand-forest">{rev.name}</h4>
+                            <h4 className="font-bold text-sm text-brand-forest">
+                              {rev.name}
+                              {rev.city && (
+                                <span className="text-xs font-normal text-brand-gray ml-2">
+                                  &bull; {rev.city}
+                                </span>
+                              )}
+                            </h4>
                             <div className="flex items-center gap-1 mt-0.5">
                               {[1, 2, 3, 4, 5].map((star) => (
                                 <Star

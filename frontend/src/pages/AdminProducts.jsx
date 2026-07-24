@@ -509,7 +509,10 @@ function Products() {
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-xs text-brand-slateDark">{rev.name}</span>
+                        <span className="font-bold text-xs text-brand-slateDark">
+                          {rev.name}
+                          {rev.city && <span className="font-normal text-brand-gray font-sans ml-1">({rev.city})</span>}
+                        </span>
                         <div className="flex items-center gap-0.5">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <Star
