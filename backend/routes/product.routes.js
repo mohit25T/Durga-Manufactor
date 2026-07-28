@@ -9,13 +9,29 @@ import {
   deleteProductImage,
   increaseProductView,
   createProductReview,
-  deleteProductReview
+  deleteProductReview,
+  generateProductAiDescription,
+  bulkFormatDescriptions,
 } from "../controllers/product.controller.js";
 
 import { verifyAdmin } from "../middleware/auth.middleware.js";
 import upload from "../middleware/upload.middleware.js";
 
 const router = express.Router();
+
+/*
+  @route   POST /api/products/ai-description
+  @desc    Generate AI Product Description from specs and info
+  @access  Admin
+*/
+router.post("/ai-description", verifyAdmin, generateProductAiDescription);
+
+/*
+  @route   POST /api/products/bulk-format-descriptions
+  @desc    Bulk format all product descriptions using Gemini AI
+  @access  Admin
+*/
+router.post("/bulk-format-descriptions", verifyAdmin, bulkFormatDescriptions);
 
 /*
   @route   GET /api/products
@@ -80,4 +96,4 @@ router.delete("/:id", verifyAdmin, deleteProduct);
 
 router.delete("/:id/image", verifyAdmin, deleteProductImage);
 
-export default router;
+export default router;

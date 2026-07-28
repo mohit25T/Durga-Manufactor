@@ -1,10 +1,14 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Star } from "lucide-react";
+import { ArrowRight, Star, Scale, Check } from "lucide-react";
 import ProgressiveImage from "./ProgressiveImage";
 import { getOptimizedImageUrl } from "../utils/image";
+import { useCompare } from "../context/CompareContext";
 
 function ProductCard({ product, index = 0 }) {
+  const { toggleCompare, isInCompare } = useCompare();
+  const isCompared = isInCompare(product._id);
+
   // Simple fallback image if not provided
   const originalUrl = product.images?.[0] || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158';
   const placeholderUrl = getOptimizedImageUrl(originalUrl, 80, 20); // very small preview
@@ -20,7 +24,7 @@ function ProductCard({ product, index = 0 }) {
       viewport={{ once: true }}
       transition={{ duration: 0.8, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -6, transition: { duration: 0.3, ease: "easeOut" } }}
-      className="group bg-white rounded-none border border-brand-sand hover:border-brand-forest/40 hover:shadow-lg hover:shadow-brand-forest/5 transition-all duration-500 overflow-hidden flex flex-col"
+      className="group bg-white rounded-none border border-brand-sand hover:border-brand-forest/40 hover:shadow-lg hover:shadow-brand-forest/5 transition-all duration-500 overflow-hidden flex flex-col relative"
     >
       {/* Image Container */}
       <div className="relative h-72 overflow-hidden bg-brand-cream border-b border-brand-sand">
@@ -36,6 +40,23 @@ function ProductCard({ product, index = 0 }) {
             {product.category}
           </div>
         )}
+        
+        {/* Compare Toggle Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleCompare(product);
+          }}
+          className={`absolute bottom-4 right-4 z-20 px-3 py-1.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-md backdrop-blur-md ${
+            isCompared
+              ? "bg-amber-400 text-brand-charcoal border border-amber-500"
+              : "bg-white/90 hover:bg-brand-forest hover:text-white text-brand-forest border border-brand-sand"
+          }`}
+        >
+          {isCompared ? <Check className="w-3.5 h-3.5" /> : <Scale className="w-3.5 h-3.5" />}
+          <span>{isCompared ? "Compared" : "Compare"}</span>
+        </button>
+
         {/* Rating Tag if available */}
         {numReviews > 0 && (
           <div className="absolute top-4 right-4 z-20 bg-white/90 text-brand-charcoal border border-brand-sand px-2.5 py-1 text-xs font-bold flex items-center gap-1 backdrop-blur-sm shadow-sm">

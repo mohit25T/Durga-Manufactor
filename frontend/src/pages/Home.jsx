@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, Award, ShieldCheck, Factory } from "lucide-react";
 import API from "../services/api";
 import ProductCard from "../components/ProductCard";
+import MachineFinderWizard from "../components/MachineFinderWizard";
 
 function Home() {
   const [featured, setFeatured] = useState([]);
@@ -178,6 +179,13 @@ function Home() {
             </div>
           </motion.div>
 
+        </div>
+      </section>
+
+      {/* AI Machine Recommendation Finder Quiz Section */}
+      <section className="py-12 bg-white border-t border-brand-sand">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <MachineFinderWizard embedded={true} />
         </div>
       </section>
 

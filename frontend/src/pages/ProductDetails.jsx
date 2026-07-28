@@ -4,12 +4,15 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import API from "../services/api";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, ChevronRight, Phone, X, ZoomIn, ZoomOut, Star, MessageSquare, User, Send, AlertCircle } from "lucide-react";
+import { CheckCircle2, ChevronRight, Phone, X, ZoomIn, ZoomOut, Star, MessageSquare, User, Send, AlertCircle, Scale, Check } from "lucide-react";
 import ProgressiveImage from "../components/ProgressiveImage";
+import FormattedDescription from "../components/FormattedDescription";
 import { getOptimizedImageUrl } from "../utils/image";
+import { useCompare } from "../context/CompareContext";
 
 function ProductDetails() {
   const { id } = useParams();
+  const { toggleCompare, isInCompare } = useCompare();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -347,11 +350,25 @@ Thank you.
             {/* PRODUCT INFO */}
             <div className="lg:col-span-3 bg-white border border-brand-sand p-6 md:p-8 shadow-sm space-y-6">
               <div>
-                {product.category && (
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-brand-forest bg-brand-sage/40 border border-brand-sand px-2.5 py-1 inline-block mb-4">
-                    {product.category}
-                  </span>
-                )}
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  {product.category && (
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-brand-forest bg-brand-sage/40 border border-brand-sand px-2.5 py-1 inline-block">
+                      {product.category}
+                    </span>
+                  )}
+
+                  <button
+                    onClick={() => toggleCompare(product)}
+                    className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border shadow-2xs ${
+                      isInCompare(product._id)
+                        ? "bg-amber-400 text-brand-charcoal border-amber-500 font-extrabold"
+                        : "bg-white hover:bg-brand-forest hover:text-white text-brand-forest border-brand-sand font-bold"
+                    }`}
+                  >
+                    {isInCompare(product._id) ? <Check className="w-3.5 h-3.5" /> : <Scale className="w-3.5 h-3.5" />}
+                    <span>{isInCompare(product._id) ? "In Comparison List" : "Add to Comparison"}</span>
+                  </button>
+                </div>
                 <h1 className="font-serif text-2xl md:text-3xl font-bold text-brand-forest tracking-tight mb-2">
                   {product.name}
                 </h1>
@@ -383,7 +400,10 @@ Thank you.
                 </div>
 
                 {product.description && (
-                  <p className="text-brand-gray font-semibold text-xs md:text-sm leading-relaxed">{product.description}</p>
+                  <FormattedDescription
+                    description={product.description}
+                    className="pt-3 border-t border-brand-sand/50"
+                  />
                 )}
               </div>
 

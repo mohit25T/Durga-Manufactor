@@ -384,3 +384,238 @@ export const deleteProductReview = async (req, res) => {
     });
   }
 };
+
+/* ======================================================
+   GENERATE AI PRODUCT DESCRIPTION
+====================================================== */
+export const generateProductAiDescription = async (req, res) => {
+  try {
+    const { name, category, description, table } = req.body;
+
+    if (!name && !category && (!table || table.length === 0)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter product name, category, or table specifications to generate AI description.",
+      });
+    }
+
+    // Format specification table into key-value context
+    let formattedSpecs = "";
+    if (Array.isArray(table) && table.length > 0) {
+      formattedSpecs = table
+        .map((row) => {
+          if (!Array.isArray(row)) return "";
+          const cleaned = row.filter((cell) => cell && cell.toString().trim() !== "");
+          return cleaned.join(": ");
+        })
+        .filter(Boolean)
+        .join("\n• ");
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    let generatedDescription = "";
+
+    // 1. Try Gemini API if API key exists
+    if (apiKey) {
+      try {
+        const prompt = `You are an elite industrial machinery copywriter for Durga Manufactor.
+Generate a premium, beautifully structured commercial product description for this machinery listing:
+
+Product Details:
+- Product Name: ${name || "Industrial Machine"}
+- Category: ${category || "Commercial Food Processing Machine"}
+- Current Overview Notes: ${description || "N/A"}
+- Technical Specifications:
+${formattedSpecs ? "• " + formattedSpecs : "Standard commercial specifications"}
+
+STRICT STRUCTURE & FORMATTING REQUIREMENTS:
+1. OVERVIEW PARAGRAPH: Write a compelling opening paragraph (2-3 sentences). Use **bold text** for the product name and key highlights (e.g. **1.5 H.P. heavy-duty motor**, **75 KG solid frame**, **high-yield output**).
+2. SECTION HEADING: On a new line separated by double newlines (\n\n), include the section title:
+   ### Key Features & Technical Specifications:
+3. BULLET LIST: Include 4 to 6 specific bullet points starting with "• ". Each bullet point MUST begin with a **Bold Feature Name:** followed by details (e.g. • **Powerful Motor:** Driven by a robust 1.5 H.P. motor...). Use **bold text** for key numbers, capacities, or materials inside the description text. Put EACH bullet point on its own new line separated by blank lines (\n\n).
+4. CLOSING PARAGRAPH: On a new line separated by double newlines (\n\n), write a short closing sentence emphasizing low maintenance, durability, and factory-direct warranty from Durga Manufactor.
+5. NO INLINE BLOBS: Always put double line breaks (\n\n) between paragraphs, headers, and bullets. Never merge headings or bullets inline on the same line. Do NOT output code fences or quotes.`;
+
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [{ text: prompt }] }],
+            }),
+          }
+        );
+
+        const data = await response.json();
+        if (data?.error) {
+          console.error("Gemini AI API Error:", data.error.message || data.error);
+        } else {
+          generatedDescription = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        }
+      } catch (err) {
+        console.error("Gemini AI Description generation error:", err.message);
+      }
+    }
+
+    // 2. Smart local generator fallback if Gemini key is not set or call failed
+    if (!generatedDescription) {
+      generatedDescription = buildLocalAiDescription({ name, category, description, table });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        description: generatedDescription.trim(),
+      },
+    });
+  } catch (error) {
+    console.error("Generate AI Description Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to generate AI description.",
+      error: error.message,
+    });
+  }
+};
+
+function buildLocalAiDescription({ name, category, description, table }) {
+  const prodName = name?.trim() || "Commercial Machinery Unit";
+  const catName = category?.trim() || "Food Processing Equipment";
+
+  let specsList = [];
+  if (Array.isArray(table)) {
+    table.forEach((row) => {
+      if (Array.isArray(row) && row.length >= 2) {
+        const key = row[0]?.trim();
+        const val = row[1]?.trim();
+        if (key && val) {
+          specsList.push(`• **${key}:** ${val}`);
+        }
+      } else if (Array.isArray(row) && row.length === 1 && row[0]?.trim()) {
+        specsList.push(`• ${row[0].trim()}`);
+      }
+    });
+  }
+
+  let intro = `The **${prodName}** by **Durga Manufactor** is a premium commercial-grade machine specifically engineered for high-volume commercial kitchens, food processing units, and catering outlets.`;
+
+  if (catName) {
+    intro += ` Designed for continuous operational excellence in the **${catName}** segment, this heavy-duty unit delivers high output yield with low operational vibration and minimal maintenance.`;
+  }
+
+  let bodyText = "";
+  if (description && description.trim()) {
+    bodyText = `\n\n${description.trim()}`;
+  }
+
+  let specsText = "";
+  if (specsList.length > 0) {
+    specsText = `\n\n### Key Features & Technical Specifications:\n\n` + specsList.join("\n\n");
+  } else {
+    specsText = `\n\n### Key Features & Technical Specifications:\n\n` +
+      `• **Commercial Duty Build:** Heavy-duty body structure for continuous duty cycles.\n\n` +
+      `• **High Efficiency Output:** Engineered for fast processing speeds and optimal energy efficiency.\n\n` +
+      `• **Safety & Protection:** Thermal overload protection with vibration-dampened frame design.`;
+  }
+
+  const outro = `\n\nInvest in long-term operational reliability with this ultra-durable machine backed by Durga Manufactor's trusted factory-direct warranty and service support.`;
+
+  return `${intro}${bodyText}${specsText}${outro}`;
+}
+
+// @desc    Bulk format and structure descriptions for ALL products in DB using Gemini AI or Local Generator
+// @route   POST /api/products/bulk-format-descriptions
+// @access  Private / Admin
+export const bulkFormatDescriptions = async (req, res) => {
+  try {
+    const products = await Product.find({});
+    if (!products || products.length === 0) {
+      return res.json({
+        success: true,
+        message: "No products found in database to format.",
+        updatedCount: 0,
+      });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    let updatedCount = 0;
+
+    for (const product of products) {
+      let formattedDesc = "";
+      const { name, category, description, table } = product;
+
+      let formattedSpecs = "";
+      if (Array.isArray(table)) {
+        formattedSpecs = table
+          .map((row) => (Array.isArray(row) ? row.join(": ") : row))
+          .filter(Boolean)
+          .join("\n• ");
+      }
+
+      if (apiKey) {
+        try {
+          const prompt = `You are an elite industrial machinery copywriter for Durga Manufactor.
+Generate a premium, beautifully structured commercial product description for this machinery listing:
+
+Product Details:
+- Product Name: ${name || "Industrial Machine"}
+- Category: ${category || "Commercial Food Processing Machine"}
+- Current Overview Notes: ${description || "N/A"}
+- Technical Specifications:
+${formattedSpecs ? "• " + formattedSpecs : "Standard commercial specifications"}
+
+STRICT STRUCTURE & FORMATTING REQUIREMENTS:
+1. OVERVIEW PARAGRAPH: Write a compelling opening paragraph (2-3 sentences). Use **bold text** for the product name and key highlights (e.g. **1.5 H.P. heavy-duty motor**, **75 KG solid frame**, **high-yield output**).
+2. SECTION HEADING: On a new line separated by double newlines (\n\n), include the section title:
+   ### Key Features & Technical Specifications:
+3. BULLET LIST: Include 4 to 6 specific bullet points starting with "• ". Each bullet point MUST begin with a **Bold Feature Name:** followed by details (e.g. • **Powerful Motor:** Driven by a robust 1.5 H.P. motor...). Use **bold text** for key numbers, capacities, or materials inside the description text. Put EACH bullet point on its own new line separated by blank lines (\n\n).
+4. CLOSING PARAGRAPH: On a new line separated by double newlines (\n\n), write a short closing sentence emphasizing low maintenance, durability, and factory-direct warranty from Durga Manufactor.
+5. NO INLINE BLOBS: Always put double line breaks (\n\n) between paragraphs, headers, and bullets. Never merge headings or bullets inline on the same line. Do NOT output code fences or quotes.`;
+
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+              }),
+            }
+          );
+
+          const data = await response.json();
+          if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+            formattedDesc = data.candidates[0].content.parts[0].text;
+          }
+        } catch (err) {
+          console.error(`Bulk format error for ${product._id}:`, err.message);
+        }
+      }
+
+      // Fallback to local formatter if Gemini key is missing or failed
+      if (!formattedDesc || !formattedDesc.trim()) {
+        formattedDesc = buildLocalAiDescription({ name, category, description, table });
+      }
+
+      if (formattedDesc && formattedDesc.trim()) {
+        product.description = formattedDesc.trim();
+        await product.save();
+        updatedCount++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Successfully formatted descriptions for ${updatedCount} product(s) using Gemini AI!`,
+      updatedCount,
+    });
+  } catch (error) {
+    console.error("Bulk Format Descriptions Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to bulk format descriptions.",
+      error: error.message,
+    });
+  }
+};

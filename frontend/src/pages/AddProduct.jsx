@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import AdminLayout from "../components/admin/AdminLayout";
 import API from "../services/api";
-import { ArrowLeft, Info, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Info, CheckCircle2, RefreshCw, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import FormattedDescription from "../components/FormattedDescription";
 
 function AddProduct() {
   const navigate = useNavigate();
@@ -19,6 +20,39 @@ function AddProduct() {
     whatsappNumbers: "",
   });
 
+  const [generatingAiDesc, setGeneratingAiDesc] = useState(false);
+
+  const handleGenerateAiDescription = async () => {
+    if (!product.name && !product.category && (!tableData || tableData.length === 0)) {
+      alert("Please enter a Machine Name, Category, or Specification Table data first.");
+      return;
+    }
+
+    setGeneratingAiDesc(true);
+    try {
+      const res = await API.post("/products/ai-description", {
+        name: product.name,
+        category: product.category,
+        description: product.description,
+        table: tableData,
+      });
+
+      if (res.data?.success && res.data?.data?.description) {
+        setProduct((prev) => ({
+          ...prev,
+          description: res.data.data.description,
+        }));
+      } else {
+        throw new Error("Failed to generate description");
+      }
+    } catch (error) {
+      console.error("AI Description Error:", error);
+      alert("Failed to generate AI description: " + (error.response?.data?.message || error.message));
+    } finally {
+      setGeneratingAiDesc(false);
+    }
+  };
+
   const handleCheckboxChange = (e) => {
     const checked = e.target.checked;
     setUseDefaultWhatsApp(checked);
@@ -27,6 +61,7 @@ function AddProduct() {
       whatsappNumbers: checked ? DEFAULT_WHATSAPP_NUMBERS : "",
     }));
   };
+
 
   const [tableData, setTableData] = useState([
     ["", ""],
@@ -207,14 +242,48 @@ function AddProduct() {
                 }
               />
 
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-bold block">Description</label>
+                <button
+                  type="button"
+                  onClick={handleGenerateAiDescription}
+                  disabled={generatingAiDesc}
+                  className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-none shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                  title="Generate professional product description automatically using AI"
+                >
+                  {generatingAiDesc ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5 text-yellow-200" />
+                      AI Description
+                    </>
+                  )}
+                </button>
+              </div>
+
               <textarea
-                rows="4"
-                placeholder="Description"
-                className="w-full px-4 py-3 bg-stone-50 rounded-none mb-6 border border-brand-sand/60"
+                rows="6"
+                placeholder="Description (click 'AI Description' to generate automatically based on machine specifications...)"
+                value={product.description}
+                className="w-full px-4 py-3 bg-stone-50 rounded-none mb-4 border border-brand-sand/60 font-sans text-sm"
                 onChange={(e) =>
                   setProduct({ ...product, description: e.target.value })
                 }
               />
+
+              {product.description && (
+                <div className="mb-6 p-4 bg-white border border-brand-sand/80 shadow-sm">
+                  <div className="text-xs font-bold text-brand-forest uppercase tracking-wider mb-2 border-b border-brand-sand/40 pb-1">
+                    Live Description Preview (as seen on website)
+                  </div>
+                  <FormattedDescription description={product.description} />
+                </div>
+              )}
+
 
               {/* TABLE */}
 

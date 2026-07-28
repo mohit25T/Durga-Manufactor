@@ -16,6 +16,8 @@ import {
   X,
   Star,
   MessageSquare,
+  Sparkles,
+  RefreshCw,
 } from "lucide-react";
 
 function Products() {
@@ -177,6 +179,47 @@ function Products() {
     } finally {
       setDeletingReviewId(null);
     }
+  }
+
+  const [bulkFormatting, setBulkFormatting] = useState(false);
+
+  const fetchProductsList = async () => {
+    try {
+      setLoading(true);
+      const res = await API.get("/products");
+      const data = (res.data?.data || []).map((p) => ({
+        ...p,
+        views: p.views || 0,
+      }));
+      setProducts(data);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkFormatDescriptions = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to format all product descriptions using Gemini AI?\n\nThis will re-generate and structure every product description into professional overview paragraphs, '### Key Features & Technical Specifications:' headings, and bold bullet points."
+    );
+    if (!confirmed) return;
+
+    try {
+      setBulkFormatting(true);
+      const res = await API.post("/products/bulk-format-descriptions");
+      if (res.data?.success) {
+        alert(res.data.message || "Successfully formatted all product descriptions!");
+        fetchProductsList();
+      } else {
+        alert(res.data?.message || "Failed to format descriptions.");
+      }
+    } catch (err) {
+      console.error("Bulk format error:", err);
+      alert(err.response?.data?.message || "Failed to format descriptions.");
+    } finally {
+      setBulkFormatting(false);
+    }
   };
 
   return (
@@ -207,7 +250,7 @@ function Products() {
 
           <button
             onClick={() => navigate("/admin/add-product")}
-            className="flex items-center gap-2 bg-brand-slateDark text-white px-4 py-2 rounded-none font-bold text-sm"
+            className="flex items-center gap-2 bg-brand-slateDark text-white px-4 py-2 rounded-none font-bold text-sm cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Add Product
@@ -215,23 +258,59 @@ function Products() {
         </div>
       </div>
 
-      {/* Priority Display Setting */}
-      <div className="bg-brand-light p-6 rounded-none shadow-md border border-brand-sand mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
-          <h2 className="text-base font-bold text-brand-slateDark mb-1">
-            Category Display Order
-          </h2>
-          <p className="text-brand-gray text-xs font-semibold">
-            Customize the order in which categories appear in the customer catalog.
-          </p>
+      {/* Admin Settings & Tools Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Priority Display Setting */}
+        <div className="bg-brand-light p-6 rounded-none shadow-md border border-brand-sand flex flex-col justify-between items-start gap-4">
+          <div>
+            <h2 className="text-base font-bold text-brand-slateDark mb-1">
+              Category Display Order
+            </h2>
+            <p className="text-brand-gray text-xs font-semibold">
+              Customize the order in which categories appear in the customer catalog.
+            </p>
+          </div>
+
+          <button
+            onClick={handleOpenReorderModal}
+            className="flex items-center gap-2 bg-brand-slateDark hover:bg-black text-white px-5 py-2.5 text-xs font-bold uppercase tracking-widest transition-all rounded-none duration-150 cursor-pointer"
+          >
+            Reorder Categories
+          </button>
         </div>
 
-        <button
-          onClick={handleOpenReorderModal}
-          className="flex items-center gap-2 bg-brand-slateDark hover:bg-black text-white px-5 py-2.5 text-xs font-bold uppercase tracking-widest transition-all rounded-none duration-150"
-        >
-          Reorder Categories
-        </button>
+        {/* AI Bulk Description Formatter */}
+        <div className="bg-amber-50/60 p-6 rounded-none shadow-md border border-amber-200 flex flex-col justify-between items-start gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="w-4 h-4 text-amber-600" />
+              <h2 className="text-base font-bold text-brand-slateDark">
+                Gemini AI Bulk Description Enhancer
+              </h2>
+            </div>
+            <p className="text-brand-gray text-xs font-semibold">
+              Automatically re-format and structure all product descriptions across your inventory into bold headings, bullet lists, and key specs.
+            </p>
+          </div>
+
+          <button
+            onClick={handleBulkFormatDescriptions}
+            disabled={bulkFormatting}
+            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white px-5 py-2.5 text-xs font-bold uppercase tracking-widest transition-all rounded-none duration-150 cursor-pointer shadow-sm"
+          >
+            {bulkFormatting ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>Formatting All Products...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                <span>Format All Descriptions with AI</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Reorder Modal */}

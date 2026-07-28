@@ -97,9 +97,32 @@ function Products() {
     if (indexB !== -1) return 1;
     return a.localeCompare(b);
   });
-  const hpOptions = [...new Set(products.map(p => extractHP(p)).filter(Boolean))].sort((a, b) => {
+
+  // Filter HP options to show only HP ratings available within the selected category
+  const productsForHP = selectedCategory === "ALL" 
+    ? products 
+    : products.filter(p => p.category === selectedCategory);
+
+  const hpOptions = [...new Set(productsForHP.map(p => extractHP(p)).filter(Boolean))].sort((a, b) => {
     return parseFloat(a) - parseFloat(b);
   });
+
+  // Automatically reset HP filter to ALL if currently selected HP is unavailable in newly selected category
+  useEffect(() => {
+    if (selectedCategory !== "ALL" && selectedHP !== "ALL") {
+      const availableHPs = products
+        .filter((p) => p.category === selectedCategory)
+        .map((p) => extractHP(p));
+      const hasNone = availableHPs.some((hp) => !hp);
+      const validHPs = availableHPs.filter(Boolean);
+
+      if (selectedHP === "NONE" && !hasNone) {
+        setSelectedHP("ALL");
+      } else if (selectedHP !== "NONE" && !validHPs.includes(selectedHP)) {
+        setSelectedHP("ALL");
+      }
+    }
+  }, [selectedCategory, products, selectedHP]);
 
   // Filter products logic
   const filteredProducts = products.filter((product) => {
