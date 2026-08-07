@@ -9,6 +9,7 @@ import productRoutes from "./routes/product.routes.js";
 import leadRoutes from "./routes/lead.routes.js";
 import settingsRoutes from "./routes/settings.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
+import dealerRoutes from "./routes/dealer.routes.js";
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/dealers", dealerRoutes);
 
 /* Health Check */
 

@@ -55,6 +55,14 @@ function Footer() {
                 Contact & Support
               </Link>
             </li>
+            <li>
+              <Link
+                to="/dealer/login"
+                className="hover:text-brand-amber hover:underline transition-all text-brand-amber font-bold"
+              >
+                Authorized Dealer Portal
+              </Link>
+            </li>
           </ul>
         </div>
 

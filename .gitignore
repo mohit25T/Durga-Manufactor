@@ -11,6 +11,7 @@ node_modules/
 # OS files
 .DS_Store
 Thumbs.db
+/dealer_app
 
 # Build folders
 dist/

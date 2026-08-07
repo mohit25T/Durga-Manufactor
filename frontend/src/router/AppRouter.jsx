@@ -20,6 +20,12 @@ import AddProduct from "../pages/AddProduct";
 import ProductsAdmin from "../pages/AdminProducts";
 import Leads from "../pages/Leads";
 import EditProduct from "../pages/EditProduct";
+import AdminDealers from "../pages/AdminDealers";
+
+/* Dealer Pages */
+import DealerLogin from "../pages/DealerLogin";
+import DealerDashboard from "../pages/DealerDashboard";
+import ProtectedDealerRoute from "../components/ProtectedDealerRoute";
 
 function AppRouter() {
   return (
@@ -36,6 +42,17 @@ function AppRouter() {
           <Route path="/products/:id" element={<ProductDetails />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+
+          {/* Dealer Portal Routes */}
+          <Route path="/dealer/login" element={<DealerLogin />} />
+          <Route
+            path="/dealer/dashboard"
+            element={
+              <ProtectedDealerRoute>
+                <DealerDashboard />
+              </ProtectedDealerRoute>
+            }
+          />
 
           {/* Protected Admin Routes */}
           <Route path="/admin/login" element={<Login />} />
@@ -84,6 +101,14 @@ function AppRouter() {
             element={
               <ProtectedRoute>
                 <Leads />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dealers"
+            element={
+              <ProtectedRoute>
+                <AdminDealers />
               </ProtectedRoute>
             }
           />

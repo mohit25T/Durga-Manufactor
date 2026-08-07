@@ -12,6 +12,7 @@ function AdminSidebar({ isOpen, setIsOpen }) {
     { name: "Manage Products", path: "/admin/products", icon: Icons.PackageSearch },
     { name: "Add Product", path: "/admin/add-product", icon: Icons.PackagePlus },
     { name: "Leads & Inquiries", path: "/admin/leads", icon: Icons.Users },
+    { name: "Manage Dealers", path: "/admin/dealers", icon: Icons.Building2 },
   ];
 
   const handleLogout = () => {

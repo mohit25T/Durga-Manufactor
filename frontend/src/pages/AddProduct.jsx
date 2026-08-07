@@ -33,7 +33,6 @@ function AddProduct() {
       const res = await API.post("/products/ai-description", {
         name: product.name,
         category: product.category,
-        description: product.description,
         table: tableData,
       });
 

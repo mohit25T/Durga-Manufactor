@@ -25,18 +25,23 @@ function Navbar() {
         </Link>
 
         {/* Navigation */}
-        <div className="hidden md:flex gap-10 font-sans text-xs tracking-widest uppercase items-center">
-          {['Home', 'Products', 'About', 'Contact'].map((item) => {
-            const path = item === 'Home' ? '/' : `/${item.toLowerCase()}`;
-            const isActive = location.pathname === path;
+        <div className="hidden md:flex gap-8 font-sans text-xs tracking-widest uppercase items-center">
+          {[
+            { label: "Home", path: "/" },
+            { label: "Products", path: "/products" },
+            { label: "About", path: "/about" },
+            { label: "Contact", path: "/contact" },
+            { label: "Dealer Portal", path: "/dealer/login" }
+          ].map((item) => {
+            const isActive = location.pathname === item.path || (item.path === "/dealer/login" && location.pathname.startsWith("/dealer"));
             
             return (
               <Link 
-                key={item} 
-                to={path}
+                key={item.label} 
+                to={item.path}
                 className={`relative py-1.5 transition-colors duration-300 font-bold ${isActive ? 'text-brand-amber' : 'text-white/80 hover:text-white'}`}
               >
-                {item}
+                {item.label}
                 {isActive && (
                   <motion.div 
                     layoutId="navbar-indicator"
@@ -49,15 +54,23 @@ function Navbar() {
           })}
         </div>
 
-        {/* Call Button */}
-        <motion.a
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          href="tel:+91 94281 56213"
-          className="bg-brand-amber hover:bg-white border border-brand-amber hover:border-white text-brand-slateDark px-6 py-3 rounded-none font-bold font-sans text-[11px] tracking-widest uppercase transition-all duration-300 hidden sm:block"
-        >
-          Call Now
-        </motion.a>
+        {/* Action Buttons */}
+        <div className="hidden sm:flex items-center gap-3">
+          <Link
+            to="/dealer/login"
+            className="border border-brand-amber/40 hover:border-brand-amber text-brand-amber hover:bg-brand-amber/10 px-4 py-3 font-bold font-sans text-[11px] tracking-widest uppercase transition-all duration-300"
+          >
+            Dealer Login
+          </Link>
+          <motion.a
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            href="tel:+91 94281 56213"
+            className="bg-brand-amber hover:bg-white border border-brand-amber hover:border-white text-brand-slateDark px-5 py-3 rounded-none font-bold font-sans text-[11px] tracking-widest uppercase transition-all duration-300"
+          >
+            Call Now
+          </motion.a>
+        </div>
       </nav>
     </motion.header>
   );

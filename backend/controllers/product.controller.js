@@ -419,12 +419,11 @@ export const generateProductAiDescription = async (req, res) => {
     if (apiKey) {
       try {
         const prompt = `You are an elite industrial machinery copywriter for Durga Manufactor.
-Generate a premium, beautifully structured commercial product description for this machinery listing:
+Generate a BRAND NEW, fresh, premium commercial product description to REPLACE any old description for this machinery listing:
 
 Product Details:
 - Product Name: ${name || "Industrial Machine"}
 - Category: ${category || "Commercial Food Processing Machine"}
-- Current Overview Notes: ${description || "N/A"}
 - Technical Specifications:
 ${formattedSpecs ? "• " + formattedSpecs : "Standard commercial specifications"}
 
@@ -434,7 +433,7 @@ STRICT STRUCTURE & FORMATTING REQUIREMENTS:
    ### Key Features & Technical Specifications:
 3. BULLET LIST: Include 4 to 6 specific bullet points starting with "• ". Each bullet point MUST begin with a **Bold Feature Name:** followed by details (e.g. • **Powerful Motor:** Driven by a robust 1.5 H.P. motor...). Use **bold text** for key numbers, capacities, or materials inside the description text. Put EACH bullet point on its own new line separated by blank lines (\n\n).
 4. CLOSING PARAGRAPH: On a new line separated by double newlines (\n\n), write a short closing sentence emphasizing low maintenance, durability, and factory-direct warranty from Durga Manufactor.
-5. NO INLINE BLOBS: Always put double line breaks (\n\n) between paragraphs, headers, and bullets. Never merge headings or bullets inline on the same line. Do NOT output code fences or quotes.`;
+5. DO NOT REPEAT OR INCLUDE ANY PREVIOUS OLD DESCRIPTION. Generate ONLY the fresh new structured text without code fences.`;
 
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
@@ -460,7 +459,7 @@ STRICT STRUCTURE & FORMATTING REQUIREMENTS:
 
     // 2. Smart local generator fallback if Gemini key is not set or call failed
     if (!generatedDescription) {
-      generatedDescription = buildLocalAiDescription({ name, category, description, table });
+      generatedDescription = buildLocalAiDescription({ name, category, table });
     }
 
     res.json({
@@ -479,7 +478,7 @@ STRICT STRUCTURE & FORMATTING REQUIREMENTS:
   }
 };
 
-function buildLocalAiDescription({ name, category, description, table }) {
+function buildLocalAiDescription({ name, category, table }) {
   const prodName = name?.trim() || "Commercial Machinery Unit";
   const catName = category?.trim() || "Food Processing Equipment";
 
@@ -504,11 +503,6 @@ function buildLocalAiDescription({ name, category, description, table }) {
     intro += ` Designed for continuous operational excellence in the **${catName}** segment, this heavy-duty unit delivers high output yield with low operational vibration and minimal maintenance.`;
   }
 
-  let bodyText = "";
-  if (description && description.trim()) {
-    bodyText = `\n\n${description.trim()}`;
-  }
-
   let specsText = "";
   if (specsList.length > 0) {
     specsText = `\n\n### Key Features & Technical Specifications:\n\n` + specsList.join("\n\n");
@@ -521,7 +515,7 @@ function buildLocalAiDescription({ name, category, description, table }) {
 
   const outro = `\n\nInvest in long-term operational reliability with this ultra-durable machine backed by Durga Manufactor's trusted factory-direct warranty and service support.`;
 
-  return `${intro}${bodyText}${specsText}${outro}`;
+  return `${intro}${specsText}${outro}`;
 }
 
 // @desc    Bulk format and structure descriptions for ALL products in DB using Gemini AI or Local Generator
@@ -543,7 +537,7 @@ export const bulkFormatDescriptions = async (req, res) => {
 
     for (const product of products) {
       let formattedDesc = "";
-      const { name, category, description, table } = product;
+      const { name, category, table } = product;
 
       let formattedSpecs = "";
       if (Array.isArray(table)) {
@@ -556,12 +550,11 @@ export const bulkFormatDescriptions = async (req, res) => {
       if (apiKey) {
         try {
           const prompt = `You are an elite industrial machinery copywriter for Durga Manufactor.
-Generate a premium, beautifully structured commercial product description for this machinery listing:
+Generate a BRAND NEW, fresh, premium commercial product description to REPLACE any old description for this machinery listing:
 
 Product Details:
 - Product Name: ${name || "Industrial Machine"}
 - Category: ${category || "Commercial Food Processing Machine"}
-- Current Overview Notes: ${description || "N/A"}
 - Technical Specifications:
 ${formattedSpecs ? "• " + formattedSpecs : "Standard commercial specifications"}
 
@@ -571,7 +564,7 @@ STRICT STRUCTURE & FORMATTING REQUIREMENTS:
    ### Key Features & Technical Specifications:
 3. BULLET LIST: Include 4 to 6 specific bullet points starting with "• ". Each bullet point MUST begin with a **Bold Feature Name:** followed by details (e.g. • **Powerful Motor:** Driven by a robust 1.5 H.P. motor...). Use **bold text** for key numbers, capacities, or materials inside the description text. Put EACH bullet point on its own new line separated by blank lines (\n\n).
 4. CLOSING PARAGRAPH: On a new line separated by double newlines (\n\n), write a short closing sentence emphasizing low maintenance, durability, and factory-direct warranty from Durga Manufactor.
-5. NO INLINE BLOBS: Always put double line breaks (\n\n) between paragraphs, headers, and bullets. Never merge headings or bullets inline on the same line. Do NOT output code fences or quotes.`;
+5. DO NOT REPEAT OR INCLUDE ANY PREVIOUS OLD DESCRIPTION. Generate ONLY the fresh new structured text without code fences.`;
 
           const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
@@ -595,7 +588,7 @@ STRICT STRUCTURE & FORMATTING REQUIREMENTS:
 
       // Fallback to local formatter if Gemini key is missing or failed
       if (!formattedDesc || !formattedDesc.trim()) {
-        formattedDesc = buildLocalAiDescription({ name, category, description, table });
+        formattedDesc = buildLocalAiDescription({ name, category, table });
       }
 
       if (formattedDesc && formattedDesc.trim()) {
