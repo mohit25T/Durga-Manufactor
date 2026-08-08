@@ -189,8 +189,8 @@ function DealerLogin() {
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-brand-amber shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-white text-xs font-bold uppercase tracking-wider">Tiered Wholesale Pricing</h4>
-                    <p className="text-slate-400 text-xs">Custom margins & discount rates for Silver, Gold, and Platinum dealers.</p>
+                    <h4 className="text-white text-xs font-bold uppercase tracking-wider">Direct Wholesale Pricing</h4>
+                    <p className="text-slate-400 text-xs">Transparent factory-direct dealer rates for all authorized partners.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

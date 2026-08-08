@@ -199,11 +199,7 @@ function DealerDashboard() {
 
   // Cart operations
   const addToCart = (product) => {
-    const discount = dealer?.discountPercent ?? 10;
-    const originalPrice = Number(product.price) || 0;
-    const discountedPrice = (product.appPrice !== undefined && product.appPrice !== null && Number(product.appPrice) > 0)
-      ? Number(product.appPrice)
-      : Math.round(originalPrice * (1 - discount / 100));
+    const dealerPrice = Number(product.appPrice || product.price) || 0;
 
     const existingIndex = cart.findIndex((item) => item.product._id === product._id);
     if (existingIndex > -1) {
@@ -217,8 +213,8 @@ function DealerDashboard() {
           product,
           productTitle: product.name || product.title || "Machinery",
           quantity: 1,
-          originalPrice,
-          discountedPrice
+          originalPrice: dealerPrice,
+          discountedPrice: dealerPrice
         }
       ]);
     }
@@ -427,8 +423,8 @@ function DealerDashboard() {
                 <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white">
                   {dealer?.companyName || "Dealer Portal"}
                 </h1>
-                <span className={`text-xs px-2.5 py-0.5 border font-semibold ${getBadgeColor(dealer?.tier)}`}>
-                  {dealer?.tier || "Standard"} Member
+                <span className="text-xs px-2.5 py-0.5 border font-semibold border-amber-500/40 text-brand-amber bg-amber-500/10 rounded">
+                  Authorized Dealer
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-1">
@@ -439,10 +435,6 @@ function DealerDashboard() {
           </div>
 
           <div className="flex items-center gap-3 self-end md:self-auto">
-            <div className="bg-slate-900 border border-slate-800 px-4 py-2 text-right">
-              <span className="block text-[10px] text-slate-400 uppercase tracking-widest font-bold">Wholesale Discount</span>
-              <span className="text-lg font-serif font-bold text-brand-amber">{dealer?.discountPercent ?? 0}% OFF MRP</span>
-            </div>
 
             {/* Notification Bell */}
             <div className="relative">
@@ -585,11 +577,7 @@ function DealerDashboard() {
                     {/* Category Products Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {catProducts.map((p) => {
-                        const originalPrice = Number(p.price) || 0;
-                        const discount = dealer?.discountPercent ?? 10;
-                        const discountedPrice = (p.appPrice !== undefined && p.appPrice !== null && Number(p.appPrice) > 0)
-                          ? Number(p.appPrice)
-                          : Math.round(originalPrice * (1 - discount / 100));
+                        const dealerPrice = Number(p.appPrice || p.price) || 0;
                         const imgUrl = p.images?.[0] || p.image || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158";
 
                         return (
@@ -611,9 +599,6 @@ function DealerDashboard() {
                                 ) : (
                                   <Building2 className="w-12 h-12 text-slate-700" />
                                 )}
-                                <div className="absolute top-2 right-2 bg-brand-amber text-slate-950 font-bold text-[10px] uppercase px-2 py-0.5">
-                                  {discount}% Dealer Off
-                                </div>
                               </div>
 
                               {/* Info */}
@@ -626,17 +611,11 @@ function DealerDashboard() {
                                 </p>
 
                                 {/* Pricing */}
-                                <div className="flex items-baseline justify-between pt-2 border-t border-slate-800">
+                                <div className="flex items-center justify-between pt-2 border-t border-slate-800">
                                   <div>
-                                    <span className="text-[10px] uppercase text-slate-500 block">MRP</span>
-                                    <span className="text-xs text-slate-400 line-through">
-                                      ₹{originalPrice.toLocaleString("en-IN")}
-                                    </span>
-                                  </div>
-                                  <div className="text-right">
-                                    <span className="text-[10px] uppercase text-brand-amber block font-bold">Dealer Rate</span>
-                                    <span className="text-base font-serif font-bold text-white">
-                                      ₹{discountedPrice.toLocaleString("en-IN")}
+                                    <span className="text-[10px] uppercase text-brand-amber block font-bold">Dealer Price</span>
+                                    <span className="text-lg font-serif font-bold text-white">
+                                      ₹{dealerPrice.toLocaleString("en-IN")}
                                     </span>
                                   </div>
                                 </div>
