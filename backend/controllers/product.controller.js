@@ -180,17 +180,23 @@ export const updateProduct = async (req, res) => {
       whatsappNumbers = JSON.parse(whatsappNumbers);
     }
 
+    const updateData = {
+      name: req.body.name,
+      description: req.body.description,
+      table,
+      category: req.body.category,
+      price: req.body.price,
+      whatsappNumbers,
+      images: updatedImages
+    };
+
+    if (req.body.appPrice !== undefined) {
+      updateData.appPrice = Number(req.body.appPrice);
+    }
+
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
-      {
-        name: req.body.name,
-        description: req.body.description,
-        table,
-        category: req.body.category,
-        price: req.body.price,
-        whatsappNumbers,
-        images: updatedImages
-      },
+      updateData,
       { new: true }
     );
 
@@ -207,6 +213,52 @@ export const updateProduct = async (req, res) => {
       message: error.message
     });
 
+  }
+};
+
+
+/* =========================
+   UPDATE MACHINE PRICE (ADMIN)
+========================= */
+
+export const updateMachinePriceAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { appPrice, price } = req.body;
+
+    const updateFields = {};
+    if (appPrice !== undefined && appPrice !== null) {
+      updateFields.appPrice = Number(appPrice);
+    }
+    if (price !== undefined && price !== null) {
+      updateFields.price = Number(price);
+    }
+
+    const product = await Product.findByIdAndUpdate(
+      id,
+      { $set: updateFields },
+      { new: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Machine price updated successfully in app",
+      data: product
+    });
+
+  } catch (error) {
+    console.error("UPDATE MACHINE PRICE ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 

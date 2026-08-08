@@ -63,6 +63,12 @@ const productSchema = new mongoose.Schema(
             min: 0
         },
 
+        /* Hidden App-only Machine Wholesale Price (Set by Admin, Not shown on website) */
+        appPrice: {
+            type: Number,
+            min: 0
+        },
+
         images: [
             {
                 type: String

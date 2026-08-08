@@ -12,6 +12,7 @@ import {
   deleteProductReview,
   generateProductAiDescription,
   bulkFormatDescriptions,
+  updateMachinePriceAdmin,
 } from "../controllers/product.controller.js";
 
 import { verifyAdmin } from "../middleware/auth.middleware.js";
@@ -93,6 +94,8 @@ router.put(
   @access  Admin
 */
 router.delete("/:id", verifyAdmin, deleteProduct);
+
+router.put("/:id/price", verifyAdmin, updateMachinePriceAdmin);
 
 router.delete("/:id/image", verifyAdmin, deleteProductImage);
 

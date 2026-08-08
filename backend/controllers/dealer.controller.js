@@ -1,8 +1,10 @@
 import Dealer from "../models/Dealer.js";
+import Admin from "../models/Admin.js";
 import DealerOrder from "../models/DealerOrder.js";
 import DealerNotification from "../models/DealerNotification.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { sendOrderStatusEmail } from "../utils/sendEmailNotification.js";
 
 // Dealer Register (Self Application)
 export const registerDealer = async (req, res) => {
@@ -80,6 +82,43 @@ export const loginDealer = async (req, res) => {
 
     const dealer = await Dealer.findOne({ email: email.toLowerCase() });
     if (!dealer) {
+      // Check if email belongs to Admin
+      const admin = await Admin.findOne({ email: email.toLowerCase() });
+      if (admin) {
+        const isAdminMatch = await bcrypt.compare(password, admin.password);
+        if (isAdminMatch) {
+          const token = jwt.sign(
+            {
+              id: admin._id,
+              email: admin.email,
+              companyName: "Durga Admin",
+              role: "admin"
+            },
+            process.env.JWT_SECRET || "defaultsecret",
+            { expiresIn: "7d" }
+          );
+
+          return res.status(200).json({
+            success: true,
+            message: "Admin Login Successful",
+            token,
+            role: "admin",
+            dealer: {
+              id: admin._id,
+              companyName: "Durga Admin Portal",
+              contactPerson: "System Administrator",
+              email: admin.email,
+              phone: "+91 94281 56213",
+              gstNumber: "24AAAAA0000A1Z5",
+              status: "approved",
+              tier: "Admin",
+              role: "admin",
+              discountPercent: 0
+            }
+          });
+        }
+      }
+
       return res.status(401).json({
         success: false,
         message: "Invalid email or password."
@@ -137,11 +176,52 @@ export const loginDealer = async (req, res) => {
   }
 };
 
-// Get current logged-in Dealer profile
+// Get current logged-in Dealer or Admin profile
 export const getDealerProfile = async (req, res) => {
   try {
+    if (req.dealer?.role === "admin") {
+      const admin = await Admin.findById(req.dealer.id).select("-password");
+      if (admin) {
+        return res.status(200).json({
+          success: true,
+          dealer: {
+            id: admin._id,
+            companyName: "Durga Admin Portal",
+            contactPerson: "System Administrator",
+            email: admin.email,
+            phone: "+91 94281 56213",
+            gstNumber: "24AAAAA0000A1Z5",
+            status: "approved",
+            tier: "Admin",
+            role: "admin",
+            discountPercent: 0
+          }
+        });
+      }
+    }
+
     const dealer = await Dealer.findById(req.dealer.id).select("-password");
     if (!dealer) {
+      // Fallback Admin check
+      const admin = await Admin.findById(req.dealer.id).select("-password");
+      if (admin) {
+        return res.status(200).json({
+          success: true,
+          dealer: {
+            id: admin._id,
+            companyName: "Durga Admin Portal",
+            contactPerson: "System Administrator",
+            email: admin.email,
+            phone: "+91 94281 56213",
+            gstNumber: "24AAAAA0000A1Z5",
+            status: "approved",
+            tier: "Admin",
+            role: "admin",
+            discountPercent: 0
+          }
+        });
+      }
+
       return res.status(404).json({
         success: false,
         message: "Dealer account not found."
@@ -248,6 +328,32 @@ export const createDealerOrder = async (req, res) => {
       status: "Pending",
       notes: notes || ""
     });
+
+    // Create In-App Notification for Dealer
+    await DealerNotification.create({
+      dealer: req.dealer.id,
+      order: order._id,
+      title: "Bulk Order / Quote Submitted",
+      message: `Your machinery order #${order._id.toString().slice(-8).toUpperCase()} for ₹${totalAmount.toLocaleString("en-IN")} has been submitted successfully.`,
+      type: "order_created"
+    });
+
+    // Trigger Email Notification (if configured)
+    try {
+      const dealerDoc = await Dealer.findById(req.dealer.id);
+      if (dealerDoc && dealerDoc.email) {
+        sendOrderStatusEmail({
+          toEmail: dealerDoc.email,
+          toName: dealerDoc.contactPerson || dealerDoc.companyName,
+          orderId: order._id,
+          status: "Pending",
+          totalAmount: order.totalAmount,
+          items: order.items
+        }).catch((err) => console.error("Order creation email send error:", err));
+      }
+    } catch (e) {
+      console.error("Email notification fetch error:", e);
+    }
 
     return res.status(201).json({
       success: true,
@@ -493,15 +599,31 @@ export const updateOrderStatusAdmin = async (req, res) => {
         dealer: order.dealer,
         order: order._id,
         title: `Order Status: ${status.toUpperCase()}`,
-        message: `Your order #${order._id.toString().slice(-8)} has been updated to ${status}. Total: ₹${order.totalAmount.toLocaleString("en-IN")}.`,
+        message: `Your order #${order._id.toString().slice(-8).toUpperCase()} has been updated to ${status}. Total: ₹${order.totalAmount.toLocaleString("en-IN")}.`,
         type: "status_update"
       });
+
+      try {
+        const dealerDoc = await Dealer.findById(order.dealer);
+        if (dealerDoc && dealerDoc.email) {
+          sendOrderStatusEmail({
+            toEmail: dealerDoc.email,
+            toName: dealerDoc.contactPerson || dealerDoc.companyName,
+            orderId: order._id,
+            status,
+            totalAmount: order.totalAmount,
+            items: order.items
+          }).catch((err) => console.error("Status email send error:", err));
+        }
+      } catch (e) {
+        console.error("Status update email fetch error:", e);
+      }
     } else if (items && items.length > 0) {
       await DealerNotification.create({
         dealer: order.dealer,
         order: order._id,
         title: `Wholesale Rates / Tax Split Updated`,
-        message: `Pricing or tax breakdown updated for order #${order._id.toString().slice(-8)}. Total: ₹${order.totalAmount.toLocaleString("en-IN")}.`,
+        message: `Pricing or tax breakdown updated for order #${order._id.toString().slice(-8).toUpperCase()}. Total: ₹${order.totalAmount.toLocaleString("en-IN")}.`,
         type: "price_update"
       });
     }
