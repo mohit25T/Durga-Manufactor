@@ -716,64 +716,99 @@ export const markDealerNotificationsRead = async (req, res) => {
 };
 
 /* ======================================================
-   GST LOOKUP API - Auto Fetch Company Details from GSTIN
+   GST LOOKUP API - Auto Fetch with Multi-Key Failover
 ====================================================== */
-// REAL GST LOOKUP API (gstincheck.co.in) - Matched EXACTLY to ERP-main
+let currentApiKeyIndex = 0;
+
 export const lookupGSTIN = async (req, res, next) => {
   const { gstin } = req.params;
-  const apiKey = process.env.GST_API_KEY;
-  console.log("api key:  ", apiKey)
-  console.log("gstin:  ", gstin)
+  const cleanGSTIN = (gstin || "").trim().toUpperCase();
 
-  if (!apiKey) {
-    console.error("[GST LOOKUP]: GST_API_KEY missing from .env");
+  if (!cleanGSTIN) {
+    return res.status(400).json({ success: false, error: "GSTIN parameter is required." });
+  }
+
+  // Parse list of API keys from GST_API_KEYS (comma-separated) or GST_API_KEY
+  const rawKeys = process.env.GST_API_KEYS || process.env.GST_API_KEY || "";
+  const apiKeys = rawKeys.split(",").map(k => k.trim()).filter(Boolean);
+
+  if (apiKeys.length === 0) {
+    console.error("[GST LOOKUP]: No GST API keys found in .env");
     return next(new Error("Server Configuration Error: GST API Key not found."));
   }
 
-  try {
-    const response = await axios.get(`https://sheet.gstincheck.co.in/check/${apiKey}/${gstin}`);
-    const result = response.data;
-    console.log("result:  ", result)
+  let lastError = null;
 
-    if (!result.flag || !result.data) {
-      return res.status(404).json({ error: result.message || "GSTIN not found or invalid." });
-    }
+  for (let i = 0; i < apiKeys.length; i++) {
+    const keyIndex = (currentApiKeyIndex + i) % apiKeys.length;
+    const apiKey = apiKeys[keyIndex];
 
-    const biz = result.data;
-    const addr = biz.pradr.addr;
+    try {
+      console.log(`[GST LOOKUP]: Trying key #${keyIndex + 1}/${apiKeys.length} (${apiKey.substring(0, 6)}...)...`);
+      const response = await axios.get(`https://sheet.gstincheck.co.in/check/${apiKey}/${cleanGSTIN}`, {
+        timeout: 7000
+      });
+      const result = response.data;
 
-    console.log(`[GST FETCH SUCCESS]: Captured details for ${biz.lgnm || biz.tradeNam}`);
-    const combinedAddress = [
-      addr.bnm, addr.bno, addr.flno, addr.st, addr.loc, addr.dst, addr.city
-    ].filter(Boolean).join(", ");
+      // Detect API Key limit / quota error
+      const isQuotaExpired = result && (!result.flag) && (
+        (result.message && /limit|quota|expired|exceed|credit/i.test(result.message)) ||
+        result.errorCode === 429
+      );
 
-    res.json({
-      success: true,
-      companyName: biz.lgnm || biz.tradeNam,
-      address: combinedAddress,
-      city: addr.dst || addr.city || addr.loc || "",
-      state: addr.stcd,
-      pincode: addr.pncd,
-      status: biz.sts,
-      data: {
+      if (isQuotaExpired) {
+        console.warn(`[GST API ROTATION]: Key #${keyIndex + 1} limit expired. Swapping to next key...`);
+        continue; // Try next key
+      }
+
+      if (!result || !result.flag || !result.data) {
+        lastError = result?.message || "GSTIN not found or invalid.";
+        break;
+      }
+
+      // Lock in working key index for future calls
+      currentApiKeyIndex = keyIndex;
+      const biz = result.data;
+      const addr = biz.pradr?.addr || {};
+
+      console.log(`[GST FETCH SUCCESS]: Captured details using Key #${keyIndex + 1} for ${biz.lgnm || biz.tradeNam}`);
+      const combinedAddress = [
+        addr.bnm, addr.bno, addr.flno, addr.st, addr.loc, addr.dst, addr.city
+      ].filter(Boolean).join(", ");
+
+      const payload = {
+        success: true,
         companyName: biz.lgnm || biz.tradeNam,
+        contactPerson: biz.lgnm || "",
         address: combinedAddress,
         city: addr.dst || addr.city || addr.loc || "",
-        state: addr.stcd,
-        pincode: addr.pncd,
-        status: biz.sts
+        state: addr.stcd || "",
+        pincode: addr.pncd || "",
+        status: biz.sts || "Active",
+        gstNumber: cleanGSTIN,
+        data: {
+          companyName: biz.lgnm || biz.tradeNam,
+          address: combinedAddress,
+          city: addr.dst || addr.city || addr.loc || "",
+          state: addr.stcd || "",
+          pincode: addr.pncd || "",
+          status: biz.sts || "Active",
+          gstNumber: cleanGSTIN
+        }
+      };
+
+      return res.json(payload);
+    } catch (err) {
+      console.warn(`[GST API ROTATION]: Key #${keyIndex + 1} failed (${err.message}). Trying next key...`);
+      lastError = err?.response?.data?.message || err.message;
+      if (err.response?.status === 429 || err.response?.status === 403) {
+        continue;
       }
-    });
-  } catch (err) {
-    console.error("[GST LOOKUP EXACT ERROR]:", err?.response?.data || err.message || err);
-    console.log("[GST LOOKUP FULL DETAILS]:", {
-      status: err?.response?.status,
-      data: err?.response?.data,
-      message: err.message
-    });
-    return res.status(err?.response?.status || 500).json({
-      success: false,
-      error: err?.response?.data?.message || err.message || "Connectivity error with GST network. Please enter details manually."
-    });
+    }
   }
+
+  return res.status(404).json({
+    success: false,
+    error: lastError || "GSTIN not found or all API key limits exhausted."
+  });
 };
