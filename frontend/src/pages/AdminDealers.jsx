@@ -177,7 +177,10 @@ function AdminDealers() {
     const prod = productList.find((p) => p._id === selProductId);
     if (!prod) return;
 
-    const rate = selCustomRate !== "" ? Number(selCustomRate) : (Number(prod.price) || 0);
+    const defaultRate = (prod.appPrice !== undefined && prod.appPrice !== null && Number(prod.appPrice) > 0)
+      ? Number(prod.appPrice)
+      : (Number(prod.price) || 0);
+    const rate = selCustomRate !== "" ? Number(selCustomRate) : defaultRate;
     const existingIdx = createOrderItems.findIndex((it) => it.product === prod._id);
 
     if (existingIdx > -1) {
@@ -228,7 +231,10 @@ function AdminDealers() {
       } else {
         const prod = productList.find((p) => p._id === selProductId);
         if (prod) {
-          const rate = selCustomRate !== "" ? Number(selCustomRate) : (Number(prod.price) || 0);
+          const defaultRate = (prod.appPrice !== undefined && prod.appPrice !== null && Number(prod.appPrice) > 0)
+            ? Number(prod.appPrice)
+            : (Number(prod.price) || 0);
+          const rate = selCustomRate !== "" ? Number(selCustomRate) : defaultRate;
           finalItems = [{
             product: prod._id,
             productTitle: prod.name || prod.title,

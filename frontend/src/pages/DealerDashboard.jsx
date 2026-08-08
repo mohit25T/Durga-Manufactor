@@ -201,7 +201,9 @@ function DealerDashboard() {
   const addToCart = (product) => {
     const discount = dealer?.discountPercent ?? 10;
     const originalPrice = Number(product.price) || 0;
-    const discountedPrice = Math.round(originalPrice * (1 - discount / 100));
+    const discountedPrice = (product.appPrice !== undefined && product.appPrice !== null && Number(product.appPrice) > 0)
+      ? Number(product.appPrice)
+      : Math.round(originalPrice * (1 - discount / 100));
 
     const existingIndex = cart.findIndex((item) => item.product._id === product._id);
     if (existingIndex > -1) {
@@ -585,7 +587,9 @@ function DealerDashboard() {
                       {catProducts.map((p) => {
                         const originalPrice = Number(p.price) || 0;
                         const discount = dealer?.discountPercent ?? 10;
-                        const discountedPrice = Math.round(originalPrice * (1 - discount / 100));
+                        const discountedPrice = (p.appPrice !== undefined && p.appPrice !== null && Number(p.appPrice) > 0)
+                          ? Number(p.appPrice)
+                          : Math.round(originalPrice * (1 - discount / 100));
                         const imgUrl = p.images?.[0] || p.image || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158";
 
                         return (
