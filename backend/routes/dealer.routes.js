@@ -13,7 +13,8 @@ import {
   createOrderAdmin,
   deleteOrderAdmin,
   getDealerNotifications,
-  markDealerNotificationsRead
+  markDealerNotificationsRead,
+  lookupGSTIN
 } from "../controllers/dealer.controller.js";
 import { verifyDealer } from "../middleware/dealer.middleware.js";
 import { verifyAdmin } from "../middleware/auth.middleware.js";
@@ -23,6 +24,7 @@ const router = express.Router();
 // Public routes
 router.post("/register", registerDealer);
 router.post("/login", loginDealer);
+router.get("/gst-lookup/:gstin", lookupGSTIN);
 
 // Protected Dealer routes
 router.get("/profile", verifyDealer, getDealerProfile);

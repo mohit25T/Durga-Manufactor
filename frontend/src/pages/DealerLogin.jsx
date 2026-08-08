@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Building2, User, Mail, Lock, Phone, MapPin, FileText, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle } from "lucide-react";
+import { Building2, User, Mail, Lock, Phone, MapPin, FileText, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle, Search, X } from "lucide-react";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -20,8 +20,64 @@ const API_BASE = isLocalhost
 function DealerLogin() {
   const [activeTab, setActiveTab] = useState("login"); // "login" | "register"
   const [loading, setLoading] = useState(false);
+  const [fetchingGst, setFetchingGst] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [gstModal, setGstModal] = useState({ isOpen: false, title: "", message: "" });
+
+  const handleGstLookup = async (gstinVal) => {
+    const cleanGst = (gstinVal || regData.gstNumber).trim().toUpperCase();
+    if (!cleanGst) {
+      setGstModal({
+        isOpen: true,
+        title: "GST Number Required",
+        message: "Please enter a GSTIN number before searching."
+      });
+      return;
+    }
+
+    setFetchingGst(true);
+    setErrorMessage("");
+    try {
+      const res = await axios.get(`${API_BASE}/dealers/gst-lookup/${cleanGst}`);
+      const data = res.data.data || res.data;
+      if (data && (data.companyName || data.state || data.address)) {
+        setRegData(prev => ({
+          ...prev,
+          gstNumber: cleanGst,
+          companyName: data.companyName || prev.companyName,
+          contactPerson: data.contactPerson && !prev.contactPerson ? data.contactPerson : prev.contactPerson,
+          city: data.city || prev.city,
+          state: data.state || prev.state,
+          address: data.address || prev.address,
+        }));
+        setSuccessMessage("⚡ Company details fetched and auto-filled!");
+        setTimeout(() => setSuccessMessage(""), 4000);
+      } else {
+        setGstModal({
+          isOpen: true,
+          title: "GSTIN Not Found",
+          message: res.data.error || "The GSTIN entered could not be found on the Government GST Portal. Please verify the number for typos."
+        });
+      }
+    } catch (err) {
+      console.error("EXACT GST FETCH ERROR IN BROWSER CONSOLE:", {
+        status: err.response?.status,
+        data: err.response?.data,
+        error: err.response?.data?.error || err.response?.data?.message,
+        message: err.message,
+        fullErrorObject: err
+      });
+      const errMsg = err.response?.data?.error || err.response?.data?.message || err.message || "GSTIN not found or invalid on Government GST Network. Please verify the number.";
+      setGstModal({
+        isOpen: true,
+        title: "Invalid GSTIN Number",
+        message: errMsg
+      });
+    } finally {
+      setFetchingGst(false);
+    }
+  };
 
   const navigate = useNavigate();
 
@@ -357,43 +413,65 @@ function DealerLogin() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">
-                      Password *
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
-                      <input
-                        type="password"
-                        required
-                        value={regData.password}
-                        onChange={(e) => setRegData({ ...regData, password: e.target.value })}
-                        placeholder="Create strong password"
-                        className="w-full bg-slate-950 border border-slate-800 focus:border-brand-amber pl-9 pr-3 py-2 text-xs text-white focus:outline-none"
-                      />
-                    </div>
+                {/* Password */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">
+                    Password *
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
+                    <input
+                      type="password"
+                      required
+                      value={regData.password}
+                      onChange={(e) => setRegData({ ...regData, password: e.target.value })}
+                      placeholder="Create strong password"
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-brand-amber pl-9 pr-3 py-2 text-xs text-white focus:outline-none"
+                    />
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">
-                      GST Number (Optional)
-                    </label>
-                    <div className="relative">
+                {/* SEPARATE DEDICATED ROW FOR GST NUMBER */}
+                <div className="pt-1">
+                  <label className="block text-[11px] font-bold uppercase text-brand-amber mb-1">
+                    GST Number (Auto-Fill Company Details)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
                       <FileText className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
                       <input
                         type="text"
                         value={regData.gstNumber}
-                        onChange={(e) => setRegData({ ...regData, gstNumber: e.target.value })}
+                        onChange={(e) => {
+                          const val = e.target.value.toUpperCase();
+                          setRegData({ ...regData, gstNumber: val });
+                        }}
                         placeholder="24AAAAA0000A1Z5"
-                        className="w-full bg-slate-950 border border-slate-800 focus:border-brand-amber pl-9 pr-3 py-2 text-xs text-white focus:outline-none uppercase"
+                        className="w-full bg-slate-950 border border-slate-800 focus:border-brand-amber pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none uppercase tracking-wider font-mono"
                       />
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => handleGstLookup(regData.gstNumber)}
+                      disabled={fetchingGst}
+                      className="bg-brand-amber hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 text-xs rounded flex items-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-md shadow-brand-amber/20"
+                      title="Click search to fetch GSTIN company details"
+                    >
+                      {fetchingGst ? (
+                        <span className="animate-pulse text-[11px]">Searching...</span>
+                      ) : (
+                        <>
+                          <Search className="w-4 h-4 text-slate-950" />
+                          <span>Search GST</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div className="md:col-span-1">
+                {/* City & State Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
                     <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">City</label>
                     <input
                       type="text"
@@ -404,7 +482,7 @@ function DealerLogin() {
                     />
                   </div>
 
-                  <div className="md:col-span-1">
+                  <div>
                     <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">State</label>
                     <input
                       type="text"
@@ -414,15 +492,19 @@ function DealerLogin() {
                       className="w-full bg-slate-950 border border-slate-800 focus:border-brand-amber px-3 py-2 text-xs text-white focus:outline-none"
                     />
                   </div>
+                </div>
 
-                  <div className="md:col-span-1">
-                    <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Address</label>
-                    <input
-                      type="text"
+                {/* SEPARATE FULL-WIDTH BOX FOR ADDRESS */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Factory / Business Address</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
+                    <textarea
+                      rows={2}
                       value={regData.address}
                       onChange={(e) => setRegData({ ...regData, address: e.target.value })}
-                      placeholder="Main Market Road"
-                      className="w-full bg-slate-950 border border-slate-800 focus:border-brand-amber px-3 py-2 text-xs text-white focus:outline-none"
+                      placeholder="Plot No 12, GIDC Industrial Estate, Near National Highway, Rajkot, Gujarat"
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-brand-amber pl-9 pr-3 py-2 text-xs text-white focus:outline-none resize-none"
                     />
                   </div>
                 </div>
@@ -440,6 +522,50 @@ function DealerLogin() {
           </motion.div>
         </div>
       </main>
+
+      {/* INVALID GST POPUP MODAL */}
+      {gstModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 15 }}
+            className="bg-slate-900 border border-red-500/40 rounded-xl p-6 max-w-md w-full shadow-2xl shadow-red-950/60 text-white relative overflow-hidden"
+          >
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-6 h-6 text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-black text-white tracking-tight uppercase mb-1">
+                  {gstModal.title || "Invalid GST Number"}
+                </h3>
+                <div className="h-0.5 w-10 bg-red-500 rounded mb-2" />
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                  {gstModal.message}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setGstModal({ isOpen: false, title: "", message: "" })}
+                className="text-slate-400 hover:text-white transition-colors p-1 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setGstModal({ isOpen: false, title: "", message: "" })}
+              className="w-full mt-3 bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 px-4 rounded-lg text-xs uppercase tracking-wider transition-all shadow-lg shadow-red-600/30 cursor-pointer"
+            >
+              Close
+            </button>
+          </motion.div>
+        </div>
+      )}
 
       <Footer />
     </div>

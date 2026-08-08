@@ -4,6 +4,7 @@ import DealerOrder from "../models/DealerOrder.js";
 import DealerNotification from "../models/DealerNotification.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import axios from "axios";
 import { sendOrderStatusEmail } from "../utils/sendEmailNotification.js";
 
 // Dealer Register (Self Application)
@@ -710,6 +711,69 @@ export const markDealerNotificationsRead = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server error marking notifications read."
+    });
+  }
+};
+
+/* ======================================================
+   GST LOOKUP API - Auto Fetch Company Details from GSTIN
+====================================================== */
+// REAL GST LOOKUP API (gstincheck.co.in) - Matched EXACTLY to ERP-main
+export const lookupGSTIN = async (req, res, next) => {
+  const { gstin } = req.params;
+  const apiKey = process.env.GST_API_KEY;
+  console.log("api key:  ", apiKey)
+  console.log("gstin:  ", gstin)
+
+  if (!apiKey) {
+    console.error("[GST LOOKUP]: GST_API_KEY missing from .env");
+    return next(new Error("Server Configuration Error: GST API Key not found."));
+  }
+
+  try {
+    const response = await axios.get(`https://sheet.gstincheck.co.in/check/${apiKey}/${gstin}`);
+    const result = response.data;
+    console.log("result:  ", result)
+
+    if (!result.flag || !result.data) {
+      return res.status(404).json({ error: result.message || "GSTIN not found or invalid." });
+    }
+
+    const biz = result.data;
+    const addr = biz.pradr.addr;
+
+    console.log(`[GST FETCH SUCCESS]: Captured details for ${biz.lgnm || biz.tradeNam}`);
+    const combinedAddress = [
+      addr.bnm, addr.bno, addr.flno, addr.st, addr.loc, addr.dst, addr.city
+    ].filter(Boolean).join(", ");
+
+    res.json({
+      success: true,
+      companyName: biz.lgnm || biz.tradeNam,
+      address: combinedAddress,
+      city: addr.dst || addr.city || addr.loc || "",
+      state: addr.stcd,
+      pincode: addr.pncd,
+      status: biz.sts,
+      data: {
+        companyName: biz.lgnm || biz.tradeNam,
+        address: combinedAddress,
+        city: addr.dst || addr.city || addr.loc || "",
+        state: addr.stcd,
+        pincode: addr.pncd,
+        status: biz.sts
+      }
+    });
+  } catch (err) {
+    console.error("[GST LOOKUP EXACT ERROR]:", err?.response?.data || err.message || err);
+    console.log("[GST LOOKUP FULL DETAILS]:", {
+      status: err?.response?.status,
+      data: err?.response?.data,
+      message: err.message
+    });
+    return res.status(err?.response?.status || 500).json({
+      success: false,
+      error: err?.response?.data?.message || err.message || "Connectivity error with GST network. Please enter details manually."
     });
   }
 };
