@@ -614,9 +614,14 @@ function DealerDashboard() {
                                 <div className="flex items-center justify-between pt-2 border-t border-slate-800">
                                   <div>
                                     <span className="text-[10px] uppercase text-brand-amber block font-bold">Dealer Price</span>
-                                    <span className="text-lg font-serif font-bold text-white">
-                                      ₹{dealerPrice.toLocaleString("en-IN")}
-                                    </span>
+                                    <div className="flex items-baseline gap-1.5">
+                                      <span className="text-lg font-serif font-bold text-white">
+                                        ₹{dealerPrice.toLocaleString("en-IN")}
+                                      </span>
+                                      <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30">
+                                        + 18% GST
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
