@@ -16,10 +16,19 @@ export default function DownloadApkButton({
     setDevice(getDeviceOS());
   }, []);
 
-  // Construct absolute download URL for the QR code
-  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+  // Construct absolute download URL for the QR code and download links
+  const isLocalhost = typeof window !== "undefined" && (
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname.startsWith("192.168.")
+  );
+
+  const baseUrl = typeof window !== "undefined"
+    ? (isLocalhost ? "https://www.durgamanufactures.com" : window.location.origin)
+    : "https://www.durgamanufactures.com";
+
   const apkDownloadUrl = `${baseUrl}/downloads/durga-dealer-app.apk`;
-  const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(apkDownloadUrl)}`;
+  const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(apkDownloadUrl)}`;
 
   // iOS users cannot install APK files directly
   if (device.isIOS) {
