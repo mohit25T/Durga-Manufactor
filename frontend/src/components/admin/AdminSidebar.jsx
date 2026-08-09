@@ -13,6 +13,7 @@ function AdminSidebar({ isOpen, setIsOpen }) {
     { name: "Add Product", path: "/admin/add-product", icon: Icons.PackagePlus },
     { name: "Leads & Inquiries", path: "/admin/leads", icon: Icons.Users },
     { name: "Manage Dealers", path: "/admin/dealers", icon: Icons.Building2 },
+    { name: "Proforma Invoices", path: "/admin/invoices", icon: Icons.FileText },
   ];
 
   const handleLogout = () => {

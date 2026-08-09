@@ -21,6 +21,8 @@ import ProductsAdmin from "../pages/AdminProducts";
 import Leads from "../pages/Leads";
 import EditProduct from "../pages/EditProduct";
 import AdminDealers from "../pages/AdminDealers";
+import AdminInvoices from "../pages/AdminInvoices";
+import CreateInvoice from "../pages/CreateInvoice";
 
 /* Dealer Pages */
 import DealerLogin from "../pages/DealerLogin";
@@ -109,6 +111,30 @@ function AppRouter() {
             element={
               <ProtectedRoute>
                 <AdminDealers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/invoices"
+            element={
+              <ProtectedRoute>
+                <AdminInvoices />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/invoices/create"
+            element={
+              <ProtectedRoute>
+                <CreateInvoice />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/invoices/edit/:id"
+            element={
+              <ProtectedRoute>
+                <CreateInvoice />
               </ProtectedRoute>
             }
           />
