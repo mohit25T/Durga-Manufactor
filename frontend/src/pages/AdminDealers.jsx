@@ -28,9 +28,8 @@ function AdminDealers() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Edit tier/discount state
+  // Edit discount state
   const [editingDealerId, setEditingDealerId] = useState(null);
-  const [editTier, setEditTier] = useState("Silver");
   const [editDiscount, setEditDiscount] = useState(10);
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -38,6 +37,24 @@ function AdminDealers() {
   const [editingOrderId, setEditingOrderId] = useState(null);
   const [editOrderItems, setEditOrderItems] = useState([]);
   const [editIncludeFullGst, setEditIncludeFullGst] = useState(true);
+
+  const handleSaveDealerDiscount = async (dealerId) => {
+    try {
+      setSavingEdit(true);
+      const res = await API.patch(`/dealers/admin/${dealerId}/status`, {
+        discountPercent: Number(editDiscount)
+      });
+      if (res.data.success) {
+        setEditingDealerId(null);
+        fetchAdminDealerData();
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update discount.");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
   const [editBillAmount, setEditBillAmount] = useState(0);
   const [editWithoutBillAmount, setEditWithoutBillAmount] = useState(0);
   const [savingOrderPrice, setSavingOrderPrice] = useState(false);
@@ -298,24 +315,7 @@ function AdminDealers() {
     }
   };
 
-  const handleSaveDealerTier = async (dealerId) => {
-    try {
-      setSavingEdit(true);
-      const res = await API.patch(`/dealers/admin/${dealerId}/status`, {
-        tier: editTier,
-        discountPercent: Number(editDiscount)
-      });
-      if (res.data.success) {
-        setEditingDealerId(null);
-        fetchAdminDealerData();
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update tier.");
-    } finally {
-      setSavingEdit(false);
-    }
-  };
+
 
   const handleSendWhatsAppAlert = (ord) => {
     const phone = ord.dealer?.phone || "";
@@ -371,9 +371,9 @@ function AdminDealers() {
     }
   };
 
-  const pendingDealers = dealers.filter((d) => d.status === "pending");
-  const approvedDealers = dealers.filter((d) => d.status === "approved");
-  const rejectedDealers = dealers.filter((d) => d.status === "rejected");
+  const pendingDealers = dealers.filter((d) => (d.status || "pending").toString().toLowerCase() === "pending");
+  const approvedDealers = dealers.filter((d) => (d.status || "").toString().toLowerCase() === "approved");
+  const rejectedDealers = dealers.filter((d) => (d.status || "").toString().toLowerCase() === "rejected");
 
   const filteredDealers = (
     activeSubTab === "pending"
@@ -387,7 +387,9 @@ function AdminDealers() {
       (d.companyName || "").toLowerCase().includes(q) ||
       (d.contactPerson || "").toLowerCase().includes(q) ||
       (d.email || "").toLowerCase().includes(q) ||
-      (d.phone || "").toLowerCase().includes(q)
+      (d.phone || "").toLowerCase().includes(q) ||
+      (d.gstNumber || "").toLowerCase().includes(q) ||
+      (d.city || "").toLowerCase().includes(q)
     );
   });
 
@@ -516,8 +518,8 @@ function AdminDealers() {
                             {d.status}
                           </span>
                           {d.status === "approved" && (
-                            <span className="text-[10px] px-2 py-0.5 bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold uppercase">
-                              {d.tier} Tier ({d.discountPercent}% OFF)
+                            <span className="text-[10px] px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase">
+                              {d.discountPercent}% B2B Discount
                             </span>
                           )}
                         </div>
@@ -554,24 +556,7 @@ function AdminDealers() {
                           <div className="flex items-center gap-2">
                             {editingDealerId === d._id ? (
                               <div className="flex items-center gap-2 bg-slate-950 p-2 border border-slate-800">
-                                <select
-                                  value={editTier}
-                                  onChange={(e) => {
-                                    setEditTier(e.target.value);
-                                    if (e.target.value === "Standard") setEditDiscount(0);
-                                    if (e.target.value === "Bronze") setEditDiscount(5);
-                                    if (e.target.value === "Silver") setEditDiscount(10);
-                                    if (e.target.value === "Gold") setEditDiscount(15);
-                                    if (e.target.value === "Platinum") setEditDiscount(20);
-                                  }}
-                                  className="bg-slate-900 text-xs text-white p-1 border border-slate-700 font-bold"
-                                >
-                                  <option value="Standard">Standard Tier (0%)</option>
-                                  <option value="Bronze">Bronze Tier (5%)</option>
-                                  <option value="Silver">Silver Tier (10%)</option>
-                                  <option value="Gold">Gold Tier (15%)</option>
-                                  <option value="Platinum">Platinum Tier (20%)</option>
-                                </select>
+                                <span className="text-xs text-slate-300 font-bold">Discount:</span>
                                 <input
                                   type="number"
                                   value={editDiscount}
@@ -580,7 +565,7 @@ function AdminDealers() {
                                 />
                                 <span className="text-xs text-slate-400">%</span>
                                 <button
-                                  onClick={() => handleSaveDealerTier(d._id)}
+                                  onClick={() => handleSaveDealerDiscount(d._id)}
                                   disabled={savingEdit}
                                   className="bg-brand-amber text-slate-950 px-2 py-1 text-xs font-bold uppercase"
                                 >
@@ -598,7 +583,6 @@ function AdminDealers() {
                                 <button
                                   onClick={() => {
                                     setEditingDealerId(d._id);
-                                    setEditTier(d.tier || "Silver");
                                     setEditDiscount(d.discountPercent || 10);
                                   }}
                                   className="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-1 border border-white/10"
@@ -662,7 +646,7 @@ function AdminDealers() {
                               {ord.dealer?.companyName || "Dealer"}
                             </span>
                             <span className="text-xs px-2 py-0.5 bg-slate-800 text-slate-300 border border-slate-700">
-                              {ord.dealer?.tier || "Standard"} Tier ({ord.dealer?.discountPercent ?? 0}% Off)
+                              {ord.dealer?.discountPercent ?? 0}% B2B Discount
                             </span>
                           </div>
                           <p className="text-xs text-slate-400 mt-0.5">

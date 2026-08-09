@@ -51,7 +51,6 @@ export const registerDealer = async (req, res) => {
       city: city || "",
       state: state || "",
       status: "pending",
-      tier: "Silver",
       discountPercent: 10
     });
 
@@ -112,7 +111,6 @@ export const loginDealer = async (req, res) => {
               phone: "+91 94281 56213",
               gstNumber: "24AAAAA0000A1Z5",
               status: "approved",
-              tier: "Admin",
               role: "admin",
               discountPercent: 0
             }
@@ -193,7 +191,6 @@ export const getDealerProfile = async (req, res) => {
             phone: "+91 94281 56213",
             gstNumber: "24AAAAA0000A1Z5",
             status: "approved",
-            tier: "Admin",
             role: "admin",
             discountPercent: 0
           }
@@ -216,7 +213,6 @@ export const getDealerProfile = async (req, res) => {
             phone: "+91 94281 56213",
             gstNumber: "24AAAAA0000A1Z5",
             status: "approved",
-            tier: "Admin",
             role: "admin",
             discountPercent: 0
           }
@@ -406,11 +402,11 @@ export const getAllDealersAdmin = async (req, res) => {
   }
 };
 
-// Admin: Update dealer status, tier, or discount
+// Admin: Update dealer status or discount
 export const updateDealerStatusAdmin = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, tier, discountPercent } = req.body;
+    const { status, discountPercent } = req.body;
 
     const dealer = await Dealer.findById(id);
     if (!dealer) {
@@ -421,7 +417,6 @@ export const updateDealerStatusAdmin = async (req, res) => {
     }
 
     if (status) dealer.status = status;
-    if (tier) dealer.tier = tier;
     if (discountPercent !== undefined) dealer.discountPercent = Number(discountPercent);
 
     await dealer.save();
@@ -430,7 +425,7 @@ export const updateDealerStatusAdmin = async (req, res) => {
       await DealerNotification.create({
         dealer: dealer._id,
         title: "Dealership Account Approved!",
-        message: `Congratulations! Your Durga Manufacturer authorized dealership account (${dealer.tier} Tier) is now fully active.`,
+        message: "Congratulations! Your Durga Manufacturer authorized dealership account is now fully active.",
         type: "approval_update"
       });
     }
@@ -453,7 +448,7 @@ export const updateDealerStatusAdmin = async (req, res) => {
 export const getAllDealerOrdersAdmin = async (req, res) => {
   try {
     const orders = await DealerOrder.find()
-      .populate("dealer", "companyName contactPerson email phone tier discountPercent")
+      .populate("dealer", "companyName contactPerson email phone discountPercent")
       .sort({ createdAt: -1 });
     return res.status(200).json({
       success: true,

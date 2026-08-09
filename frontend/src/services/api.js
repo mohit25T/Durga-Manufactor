@@ -1,5 +1,7 @@
 import axios from "axios";
 
+const primaryApiUrl = import.meta.env.VITE_API_URL || "https://durga-manufactor.onrender.com/api";
+
 const isLocalhost =
   typeof window !== "undefined" &&
   (window.location.hostname === "localhost" ||
@@ -9,24 +11,37 @@ const isLocalhost =
 
 const baseURL = isLocalhost
   ? "http://localhost:5000/api"
-  : (import.meta.env.VITE_API_URL || "https://b.durgamanufactures.com/api");
+  : primaryApiUrl;
 
 const API = axios.create({
   baseURL,
 });
 
 /* Attach JWT Token Automatically */
-
 API.interceptors.request.use((config) => {
-
-    const token = localStorage.getItem("token");
-
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
-
+  const token = localStorage.getItem("token") || localStorage.getItem("dealer_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
+
+/* Automatic Failover to backup API endpoint if primary network fails */
+API.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (
+      (error.code === "ERR_NETWORK" || error.message.includes("Network Error")) &&
+      !originalRequest._retry &&
+      !isLocalhost
+    ) {
+      originalRequest._retry = true;
+      originalRequest.baseURL = "https://b.durgamanufactures.com/api";
+      return API(originalRequest);
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default API;

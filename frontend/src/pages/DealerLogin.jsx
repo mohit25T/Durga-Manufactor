@@ -15,7 +15,7 @@ const isLocalhost =
 
 const API_BASE = isLocalhost
   ? "http://localhost:5000/api"
-  : (import.meta.env.VITE_API_URL || "https://b.durgamanufactures.com/api");
+  : (import.meta.env.VITE_API_URL || "https://durga-manufactor.onrender.com/api");
 
 function DealerLogin() {
   const [activeTab, setActiveTab] = useState("login"); // "login" | "register"

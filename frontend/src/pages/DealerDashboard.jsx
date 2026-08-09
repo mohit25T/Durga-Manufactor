@@ -37,7 +37,7 @@ const isLocalhost =
 
 const API_BASE = isLocalhost
   ? "http://localhost:5000/api"
-  : (import.meta.env.VITE_API_URL || "https://b.durgamanufactures.com/api");
+  : (import.meta.env.VITE_API_URL || "https://durga-manufactor.onrender.com/api");
 
 function DealerDashboard() {
   const navigate = useNavigate();
@@ -614,14 +614,9 @@ function DealerDashboard() {
                                 <div className="flex items-center justify-between pt-2 border-t border-slate-800">
                                   <div>
                                     <span className="text-[10px] uppercase text-brand-amber block font-bold">Dealer Price</span>
-                                    <div className="flex items-baseline gap-1.5">
-                                      <span className="text-lg font-serif font-bold text-white">
-                                        ₹{dealerPrice.toLocaleString("en-IN")}
-                                      </span>
-                                      <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30">
-                                        + 18% GST
-                                      </span>
-                                    </div>
+                                    <span className="text-lg font-serif font-bold text-white">
+                                      ₹{dealerPrice.toLocaleString("en-IN")}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
@@ -737,7 +732,7 @@ function DealerDashboard() {
                             </>
                           );
                         })()}
-                        <p className="text-[10px] text-slate-500 pt-1">Applied dealer tier margin discount + 18% standard GST.</p>
+                        <p className="text-[10px] text-slate-500 pt-1">Applied B2B dealer margin discount + 18% standard GST.</p>
                       </div>
 
                       {/* Order Notes */}

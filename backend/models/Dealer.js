@@ -53,11 +53,6 @@ const dealerSchema = new mongoose.Schema(
       enum: ["pending", "approved", "rejected"],
       default: "pending"
     },
-    tier: {
-      type: String,
-      enum: ["Standard", "Bronze", "Silver", "Gold", "Platinum"],
-      default: "Standard"
-    },
     discountPercent: {
       type: Number,
       default: 10
