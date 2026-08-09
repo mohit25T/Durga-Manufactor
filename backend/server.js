@@ -22,7 +22,34 @@ connectDB();
 
 /* Middlewares */
 
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://durgamanufactures.com",
+  "https://www.durgamanufactures.com",
+  "https://durga-manufactor.onrender.com"
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".durgamanufactures.com") ||
+        origin.endsWith(".onrender.com")
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Fallback allow all origins to prevent CORS blocks
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"]
+  })
+);
+
+app.options("*", cors());
 app.use(express.json());
 
 /* Routes */
