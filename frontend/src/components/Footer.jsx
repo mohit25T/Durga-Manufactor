@@ -1,5 +1,6 @@
 import { MapPin, Phone, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
+import DownloadApkButton from "./DownloadApkButton";
 
 function Footer() {
   return (
@@ -15,6 +16,9 @@ function Footer() {
           <p className="text-white/60 mb-4 max-w-sm leading-relaxed text-sm font-medium">
             Premium commercial food processing machinery engineered for durability, precision, and efficiency in demanding commercial environments.
           </p>
+          <div className="mt-4">
+            <DownloadApkButton variant="secondary" />
+          </div>
         </div>
 
         {/* Quick Links */}

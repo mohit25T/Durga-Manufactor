@@ -27,6 +27,7 @@ import {
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import DownloadApkButton from "../components/DownloadApkButton";
 
 const isLocalhost =
   typeof window !== "undefined" &&
@@ -435,6 +436,7 @@ function DealerDashboard() {
           </div>
 
           <div className="flex items-center gap-3 self-end md:self-auto">
+            <DownloadApkButton variant="secondary" />
 
             {/* Notification Bell */}
             <div className="relative">

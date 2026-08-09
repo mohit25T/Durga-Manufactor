@@ -5,6 +5,7 @@ import { Building2, User, Mail, Lock, Phone, MapPin, FileText, ArrowRight, Shiel
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import DownloadApkButton from "../components/DownloadApkButton";
 
 const isLocalhost =
   typeof window !== "undefined" &&
@@ -207,6 +208,11 @@ function DealerLogin() {
                     <p className="text-slate-400 text-xs">Download high-res brochures, specification sheets, and certificates.</p>
                   </div>
                 </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-amber-500/20">
+                <p className="text-white/80 text-xs font-semibold mb-3">Prefer mobile access? Get the Android App:</p>
+                <DownloadApkButton variant="primary" />
               </div>
             </div>
 
