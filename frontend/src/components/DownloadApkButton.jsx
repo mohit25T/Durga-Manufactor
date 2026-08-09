@@ -70,7 +70,7 @@ export default function DownloadApkButton({
           <div className="flex items-center gap-3 w-full md:w-auto">
             {device.isAndroid ? (
               <a
-                href="/downloads/durga-dealer-app.apk"
+                href={apkDownloadUrl}
                 download="Durga-Dealer-App.apk"
                 className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-brand-amber hover:bg-white text-slate-950 font-bold px-6 py-3.5 rounded-xl text-sm transition-all duration-300 shadow-lg hover:shadow-brand-amber/20"
               >
@@ -80,7 +80,7 @@ export default function DownloadApkButton({
             ) : (
               <>
                 <a
-                  href="/downloads/durga-dealer-app.apk"
+                  href={apkDownloadUrl}
                   download="Durga-Dealer-App.apk"
                   className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 bg-brand-amber hover:bg-white text-slate-950 font-bold px-5 py-3.5 rounded-xl text-xs md:text-sm transition-all duration-300 shadow-lg"
                 >
@@ -107,7 +107,7 @@ export default function DownloadApkButton({
       return (
         <div className="inline-flex items-center gap-2">
           <a
-            href="/downloads/durga-dealer-app.apk"
+            href={apkDownloadUrl}
             download="Durga-Dealer-App.apk"
             className={`inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-brand-amber border border-brand-amber/30 px-4 py-2.5 rounded-lg text-xs font-bold transition-all duration-300 ${className}`}
           >
@@ -131,7 +131,7 @@ export default function DownloadApkButton({
     if (variant === "minimal") {
       return (
         <a
-          href="/downloads/durga-dealer-app.apk"
+          href={apkDownloadUrl}
           download="Durga-Dealer-App.apk"
           className={`inline-flex items-center gap-1.5 text-brand-amber hover:text-white text-xs font-bold transition-colors ${className}`}
         >
@@ -145,7 +145,7 @@ export default function DownloadApkButton({
     return (
       <div className="inline-flex items-center gap-2">
         <a
-          href="/downloads/durga-dealer-app.apk"
+          href={apkDownloadUrl}
           download="Durga-Dealer-App.apk"
           className={`inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all duration-300 shadow-md ${className}`}
         >
@@ -216,7 +216,7 @@ export default function DownloadApkButton({
 
               <div className="flex flex-col gap-2">
                 <a
-                  href="/downloads/durga-dealer-app.apk"
+                  href={apkDownloadUrl}
                   download="Durga-Dealer-App.apk"
                   className="w-full inline-flex items-center justify-center gap-2 bg-brand-amber hover:bg-white text-slate-950 font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all"
                 >
