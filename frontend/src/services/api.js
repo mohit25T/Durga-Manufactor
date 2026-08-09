@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const primaryApiUrl = import.meta.env.VITE_API_URL || "https://durga-manufactor.onrender.com/api";
+const primaryApiUrl = import.meta.env.VITE_API_URL || "https://b.durgamanufactures.com/api";
 
 const isLocalhost =
   typeof window !== "undefined" &&
