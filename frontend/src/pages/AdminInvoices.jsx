@@ -17,20 +17,9 @@ import {
   Eye,
   AlertCircle
 } from "lucide-react";
-import axios from "axios";
+import API from "../services/api";
 import AdminLayout from "../components/admin/AdminLayout";
 import InvoicePrintModal from "../components/admin/InvoicePrintModal";
-
-const isLocalhost =
-  typeof window !== "undefined" &&
-  (window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1" ||
-    window.location.hostname.startsWith("192.168.") ||
-    window.location.hostname.endsWith(".local"));
-
-const API_BASE = isLocalhost
-  ? "http://localhost:5000/api"
-  : (import.meta.env.VITE_API_URL || "https://durga-manufactor.onrender.com/api");
 
 export default function AdminInvoices() {
   const [invoices, setInvoices] = useState([]);
@@ -42,15 +31,10 @@ export default function AdminInvoices() {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem("token");
-    return { headers: { Authorization: `Bearer ${token}` } };
-  };
-
   const fetchInvoices = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE}/invoices`, getAuthHeaders());
+      const res = await API.get("/invoices");
       if (res.data.success) {
         setInvoices(res.data.invoices || []);
       }
@@ -67,7 +51,7 @@ export default function AdminInvoices() {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      const res = await axios.put(`${API_BASE}/invoices/${id}`, { status: newStatus }, getAuthHeaders());
+      const res = await API.put(`/invoices/${id}`, { status: newStatus });
       if (res.data.success) {
         setInvoices((prev) =>
           prev.map((inv) => (inv._id === id ? { ...inv, status: newStatus } : inv))
@@ -83,7 +67,7 @@ export default function AdminInvoices() {
     if (!window.confirm(`Are you sure you want to delete Proforma Invoice ${invNum}?`)) return;
 
     try {
-      const res = await axios.delete(`${API_BASE}/invoices/${id}`, getAuthHeaders());
+      const res = await API.delete(`/invoices/${id}`);
       if (res.data.success) {
         setInvoices((prev) => prev.filter((inv) => inv._id !== id));
       }

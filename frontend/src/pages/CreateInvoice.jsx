@@ -19,20 +19,9 @@ import {
   Printer,
   Info
 } from "lucide-react";
-import axios from "axios";
+import API from "../services/api";
 import AdminLayout from "../components/admin/AdminLayout";
 import InvoicePrintModal from "../components/admin/InvoicePrintModal";
-
-const isLocalhost =
-  typeof window !== "undefined" &&
-  (window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1" ||
-    window.location.hostname.startsWith("192.168.") ||
-    window.location.hostname.endsWith(".local"));
-
-const API_BASE = isLocalhost
-  ? "http://localhost:5000/api"
-  : (import.meta.env.VITE_API_URL || "https://durga-manufactor.onrender.com/api");
 
 export default function CreateInvoice() {
   const navigate = useNavigate();
@@ -110,11 +99,6 @@ export default function CreateInvoice() {
     status: "Sent"
   });
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem("token");
-    return { headers: { Authorization: `Bearer ${token}` } };
-  };
-
   // Fetch initial datasets & next invoice number
   useEffect(() => {
     const fetchData = async () => {
@@ -122,11 +106,11 @@ export default function CreateInvoice() {
         setLoading(true);
         // Fetch dealers, leads, products in parallel
         const [dealersRes, leadsRes, productsRes] = await Promise.all([
-          axios.get(`${API_BASE}/dealers/admin/all`, getAuthHeaders()).catch(() =>
-            axios.get(`${API_BASE}/dealers`, getAuthHeaders()).catch(() => ({ data: {} }))
+          API.get("/dealers/admin/all").catch(() =>
+            API.get("/dealers").catch(() => ({ data: {} }))
           ),
-          axios.get(`${API_BASE}/leads`, getAuthHeaders()).catch(() => ({ data: {} })),
-          axios.get(`${API_BASE}/products`).catch(() => ({ data: {} }))
+          API.get("/leads").catch(() => ({ data: {} })),
+          API.get("/products").catch(() => ({ data: {} }))
         ]);
 
         const dealersArr = dealersRes.data?.dealers || dealersRes.data?.data || (Array.isArray(dealersRes.data) ? dealersRes.data : []);
@@ -139,7 +123,7 @@ export default function CreateInvoice() {
 
         if (isEditMode) {
           // Fetch invoice to edit
-          const invRes = await axios.get(`${API_BASE}/invoices/${id}`, getAuthHeaders());
+          const invRes = await API.get(`/invoices/${id}`);
           if (invRes.data.success && invRes.data.invoice) {
             const inv = invRes.data.invoice;
             setFormData({
@@ -150,7 +134,7 @@ export default function CreateInvoice() {
           }
         } else {
           // Fetch next invoice number
-          const numRes = await axios.get(`${API_BASE}/invoices/next-number`, getAuthHeaders());
+          const numRes = await API.get("/invoices/next-number");
           if (numRes.data.success && numRes.data.invoiceNumber) {
             setFormData((prev) => ({ ...prev, invoiceNumber: numRes.data.invoiceNumber }));
           }
@@ -346,9 +330,9 @@ export default function CreateInvoice() {
     try {
       let res;
       if (isEditMode) {
-        res = await axios.put(`${API_BASE}/invoices/${id}`, payload, getAuthHeaders());
+        res = await API.put(`/invoices/${id}`, payload);
       } else {
-        res = await axios.post(`${API_BASE}/invoices`, payload, getAuthHeaders());
+        res = await API.post("/invoices", payload);
       }
 
       if (res.data.success) {

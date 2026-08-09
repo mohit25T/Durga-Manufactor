@@ -38,7 +38,7 @@ const isLocalhost =
 
 const API_BASE = isLocalhost
   ? "http://localhost:5000/api"
-  : (import.meta.env.VITE_API_URL || "https://durga-manufactor.onrender.com/api");
+  : (import.meta.env.VITE_API_URL || "https://backend-mp6m.onrender.com/api");
 
 function DealerDashboard() {
   const navigate = useNavigate();

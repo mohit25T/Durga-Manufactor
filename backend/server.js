@@ -71,9 +71,6 @@ const corsOptions = {
 /* CORS MUST COME BEFORE ROUTES */
 app.use(cors(corsOptions));
 
-/* Explicitly handle preflight requests */
-app.options("*", cors(corsOptions));
-
 /* Body Parser */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
