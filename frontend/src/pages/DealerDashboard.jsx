@@ -35,6 +35,8 @@ import Footer from "../components/Footer";
 import DownloadApkButton from "../components/DownloadApkButton";
 import InvoicePrintModal from "../components/admin/InvoicePrintModal";
 import PurchaseOrderPrintModal from "../components/admin/PurchaseOrderPrintModal";
+import socketService from "../services/socketService";
+import notificationService from "../services/notificationService";
 
 const isLocalhost =
   typeof window !== "undefined" &&
@@ -248,7 +250,30 @@ function DealerDashboard() {
 
   useEffect(() => {
     fetchDealerData();
-  }, []);
+    notificationService.init();
+
+    if (dealer?._id) {
+      socketService.init(dealer._id, false);
+      socketService.onNotification((notif) => {
+        setNotifications((prev) => [notif, ...prev]);
+        setUnreadCount((prev) => prev + 1);
+        notificationService.showSystemNotification(notif.title, notif.message, () => {
+          if (notif.type === "price_update" || notif.title.includes("Proforma")) {
+            setActiveTab("proformas");
+          } else if (notif.title.includes("Purchase Order") || notif.title.includes("Signed PO")) {
+            setActiveTab("purchase-orders");
+          } else {
+            setActiveTab("inquiries");
+          }
+        });
+        fetchDealerData();
+      });
+    }
+
+    return () => {
+      socketService.disconnect();
+    };
+  }, [dealer?._id]);
 
   const handleLogout = () => {
     localStorage.removeItem("dealerToken");

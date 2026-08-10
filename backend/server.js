@@ -25,26 +25,37 @@ connectDB();
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:5174",
   "http://localhost:3000",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174",
   "https://www.durgamanufactures.com",
   "https://durgamanufactures.com",
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests without an Origin header
-    // (Postman, server-to-server requests, etc.)
+    // Allow requests without an Origin header (Postman, mobile apps, server-to-server)
     if (!origin) {
       return callback(null, true);
     }
 
-    if (allowedOrigins.includes(origin)) {
+    // Allow configured origins or any local development / LAN origin
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.startsWith("http://localhost:") ||
+      origin.startsWith("http://127.0.0.1:") ||
+      origin.startsWith("http://192.168.") ||
+      origin.startsWith("http://10.0.") ||
+      origin.includes("durgamanufactures.com") ||
+      origin.includes("onrender.com") ||
+      origin.includes("vercel.app")
+    ) {
       return callback(null, true);
     }
 
-    console.log("❌ CORS blocked origin:", origin);
-
-    return callback(new Error("Not allowed by CORS"));
+    console.warn("⚠️ CORS request allowed for origin:", origin);
+    return callback(null, true);
   },
 
   credentials: true,
@@ -113,12 +124,19 @@ app.use((err, req, res, next) => {
   });
 });
 
+import http from "http";
+import { initSocket } from "./utils/socket.js";
+
 /* =========================
-   START SERVER
+   START SERVER WITH SOCKET.IO
 ========================= */
 
 const PORT = process.env.PORT || 5000;
+const httpServer = http.createServer(app);
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+// Initialize Socket.io
+initSocket(httpServer, corsOptions);
+
+httpServer.listen(PORT, () => {
+  console.log(`🚀 Server with Socket.io running on port ${PORT}`);
 });
