@@ -10,6 +10,7 @@ import settingsRoutes from "./routes/settings.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
 import dealerRoutes from "./routes/dealer.routes.js";
 import invoiceRoutes from "./routes/invoice.routes.js";
+import workflowRoutes from "./routes/workflow.routes.js";
 
 dotenv.config();
 
@@ -86,6 +87,7 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/dealers", dealerRoutes);
 app.use("/api/invoices", invoiceRoutes);
+app.use("/api/workflow", workflowRoutes);
 
 /* =========================
    HEALTH CHECK

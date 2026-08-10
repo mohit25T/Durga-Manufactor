@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Building2,
-  Award,
+  Send,
   Percent,
   ShoppingBag,
   Clock,
@@ -22,12 +22,19 @@ import {
   AlertCircle,
   HelpCircle,
   Truck,
-  Bell
+  Bell,
+  Upload,
+  FileCheck,
+  CheckCircle2,
+  XCircle,
+  ShieldAlert
 } from "lucide-react";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import DownloadApkButton from "../components/DownloadApkButton";
+import InvoicePrintModal from "../components/admin/InvoicePrintModal";
+import PurchaseOrderPrintModal from "../components/admin/PurchaseOrderPrintModal";
 
 const isLocalhost =
   typeof window !== "undefined" &&
@@ -81,6 +88,25 @@ function DealerDashboard() {
   });
   const [updatingProfile, setUpdatingProfile] = useState(false);
   const [profileMsg, setProfileMsg] = useState("");
+
+  // WORKFLOW STATE
+  const [inquiries, setInquiries] = useState([]);
+  const [proformas, setProformas] = useState([]);
+  const [purchaseOrders, setPurchaseOrders] = useState([]);
+  
+  // Print & Modal States
+  const [selectedPIPrint, setSelectedPIPrint] = useState(null);
+  const [selectedPOPrint, setSelectedPOPrint] = useState(null);
+  const [confirmPIModalOpen, setConfirmPIModalOpen] = useState(false);
+  const [confirmingPI, setConfirmingPI] = useState(null);
+  const [confirmingPISubmitting, setConfirmingPISubmitting] = useState(false);
+
+  // Signed PO Upload States
+  const [uploadPOModalOpen, setUploadPOModalOpen] = useState(false);
+  const [uploadingPO, setUploadingPO] = useState(null);
+  const [signedFileUrl, setSignedFileUrl] = useState("");
+  const [signedFileName, setSignedFileName] = useState("");
+  const [uploadSubmitting, setUploadSubmitting] = useState(false);
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("dealerToken");
@@ -143,6 +169,38 @@ function DealerDashboard() {
       const ordersRes = await axios.get(`${API_BASE}/dealers/orders`, getAuthHeaders());
       if (ordersRes.data.success) {
         setOrders(ordersRes.data.orders || []);
+      }
+
+      // Fetch Workflow Data (Inquiries, PIs, POs)
+      try {
+        const inqRes = await axios.get(`${API_BASE}/workflow/inquiries/dealer`, getAuthHeaders());
+        if (inqRes.data.success) {
+          setInquiries(inqRes.data.inquiries || []);
+        }
+      } catch (ie) {
+        console.error("Workflow inquiries fetch error:", ie);
+      }
+
+      try {
+        const invRes = await axios.get(`${API_BASE}/invoices`, getAuthHeaders());
+        if (invRes.data.success) {
+          // Filter invoices for current dealer
+          const myInvoices = (invRes.data.invoices || []).filter(
+            (inv) => inv.dealerId === dealer?._id || inv.dealerId?._id === dealer?._id || inv.customerType === "Dealer"
+          );
+          setProformas(myInvoices);
+        }
+      } catch (pve) {
+        console.error("Workflow PIs fetch error:", pve);
+      }
+
+      try {
+        const poRes = await axios.get(`${API_BASE}/workflow/po/dealer`, getAuthHeaders());
+        if (poRes.data.success) {
+          setPurchaseOrders(poRes.data.purchaseOrders || []);
+        }
+      } catch (poe) {
+        console.error("Workflow POs fetch error:", poe);
       }
 
       // Fetch Notifications & Trigger Native Device Push Banner
@@ -264,7 +322,8 @@ function DealerDashboard() {
     setCustomItemEstPrice("");
   };
 
-  const handlePlaceOrder = async () => {
+  // Submit Inquiry from Cart / Selection
+  const handleCreateInquiryFromCart = async () => {
     if (cart.length === 0) return;
     setSubmittingOrder(true);
     setOrderSuccessMsg("");
@@ -272,36 +331,100 @@ function DealerDashboard() {
     try {
       const payload = {
         items: cart.map((item) => ({
-          product: item.product?.isCustom ? null : item.product._id,
-          productTitle: item.productTitle,
+          productId: item.product?.isCustom ? null : item.product._id,
+          name: item.productTitle,
           quantity: item.quantity,
-          originalPrice: item.originalPrice,
-          discountedPrice: item.discountedPrice
+          specification: item.specification || "Standard Machinery Spec",
+          dealerRemarks: orderNotes
         })),
-        notes: orderNotes
+        dealerRemarks: orderNotes
       };
 
-      const res = await axios.post(`${API_BASE}/dealers/orders`, payload, getAuthHeaders());
+      const res = await axios.post(`${API_BASE}/workflow/inquiries`, payload, getAuthHeaders());
       if (res.data.success) {
-        setOrderSuccessMsg("Bulk Quotation / Order submitted successfully!");
+        setOrderSuccessMsg("Dealer Inquiry submitted successfully to Admin!");
         setCart([]);
         setOrderNotes("");
-        // Refresh orders
-        const ordersRes = await axios.get(`${API_BASE}/dealers/orders`, getAuthHeaders());
-        if (ordersRes.data.success) {
-          setOrders(ordersRes.data.orders);
-        }
+        fetchDealerData();
         setTimeout(() => {
           setOrderSuccessMsg("");
-          setActiveTab("orders");
-        }, 2000);
+          setActiveTab("inquiries");
+        }, 1500);
       }
     } catch (err) {
-      console.error(err);
-      alert("Failed to submit order. Please try again.");
+      console.error("Create inquiry error:", err);
+      alert(err.response?.data?.message || "Failed to submit inquiry.");
     } finally {
       setSubmittingOrder(false);
     }
+  };
+
+  const handlePlaceOrder = handleCreateInquiryFromCart;
+
+  // Confirm PI Action (Triggers Auto PO Generation!)
+  const handleConfirmPISubmit = async () => {
+    if (!confirmingPI) return;
+    setConfirmingPISubmitting(true);
+
+    try {
+      const res = await axios.post(`${API_BASE}/workflow/pi/${confirmingPI._id}/confirm`, {}, getAuthHeaders());
+      if (res.data.success) {
+        alert(res.data.message || "PI Confirmed successfully! Purchase Order generated.");
+        setConfirmPIModalOpen(false);
+        setConfirmingPI(null);
+        fetchDealerData();
+        setActiveTab("purchase-orders");
+      }
+    } catch (err) {
+      console.error("Confirm PI error:", err);
+      alert(err.response?.data?.message || "Failed to confirm Proforma Invoice.");
+    } finally {
+      setConfirmingPISubmitting(false);
+    }
+  };
+
+  // Upload Signed PO Action
+  const handleUploadSignedPOSubmit = async (e) => {
+    e.preventDefault();
+    if (!uploadingPO || !signedFileUrl) {
+      alert("Please select or upload a valid signed PO file.");
+      return;
+    }
+    setUploadSubmitting(true);
+
+    try {
+      const payload = {
+        fileUrl: signedFileUrl,
+        fileName: signedFileName || "Signed_PO.pdf",
+        fileType: "application/pdf"
+      };
+
+      const res = await axios.post(`${API_BASE}/workflow/po/${uploadingPO._id}/upload-signed`, payload, getAuthHeaders());
+      if (res.data.success) {
+        alert("Signed Purchase Order uploaded successfully! Pending Admin verification.");
+        setUploadPOModalOpen(false);
+        setUploadingPO(null);
+        setSignedFileUrl("");
+        setSignedFileName("");
+        fetchDealerData();
+      }
+    } catch (err) {
+      console.error("Upload signed PO error:", err);
+      alert(err.response?.data?.message || "Failed to upload signed PO.");
+    } finally {
+      setUploadSubmitting(false);
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setSignedFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setSignedFileUrl(event.target.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleProfileUpdate = async (e) => {
@@ -497,7 +620,10 @@ function DealerDashboard() {
         <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto no-scrollbar">
           {[
             { id: "catalog", label: "Wholesale Catalog", icon: ShoppingBag },
-            { id: "orders", label: `My Orders & Quotes (${orders.length})`, icon: Clock },
+            { id: "inquiries", label: `Inquiries (${inquiries.length})`, icon: HelpCircle },
+            { id: "proformas", label: `Proforma Invoices (${proformas.length})`, icon: FileText },
+            { id: "purchase-orders", label: `PO & Signed Upload (${purchaseOrders.length})`, icon: FileCheck },
+            { id: "orders", label: `Order History (${orders.length})`, icon: Clock },
             { id: "resources", label: "Resource Library", icon: FileText },
             { id: "profile", label: "Dealership Profile", icon: User }
           ].map((tab) => {
@@ -904,7 +1030,320 @@ function DealerDashboard() {
           </div>
         )}
 
-        {/* --- TAB 3: RESOURCE LIBRARY --- */}
+        {/* --- TAB 2: DEALER INQUIRIES --- */}
+        {activeTab === "inquiries" && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <HelpCircle className="w-5 h-5 text-brand-amber" /> Dealer Machine Inquiries
+                </h2>
+                <p className="text-xs text-slate-400 mt-1">
+                  Track catalog inquiries submitted to Admin for pricing & formal Proforma Invoice generation.
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveTab("catalog")}
+                className="bg-brand-amber text-slate-950 font-bold px-4 py-2 text-xs uppercase tracking-wider hover:bg-amber-400 transition-colors flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" /> Create New Inquiry
+              </button>
+            </div>
+
+            {inquiries.length === 0 ? (
+              <div className="bg-slate-900 border border-slate-800 p-8 text-center space-y-3">
+                <HelpCircle className="w-10 h-10 text-slate-600 mx-auto" />
+                <p className="text-sm font-bold text-slate-300">No active machine inquiries found.</p>
+                <p className="text-xs text-slate-500">Select machines from the Wholesale Catalog to submit your first inquiry.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {inquiries.map((inq) => (
+                  <div key={inq._id} className="bg-slate-900 border border-slate-800 p-5 space-y-3 hover:border-brand-amber/40 transition-colors">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                      <div>
+                        <span className="font-mono text-sm font-extrabold text-brand-amber">{inq.inquiryNumber}</span>
+                        <span className="text-xs text-slate-400 ml-3">
+                          Submitted: {new Date(inq.createdAt).toLocaleDateString("en-IN")}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          {inq.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Status Workflow Progress Indicator */}
+                    <div className="bg-slate-950 p-2.5 border border-slate-850 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      <span className={inq.status === "SUBMITTED" ? "text-amber-400" : "text-emerald-400"}>1. SUBMITTED ✓</span>
+                      <span>→</span>
+                      <span className={inq.status === "UNDER_REVIEW" ? "text-amber-400" : (["PI_GENERATED", "PI_SENT_TO_DEALER", "AWAITING_SIGNED_PO", "ORDER_CONFIRMED"].includes(inq.status) ? "text-emerald-400" : "")}>2. ADMIN REVIEW</span>
+                      <span>→</span>
+                      <span className={["PI_GENERATED", "PI_SENT_TO_DEALER"].includes(inq.status) ? "text-amber-400" : (["AWAITING_SIGNED_PO", "ORDER_CONFIRMED"].includes(inq.status) ? "text-emerald-400" : "")}>3. PI GENERATED</span>
+                      <span>→</span>
+                      <span className={inq.status === "ORDER_CONFIRMED" ? "text-emerald-400" : ""}>4. ORDER CONFIRMED</span>
+                    </div>
+
+                    {/* Items List */}
+                    <div className="divide-y divide-slate-800/60 bg-slate-950/50 p-3">
+                      {(inq.items || []).map((item, idx) => (
+                        <div key={idx} className="py-2 flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs gap-1">
+                          <div>
+                            <span className="font-bold text-white">{item.name}</span>
+                            {item.model && <span className="text-slate-400 text-[11px] ml-2">({item.model})</span>}
+                            {item.specification && <p className="text-[11px] text-slate-400 italic mt-0.5">{item.specification}</p>}
+                          </div>
+                          <div className="text-right sm:text-right">
+                            <span className="font-mono text-slate-300 font-bold">Qty: {item.quantity}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {inq.dealerRemarks && (
+                      <p className="text-xs text-slate-400 italic bg-slate-950 p-2 border-l-2 border-brand-amber">
+                        Remarks: "{inq.dealerRemarks}"
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* --- TAB 3: PROFORMA INVOICES --- */}
+        {activeTab === "proformas" && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <FileText className="w-5 h-5 text-brand-amber" /> Proforma Invoices (PI)
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Review pricing, download official PI PDF with watermark & signature, and accept/confirm to generate Purchase Order.
+              </p>
+            </div>
+
+            {proformas.length === 0 ? (
+              <div className="bg-slate-900 border border-slate-800 p-8 text-center space-y-3">
+                <FileText className="w-10 h-10 text-slate-600 mx-auto" />
+                <p className="text-sm font-bold text-slate-300">No Proforma Invoices generated yet.</p>
+                <p className="text-xs text-slate-500">Invoices will appear here once Admin approves pricing on your submitted inquiry.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {proformas.map((pi) => {
+                  const isConfirmed = pi.isLocked || ["CONFIRMED", "Confirmed"].includes(pi.status);
+                  return (
+                    <div key={pi._id} className="bg-slate-900 border border-slate-800 p-5 space-y-4 hover:border-brand-amber/40 transition-colors">
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                        <div>
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-base font-extrabold text-brand-amber">{pi.invoiceNumber}</span>
+                            <span className="text-xs font-mono font-bold px-2 py-0.5 bg-amber-500/10 text-brand-amber border border-amber-500/30">
+                              Version {pi.version || 1}
+                            </span>
+                            {isConfirmed && (
+                              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" /> Confirmed & Locked
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-400 mt-1">
+                            Date: {new Date(pi.invoiceDate || pi.createdAt).toLocaleDateString("en-IN")} | Valid Until: {new Date(pi.validUntil).toLocaleDateString("en-IN")}
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <p className="text-xs text-slate-400 uppercase font-bold">Grand Total</p>
+                          <p className="font-mono text-lg font-extrabold text-emerald-400">₹{(pi.grandTotal || 0).toLocaleString("en-IN")}</p>
+                        </div>
+                      </div>
+
+                      {/* Items Summary Table */}
+                      <div className="divide-y divide-slate-800 bg-slate-950 p-3 text-xs">
+                        {(pi.items || []).map((item, idx) => (
+                          <div key={idx} className="py-1.5 flex justify-between items-center">
+                            <div>
+                              <span className="font-bold text-white">{item.name}</span>
+                              <span className="text-slate-400 ml-2">x {item.quantity}</span>
+                            </div>
+                            <span className="font-mono text-slate-300 font-bold">₹{(item.totalAmount || 0).toLocaleString("en-IN")}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Financial breakdown */}
+                      <div className="bg-slate-950 p-3 text-xs flex flex-wrap items-center justify-between gap-2 border border-slate-850">
+                        <span>Advance Payable (50%): <strong className="text-emerald-400 font-mono">₹{(pi.advancePayment || 0).toLocaleString("en-IN")}</strong></span>
+                        <span>Balance Due Before Dispatch: <strong className="text-slate-200 font-mono">₹{(pi.balanceDue || 0).toLocaleString("en-IN")}</strong></span>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                        <button
+                          onClick={() => setSelectedPIPrint(pi)}
+                          className="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 text-xs uppercase tracking-wider transition-colors flex items-center gap-2 border border-slate-700"
+                        >
+                          <Download className="w-4 h-4 text-brand-amber" /> View & Download PI PDF
+                        </button>
+
+                        {!isConfirmed ? (
+                          <button
+                            onClick={() => {
+                              setConfirmingPI(pi);
+                              setConfirmPIModalOpen(true);
+                            }}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2 text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-lg"
+                          >
+                            <CheckCircle2 className="w-4 h-4" /> Confirm PI & Generate PO
+                          </button>
+                        ) : (
+                          <span className="text-xs text-emerald-400 font-bold flex items-center gap-1.5 bg-emerald-950/60 border border-emerald-800/60 px-3 py-1.5">
+                            <CheckCircle2 className="w-4 h-4" /> PI Confirmed (Immutable)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* --- TAB 4: PURCHASE ORDERS & SIGNED PO UPLOAD --- */}
+        {activeTab === "purchase-orders" && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <FileCheck className="w-5 h-5 text-brand-amber" /> Customer Purchase Orders & Signed Upload
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Download generated PO PDF, sign and stamp it, and upload the signed document for final Order Confirmation.
+              </p>
+            </div>
+
+            {purchaseOrders.length === 0 ? (
+              <div className="bg-slate-900 border border-slate-800 p-8 text-center space-y-3">
+                <FileCheck className="w-10 h-10 text-slate-600 mx-auto" />
+                <p className="text-sm font-bold text-slate-300">No Purchase Orders generated yet.</p>
+                <p className="text-xs text-slate-500">Purchase Orders are automatically generated as soon as you confirm a Proforma Invoice.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {purchaseOrders.map((po) => {
+                  const isRejected = po.signedPoDocument?.status === "REJECTED" || po.status === "SIGNED_PO_REJECTED";
+                  const isApproved = po.status === "ORDER_CONFIRMED" || po.signedPoDocument?.status === "APPROVED";
+                  const isUploaded = po.signedPoDocument?.status === "PENDING" || po.status === "SIGNED_PO_UPLOADED";
+
+                  return (
+                    <div key={po._id} className="bg-slate-900 border border-slate-800 p-5 space-y-4 hover:border-brand-amber/40 transition-colors">
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                        <div>
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-base font-extrabold text-brand-amber">{po.poNumber}</span>
+                            <span className="text-xs font-mono font-bold text-slate-400">
+                              Ref PI: {po.proformaInvoiceId?.invoiceNumber || "N/A"} (v{po.piVersionNumber || 1})
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400 mt-1">
+                            PO Date: {new Date(po.poDate || po.createdAt).toLocaleDateString("en-IN")}
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <span className={`text-xs font-bold uppercase tracking-wider px-3 py-1 border ${
+                            isApproved ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" :
+                            isRejected ? "bg-red-500/20 text-red-300 border-red-500/30" :
+                            isUploaded ? "bg-blue-500/20 text-blue-300 border-blue-500/30" :
+                            "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                          }`}>
+                            {po.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Instructions Prompt */}
+                      {!isApproved && (
+                        <div className="bg-amber-500/10 border border-amber-500/30 p-3 text-xs text-amber-300 space-y-1">
+                          <p className="font-bold flex items-center gap-1.5">
+                            <AlertCircle className="w-4 h-4" /> Action Required: Sign, Stamp & Upload PO
+                          </p>
+                          <p className="text-[11px] text-amber-200/80">
+                            "Your Purchase Order has been generated. Please download the PO, sign it, apply your company stamp, and upload the signed document."
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Rejection Alert Banner */}
+                      {isRejected && (
+                        <div className="bg-red-500/10 border border-red-500/30 p-3 text-xs text-red-300 space-y-1">
+                          <p className="font-bold flex items-center gap-1.5">
+                            <XCircle className="w-4 h-4 text-red-400" /> Signed PO Rejected by Admin
+                          </p>
+                          <p className="text-red-200">
+                            Reason: <strong>"{po.signedPoDocument?.rejectionReason || "Signature or stamp missing"}"</strong>
+                          </p>
+                          <p className="text-[11px] text-red-300/80">Please re-upload a clear scanned copy with your authorized signature and company stamp.</p>
+                        </div>
+                      )}
+
+                      {/* Approved Order Banner */}
+                      {isApproved && (
+                        <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 text-xs text-emerald-300 space-y-1">
+                          <p className="font-bold flex items-center gap-1.5 text-sm">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400" /> ORDER OFFICIALLY CONFIRMED
+                          </p>
+                          <p className="text-emerald-200 text-[11px]">
+                            Signed Purchase Order has been verified & approved by Admin. Commercial terms are now locked.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* PO Details Summary */}
+                      <div className="divide-y divide-slate-800 bg-slate-950 p-3 text-xs">
+                        <div className="flex justify-between py-1">
+                          <span>Total Order Value:</span>
+                          <strong className="font-mono text-emerald-400 text-sm">₹{(po.financials?.grandTotal || po.totalAmount || 0).toLocaleString("en-IN")}</strong>
+                        </div>
+                        {po.signedPoDocument?.fileName && (
+                          <div className="flex justify-between py-1 text-slate-400">
+                            <span>Uploaded Signed Document:</span>
+                            <span className="font-mono text-slate-200">{po.signedPoDocument.fileName}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                        <button
+                          onClick={() => setSelectedPOPrint(po)}
+                          className="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 text-xs uppercase tracking-wider transition-colors flex items-center gap-2 border border-slate-700"
+                        >
+                          <Download className="w-4 h-4 text-brand-amber" /> Download PO PDF
+                        </button>
+
+                        {!isApproved && (
+                          <button
+                            onClick={() => {
+                              setUploadingPO(po);
+                              setUploadPOModalOpen(true);
+                            }}
+                            className="bg-brand-amber text-slate-950 hover:bg-amber-400 font-bold px-5 py-2 text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-lg"
+                          >
+                            <Upload className="w-4 h-4" /> Upload Signed PO
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
         {activeTab === "resources" && (
           <div className="space-y-6">
             <div>
@@ -1043,6 +1482,149 @@ function DealerDashboard() {
           </div>
         )}
       </main>
+
+      {/* --- INVOICE PRINT MODAL --- */}
+      <InvoicePrintModal
+        invoice={selectedPIPrint}
+        isOpen={!!selectedPIPrint}
+        onClose={() => setSelectedPIPrint(null)}
+      />
+
+      {/* --- PURCHASE ORDER PRINT MODAL --- */}
+      <PurchaseOrderPrintModal
+        po={selectedPOPrint}
+        isOpen={!!selectedPOPrint}
+        onClose={() => setSelectedPOPrint(null)}
+      />
+
+      {/* --- CONFIRM PI MODAL (WITH MANDATORY LEGAL DISCLAIMER) --- */}
+      <AnimatePresence>
+        {confirmPIModalOpen && confirmingPI && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-slate-900 border-2 border-brand-amber text-white p-6 max-w-lg w-full rounded-xl shadow-2xl space-y-4 font-sans"
+            >
+              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 className="text-sm font-extrabold uppercase tracking-wider text-brand-amber flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400" /> Confirm Proforma Invoice
+                </h3>
+                <button onClick={() => setConfirmPIModalOpen(false)} className="text-slate-400 hover:text-white">
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="bg-slate-950 p-4 border border-slate-850 space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Invoice Number:</span>
+                  <span className="font-mono font-bold text-white">{confirmingPI.invoiceNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Active Version:</span>
+                  <span className="font-mono font-bold text-amber-400">Version {confirmingPI.version || 1}</span>
+                </div>
+                <div className="flex justify-between border-t border-slate-800 pt-2 text-sm font-bold">
+                  <span className="text-white">Total Amount:</span>
+                  <span className="font-mono text-emerald-400">₹{(confirmingPI.grandTotal || 0).toLocaleString("en-IN")}</span>
+                </div>
+              </div>
+
+              {/* PDF Mandatory Legal Prompt (Section 7) */}
+              <div className="bg-amber-500/10 border-l-4 border-brand-amber p-3 text-xs text-amber-200 leading-relaxed font-semibold">
+                "By confirming this Proforma Invoice, you agree to the products, quantities, prices, taxes, payment terms and other commercial terms mentioned in the latest version of this PI."
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmPIModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white uppercase tracking-wider"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={confirmingPISubmitting}
+                  onClick={handleConfirmPISubmit}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 text-xs uppercase tracking-wider shadow-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+                >
+                  {confirmingPISubmitting ? "Confirming..." : "I Accept & Confirm PI"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* --- UPLOAD SIGNED PO MODAL --- */}
+      <AnimatePresence>
+        {uploadPOModalOpen && uploadingPO && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-slate-900 border-2 border-emerald-500 text-white p-6 max-w-lg w-full rounded-xl shadow-2xl space-y-4 font-sans"
+            >
+              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 className="text-sm font-extrabold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                  <Upload className="w-5 h-5 text-emerald-400" /> Upload Signed & Stamped PO
+                </h3>
+                <button onClick={() => setUploadPOModalOpen(false)} className="text-slate-400 hover:text-white">
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="bg-slate-950 p-3 border border-slate-850 text-xs space-y-1">
+                <p>PO Number: <strong className="font-mono text-brand-amber">{uploadingPO.poNumber}</strong></p>
+                <p>Ref PI Number: <strong className="font-mono text-slate-300">{uploadingPO.proformaInvoiceId?.invoiceNumber || "N/A"}</strong></p>
+                <p>Order Amount: <strong className="font-mono text-emerald-400">₹{(uploadingPO.financials?.grandTotal || uploadingPO.totalAmount || 0).toLocaleString("en-IN")}</strong></p>
+              </div>
+
+              <form onSubmit={handleUploadSignedPOSubmit} className="space-y-4 text-xs">
+                <div>
+                  <label className="block font-bold uppercase text-slate-300 mb-1">
+                    Upload Scanned / Photo of Signed PO (Accepted: PDF, JPG, JPEG, PNG)
+                  </label>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleFileSelect}
+                    className="w-full bg-slate-950 border border-slate-800 text-slate-300 p-2 focus:border-emerald-500"
+                    required
+                  />
+                  {signedFileName && (
+                    <p className="text-[11px] text-emerald-400 mt-1 font-mono">Selected: {signedFileName}</p>
+                  )}
+                </div>
+
+                <div className="bg-slate-950 p-2.5 border-l-2 border-amber-500 text-[11px] text-slate-400">
+                  Dealer must not upload an unsigned PO as final confirmation. Ensure signature & company stamp are clearly visible.
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setUploadPOModalOpen(false)}
+                    className="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white uppercase tracking-wider"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={uploadSubmitting || !signedFileUrl}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2.5 text-xs uppercase tracking-wider shadow-lg transition-colors disabled:opacity-50"
+                  >
+                    {uploadSubmitting ? "Uploading..." : "Submit Signed PO for Approval"}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <Footer />
     </div>

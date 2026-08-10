@@ -160,6 +160,8 @@ export default function InvoicePrintModal({ invoice, isOpen, onClose }) {
                     </span>
                     <div className="text-[11px] space-y-0.5">
                       <p><strong>Invoice No:</strong> <span className="font-mono text-slate-900 font-bold">{invoice.invoiceNumber}</span></p>
+                      <p><strong>PI Version:</strong> <span className="font-mono font-bold text-amber-700">Version {invoice.version || 1}</span></p>
+                      {invoice.inquiryId && <p><strong>Ref Inquiry:</strong> <span className="font-mono font-bold">{invoice.inquiryId?.inquiryNumber || invoice.inquiryId}</span></p>}
                       <p><strong>Date:</strong> {new Date(invoice.invoiceDate).toLocaleDateString("en-IN")}</p>
                       <p><strong>Valid Until:</strong> {new Date(invoice.validUntil).toLocaleDateString("en-IN")}</p>
                       <p><strong>Status:</strong> <span className="text-emerald-800 font-bold uppercase">{invoice.status}</span></p>

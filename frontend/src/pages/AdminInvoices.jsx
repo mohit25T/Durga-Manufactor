@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText,
   Plus,
@@ -15,76 +15,234 @@ import {
   Building2,
   Filter,
   Eye,
-  AlertCircle
+  AlertCircle,
+  HelpCircle,
+  FileCheck,
+  Send,
+  XCircle,
+  ShieldCheck,
+  History,
+  Lock
 } from "lucide-react";
 import API from "../services/api";
 import AdminLayout from "../components/admin/AdminLayout";
 import InvoicePrintModal from "../components/admin/InvoicePrintModal";
+import PurchaseOrderPrintModal from "../components/admin/PurchaseOrderPrintModal";
 
 export default function AdminInvoices() {
-  const [invoices, setInvoices] = useState([]);
+  const [activeTab, setActiveTab] = useState("inquiries"); // "inquiries" | "proformas" | "purchase-orders" | "summary"
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
 
-  // Selected Invoice for Print/PDF preview
+  // Data States
+  const [inquiries, setInquiries] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [purchaseOrders, setPurchaseOrders] = useState([]);
+  const [workflowSummary, setWorkflowSummary] = useState(null);
+
+  // Print Modals
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [selectedPO, setSelectedPO] = useState(null);
+  const [showPOPrintModal, setShowPOPrintModal] = useState(false);
 
-  const fetchInvoices = async () => {
+  // Admin Action Modals
+  const [priceInquiryModalOpen, setPriceInquiryModalOpen] = useState(false);
+  const [pricingInquiry, setPricingInquiry] = useState(null);
+  const [pricingForm, setPricingForm] = useState({
+    items: [],
+    freightCharges: 0,
+    packagingCharges: 0,
+    paymentTerms: "50% Advance with Purchase Order, 50% before Dispatch.",
+    deliveryTerms: "Ex-factory Rajkot, Gujarat.",
+    warrantyTerms: "1 Year Pan-India Warranty.",
+    notes: "Factory Service Included. Subject to Rajkot Jurisdiction."
+  });
+  const [generatingPI, setGeneratingPI] = useState(false);
+
+  // Edit PI Version Modal
+  const [editPIModalOpen, setEditPIModalOpen] = useState(false);
+  const [editingPI, setEditingPI] = useState(null);
+  const [editPIForm, setEditPIForm] = useState({
+    items: [],
+    freightCharges: 0,
+    packagingCharges: 0,
+    paymentTerms: "",
+    notes: "",
+    reason: ""
+  });
+  const [updatingPI, setUpdatingPI] = useState(false);
+
+  // Verify Signed PO Modal
+  const [verifyPOModalOpen, setVerifyPOModalOpen] = useState(false);
+  const [verifyingPO, setVerifyingPO] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [verifyingSubmitting, setVerifyingSubmitting] = useState(false);
+
+  const fetchAllWorkflowData = async () => {
     try {
       setLoading(true);
-      const res = await API.get("/invoices");
-      if (res.data.success) {
-        setInvoices(res.data.invoices || []);
-      }
+      const [inqRes, invRes, poRes, sumRes] = await Promise.all([
+        API.get("/workflow/inquiries/admin").catch(() => ({ data: { success: false } })),
+        API.get("/invoices").catch(() => ({ data: { success: false } })),
+        API.get("/workflow/po/admin").catch(() => ({ data: { success: false } })),
+        API.get("/workflow/summary").catch(() => ({ data: { success: false } }))
+      ]);
+
+      if (inqRes.data.success) setInquiries(inqRes.data.inquiries || []);
+      if (invRes.data.success) setInvoices(invRes.data.invoices || []);
+      if (poRes.data.success) setPurchaseOrders(poRes.data.purchaseOrders || []);
+      if (sumRes.data.success) setWorkflowSummary(sumRes.data.summary || null);
     } catch (err) {
-      console.error("Error fetching invoices:", err);
+      console.error("Error loading workflow data:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchInvoices();
+    fetchAllWorkflowData();
   }, []);
 
-  const handleStatusChange = async (id, newStatus) => {
+  // --- 1. ADMIN SETS PRICE & GENERATES PI ---
+  const handleOpenPriceModal = (inquiry) => {
+    setPricingInquiry(inquiry);
+    const preparedItems = (inquiry.items || []).map((item) => ({
+      productId: item.productId?._id || item.productId || null,
+      name: item.name,
+      model: item.model || "",
+      quantity: item.quantity || 1,
+      unitPrice: item.unitPrice || item.productId?.price || 50000,
+      discountPercent: 0,
+      hsnCode: "8438",
+      gstRate: 18
+    }));
+
+    setPricingForm({
+      items: preparedItems,
+      freightCharges: 0,
+      packagingCharges: 0,
+      paymentTerms: "50% Advance with Purchase Order, 50% before Dispatch.",
+      deliveryTerms: "Ex-factory Rajkot, Gujarat.",
+      warrantyTerms: "1 Year Pan-India Warranty.",
+      notes: "Factory Service Included. Subject to Rajkot Jurisdiction."
+    });
+    setPriceInquiryModalOpen(true);
+  };
+
+  const handleGeneratePISubmit = async (e) => {
+    e.preventDefault();
+    if (!pricingInquiry) return;
+    setGeneratingPI(true);
+
     try {
-      const res = await API.put(`/invoices/${id}`, { status: newStatus });
+      const res = await API.post(`/workflow/inquiries/${pricingInquiry._id}/generate-pi`, pricingForm);
       if (res.data.success) {
-        setInvoices((prev) =>
-          prev.map((inv) => (inv._id === id ? { ...inv, status: newStatus } : inv))
-        );
+        alert(res.data.message || "Proforma Invoice generated successfully!");
+        setPriceInquiryModalOpen(false);
+        setPricingInquiry(null);
+        fetchAllWorkflowData();
+        setActiveTab("proformas");
       }
     } catch (err) {
-      console.error("Failed to update status:", err);
-      alert("Failed to update invoice status.");
+      console.error("Generate PI error:", err);
+      alert(err.response?.data?.message || "Failed to generate Proforma Invoice.");
+    } finally {
+      setGeneratingPI(false);
     }
   };
 
-  const handleDelete = async (id, invNum) => {
-    if (!window.confirm(`Are you sure you want to delete Proforma Invoice ${invNum}?`)) return;
+  // --- 2. ADMIN EDITS PI VERSION ---
+  const handleOpenEditPIModal = (pi) => {
+    if (pi.isLocked) {
+      alert("This Proforma Invoice has been confirmed by the dealer and is locked. Silently altering confirmed PIs is restricted.");
+      return;
+    }
+    setEditingPI(pi);
+    setEditPIForm({
+      items: pi.items.map(i => ({ ...i })),
+      freightCharges: pi.freightCharges || 0,
+      packagingCharges: pi.packagingCharges || 0,
+      paymentTerms: pi.paymentTerms || "",
+      notes: pi.notes || "",
+      reason: ""
+    });
+    setEditPIModalOpen(true);
+  };
+
+  const handleUpdatePIVersionSubmit = async (e) => {
+    e.preventDefault();
+    if (!editingPI) return;
+    if (!editPIForm.reason.trim()) {
+      alert("Please provide a reason for revising this PI version.");
+      return;
+    }
+    setUpdatingPI(true);
 
     try {
-      const res = await API.delete(`/invoices/${id}`);
+      const res = await API.put(`/workflow/pi/${editingPI._id}/version`, editPIForm);
       if (res.data.success) {
-        setInvoices((prev) => prev.filter((inv) => inv._id !== id));
+        alert(res.data.message || "PI version updated successfully!");
+        setEditPIModalOpen(false);
+        setEditingPI(null);
+        fetchAllWorkflowData();
       }
     } catch (err) {
-      console.error("Error deleting invoice:", err);
-      alert("Failed to delete invoice.");
+      console.error("Update PI version error:", err);
+      alert(err.response?.data?.message || "Failed to update PI version.");
+    } finally {
+      setUpdatingPI(false);
+    }
+  };
+
+  // --- 3. SEND PI TO DEALER ---
+  const handleSendPIToDealer = async (piId) => {
+    try {
+      const res = await API.post(`/workflow/pi/${piId}/send`);
+      if (res.data.success) {
+        alert("Proforma Invoice sent to dealer!");
+        fetchAllWorkflowData();
+      }
+    } catch (err) {
+      console.error("Send PI error:", err);
+      alert("Failed to send PI to dealer.");
+    }
+  };
+
+  // --- 4. VERIFY SIGNED PO (APPROVE / REJECT) ---
+  const handleVerifyPOSubmit = async (action) => {
+    if (!verifyingPO) return;
+    if (action === "REJECT" && !rejectionReason.trim()) {
+      alert("Please enter a rejection reason.");
+      return;
+    }
+
+    setVerifyingSubmitting(true);
+    try {
+      const payload = { action, rejectionReason };
+      const res = await API.post(`/workflow/po/${verifyingPO._id}/verify`, payload);
+      if (res.data.success) {
+        alert(res.data.message || `Signed PO ${action === "APPROVE" ? "Approved" : "Rejected"} successfully!`);
+        setVerifyPOModalOpen(false);
+        setVerifyingPO(null);
+        setRejectionReason("");
+        fetchAllWorkflowData();
+      }
+    } catch (err) {
+      console.error("Verify PO error:", err);
+      alert(err.response?.data?.message || "Failed to process PO verification.");
+    } finally {
+      setVerifyingSubmitting(false);
     }
   };
 
   const handleWhatsAppShare = (inv) => {
     const text = `*PROFORMA INVOICE - DURGA MANUFACTURES*\n` +
-      `Invoice No: ${inv.invoiceNumber}\n` +
+      `Invoice No: ${inv.invoiceNumber} (v${inv.version || 1})\n` +
       `Date: ${new Date(inv.invoiceDate).toLocaleDateString("en-IN")}\n` +
       `Customer: ${inv.companyName || inv.customerName}\n` +
-      `Grand Total: ₹${inv.grandTotal?.toLocaleString("en-IN")}\n` +
-      `Advance Amount: ₹${inv.advancePayment?.toLocaleString("en-IN")}\n\n` +
-      `Thank you for choosing Durga Manufactures! Call +91 94281 56213 for support.`;
+      `Grand Total: ₹${inv.grandTotal?.toLocaleString("en-IN")}\n\n` +
+      `Call +91 94281 56213 for Durga Manufactures Support.`;
 
     const cleanPhone = (inv.phone || "").replace(/\D/g, "");
     const targetPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
@@ -92,256 +250,567 @@ export default function AdminInvoices() {
     window.open(url, "_blank");
   };
 
-  // Filtered invoices
-  const filteredInvoices = invoices.filter((inv) => {
-    const matchesStatus = statusFilter === "ALL" || inv.status === statusFilter;
-    const query = searchQuery.toLowerCase();
-    const matchesSearch =
-      inv.invoiceNumber?.toLowerCase().includes(query) ||
-      inv.customerName?.toLowerCase().includes(query) ||
-      inv.companyName?.toLowerCase().includes(query) ||
-      inv.phone?.toLowerCase().includes(query);
-    return matchesStatus && matchesSearch;
-  });
-
-  // Calculate Metrics
-  const totalInvoiceValue = invoices.reduce((sum, i) => sum + (i.grandTotal || 0), 0);
-  const paidInvoiceValue = invoices
-    .filter((i) => i.status === "Paid" || i.status === "Approved")
-    .reduce((sum, i) => sum + (i.grandTotal || 0), 0);
-  const pendingCount = invoices.filter((i) => i.status === "Sent" || i.status === "Draft").length;
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "Paid":
-        return "bg-emerald-100 text-emerald-800 border-emerald-300";
-      case "Approved":
-        return "bg-blue-100 text-blue-800 border-blue-300";
-      case "Sent":
-        return "bg-amber-100 text-amber-800 border-amber-300";
-      case "Cancelled":
-        return "bg-red-100 text-red-800 border-red-300";
-      default:
-        return "bg-slate-100 text-slate-800 border-slate-300";
-    }
-  };
-
   return (
     <AdminLayout>
-      <div className="space-y-8 font-sans">
-        {/* Top Header Bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-brand-sand pb-5">
+      <div className="space-y-6 font-sans">
+        {/* Top Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-brand-sand pb-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-extrabold text-brand-slateDark tracking-tight flex items-center gap-3">
               <FileText className="w-7 h-7 text-brand-amber" />
-              Proforma Invoice System
+              Dealer Sales & Order Workflow Management
             </h1>
-            <p className="text-brand-gray text-sm font-semibold mt-1">
-              Create, track, print, and share GST proforma invoices for machinery dealers and leads.
+            <p className="text-brand-gray text-xs font-semibold mt-1">
+              Transaction-Safe Workflow: Dealer Inquiry $\rightarrow$ Admin Pricing $\rightarrow$ Proforma Invoice $\rightarrow$ Customer PO $\rightarrow$ Signed PO Approval.
             </p>
           </div>
-
-          <Link
-            to="/admin/invoices/create"
-            className="inline-flex items-center justify-center gap-2 bg-brand-amber hover:bg-brand-slateDark hover:text-white text-brand-slateDark px-6 py-3 rounded-none text-xs font-bold uppercase tracking-wider transition-all shadow-md"
-          >
-            <Plus className="w-4 h-4" /> Create New Invoice
-          </Link>
         </div>
 
-        {/* Financial Metrics Cards (Matching Dashboard.jsx KPI stats) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-brand-light rounded-none p-5 shadow border border-brand-sand flex items-center gap-4">
-            <div className="w-12 h-12 rounded-none bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
-              <FileText className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-brand-gray font-bold text-xs uppercase tracking-wider mb-0.5">Total Invoices</p>
-              <h3 className="text-xl font-bold text-brand-slateDark">{invoices.length}</h3>
-            </div>
+        {/* Workflow Summary Cards (Section 19 Metric Counters) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+          <div className="bg-white p-3 border border-brand-sand shadow-sm space-y-1">
+            <p className="text-brand-gray font-bold uppercase text-[10px]">New Inquiries</p>
+            <h3 className="text-lg font-bold text-amber-600">{workflowSummary?.newInquiries || inquiries.filter(i => i.status === "SUBMITTED").length}</h3>
           </div>
-
-          <div className="bg-brand-light rounded-none p-5 shadow border border-brand-sand flex items-center gap-4">
-            <div className="w-12 h-12 rounded-none bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
-              <DollarSign className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-brand-gray font-bold text-xs uppercase tracking-wider mb-0.5">Total Value (₹)</p>
-              <h3 className="text-xl font-bold text-brand-slateDark">₹{totalInvoiceValue.toLocaleString("en-IN")}</h3>
-            </div>
+          <div className="bg-white p-3 border border-brand-sand shadow-sm space-y-1">
+            <p className="text-brand-gray font-bold uppercase text-[10px]">Pending Pricing</p>
+            <h3 className="text-lg font-bold text-blue-600">{inquiries.filter(i => i.status === "SUBMITTED" || i.status === "UNDER_REVIEW").length}</h3>
           </div>
-
-          <div className="bg-brand-light rounded-none p-5 shadow border border-brand-sand flex items-center gap-4">
-            <div className="w-12 h-12 rounded-none bg-purple-500/10 text-purple-600 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-brand-gray font-bold text-xs uppercase tracking-wider mb-0.5">Confirmed Volume</p>
-              <h3 className="text-xl font-bold text-brand-slateDark">₹{paidInvoiceValue.toLocaleString("en-IN")}</h3>
-            </div>
+          <div className="bg-white p-3 border border-brand-sand shadow-sm space-y-1">
+            <p className="text-brand-gray font-bold uppercase text-[10px]">PI Sent to Dealer</p>
+            <h3 className="text-lg font-bold text-purple-600">{invoices.filter(i => ["SENT_TO_DEALER", "Sent"].includes(i.status)).length}</h3>
           </div>
-
-          <div className="bg-brand-light rounded-none p-5 shadow border border-brand-sand flex items-center gap-4">
-            <div className="w-12 h-12 rounded-none bg-brand-amber/10 text-brand-amber flex items-center justify-center shrink-0">
-              <Clock className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-brand-gray font-bold text-xs uppercase tracking-wider mb-0.5">Pending Quotes</p>
-              <h3 className="text-xl font-bold text-brand-slateDark">{pendingCount}</h3>
-            </div>
+          <div className="bg-white p-3 border border-brand-sand shadow-sm space-y-1">
+            <p className="text-brand-gray font-bold uppercase text-[10px]">PI Confirmed</p>
+            <h3 className="text-lg font-bold text-emerald-600">{invoices.filter(i => i.isLocked || ["CONFIRMED", "Confirmed"].includes(i.status)).length}</h3>
+          </div>
+          <div className="bg-white p-3 border border-brand-sand shadow-sm space-y-1">
+            <p className="text-brand-gray font-bold uppercase text-[10px]">Signed PO Verification</p>
+            <h3 className="text-lg font-bold text-orange-600">{purchaseOrders.filter(p => p.status === "SIGNED_PO_UPLOADED").length}</h3>
+          </div>
+          <div className="bg-white p-3 border border-brand-sand shadow-sm space-y-1">
+            <p className="text-brand-gray font-bold uppercase text-[10px]">Confirmed Orders</p>
+            <h3 className="text-lg font-bold text-emerald-700">{purchaseOrders.filter(p => p.status === "ORDER_CONFIRMED").length}</h3>
           </div>
         </div>
 
-        {/* Filters and Search Bar */}
-        <div className="bg-brand-light p-4 rounded-none shadow border border-brand-sand flex flex-col md:flex-row gap-4 items-center justify-between">
-          {/* Status Tabs */}
-          <div className="flex flex-wrap gap-2 w-full md:w-auto">
-            {["ALL", "Sent", "Approved", "Paid", "Draft", "Cancelled"].map((tab) => (
+        {/* Workflow Navigation Sub-Tabs */}
+        <div className="bg-white p-2 border border-brand-sand flex items-center gap-2 overflow-x-auto">
+          {[
+            { id: "inquiries", label: `1. Dealer Inquiries (${inquiries.length})`, icon: HelpCircle },
+            { id: "proformas", label: `2. Proforma Invoices (${invoices.length})`, icon: FileText },
+            { id: "purchase-orders", label: `3. Customer POs & Verification (${purchaseOrders.length})`, icon: FileCheck },
+            { id: "summary", label: "4. Audit Trail & Log History", icon: History }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
               <button
-                key={tab}
-                onClick={() => setStatusFilter(tab)}
-                className={`px-4 py-2 text-xs font-bold rounded-none uppercase tracking-wider transition-all ${
-                  statusFilter === tab
-                    ? "bg-brand-slateDark text-white shadow"
-                    : "bg-white text-brand-slateDark hover:bg-stone-100 border border-brand-sand"
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all whitespace-nowrap ${
+                  isActive
+                    ? "bg-brand-slateDark text-brand-amber shadow"
+                    : "text-brand-slateDark hover:bg-stone-100"
                 }`}
               >
-                {tab === "ALL" ? "All Invoices" : tab}
+                <Icon className="w-4 h-4" />
+                {tab.label}
               </button>
-            ))}
-          </div>
-
-          {/* Search Input */}
-          <div className="relative w-full md:w-72">
-            <Search className="w-4 h-4 text-brand-gray absolute left-3.5 top-3" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search PI #, dealer, customer..."
-              className="w-full bg-stone-50 border border-brand-sand rounded-none pl-10 pr-4 py-2 text-xs text-brand-slateDark font-semibold outline-none focus:border-brand-amber"
-            />
-          </div>
+            );
+          })}
         </div>
 
-        {/* Invoices List Table */}
-        <div className="bg-brand-light rounded-none border border-brand-sand overflow-hidden shadow">
-          {loading ? (
-            <div className="p-12 text-center text-brand-gray text-xs font-bold">
-              <div className="w-8 h-8 border-4 border-brand-amber border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              Loading Proforma Invoices...
+        {/* --- SUB-TAB 1: DEALER INQUIRIES --- */}
+        {activeTab === "inquiries" && (
+          <div className="bg-white border border-brand-sand p-4 space-y-4">
+            <div className="flex justify-between items-center border-b border-brand-sand pb-3">
+              <h2 className="text-sm font-extrabold uppercase text-brand-slateDark flex items-center gap-2">
+                <HelpCircle className="w-4 h-4 text-brand-amber" /> Dealer Machinery Inquiries
+              </h2>
+              <span className="text-xs text-brand-gray font-semibold">Review requested products and set selling price</span>
             </div>
-          ) : filteredInvoices.length === 0 ? (
-            <div className="p-12 text-center text-brand-gray text-xs space-y-3">
-              <FileText className="w-10 h-10 text-brand-sand mx-auto" />
-              <p className="font-bold text-brand-slateDark text-sm">No Proforma Invoices Found</p>
-              <p className="max-w-xs mx-auto">Create a new PI or clear your search filter to view saved invoices.</p>
-              <Link
-                to="/admin/invoices/create"
-                className="inline-flex items-center gap-2 bg-brand-amber text-brand-slateDark px-4 py-2 rounded-none font-bold text-xs uppercase"
-              >
-                <Plus className="w-4 h-4" /> Create Invoice Now
-              </Link>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-brand-slateDark text-white uppercase tracking-wider text-[11px]">
-                    <th className="p-4">Invoice #</th>
-                    <th className="p-4">Date</th>
-                    <th className="p-4">Customer / Dealer</th>
-                    <th className="p-4">Location</th>
-                    <th className="p-4 text-right">Grand Total</th>
-                    <th className="p-4 text-right">Advance (50%)</th>
-                    <th className="p-4 text-center">Status</th>
-                    <th className="p-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-brand-sand bg-white text-brand-slateDark font-semibold">
-                  {filteredInvoices.map((inv) => (
-                    <tr key={inv._id} className="hover:bg-stone-50 transition-colors">
-                      <td className="p-4 font-mono font-bold text-brand-slateDark">{inv.invoiceNumber}</td>
-                      <td className="p-4 text-brand-gray font-semibold">
-                        {new Date(inv.invoiceDate).toLocaleDateString("en-IN")}
-                      </td>
-                      <td className="p-4">
-                        <div className="font-bold text-brand-slateDark text-sm">{inv.companyName || inv.customerName}</div>
-                        {inv.companyName && <div className="text-[11px] text-brand-gray">{inv.customerName}</div>}
-                        <div className="text-[10px] text-brand-gray font-mono mt-0.5">{inv.phone}</div>
-                      </td>
-                      <td className="p-4">
-                        <div className="font-semibold text-brand-slateDark">{inv.city || inv.state}</div>
-                        <div className="text-[10px] text-brand-gray">{inv.state || "Gujarat"}</div>
-                      </td>
-                      <td className="p-4 text-right font-mono font-bold text-sm text-brand-slateDark">
-                        ₹{(inv.grandTotal || 0).toLocaleString("en-IN")}
-                      </td>
-                      <td className="p-4 text-right font-mono text-emerald-700 font-bold">
-                        ₹{(inv.advancePayment || 0).toLocaleString("en-IN")}
-                      </td>
-                      <td className="p-4 text-center">
-                        <select
-                          value={inv.status}
-                          onChange={(e) => handleStatusChange(inv._id, e.target.value)}
-                          className={`text-[10px] font-bold px-2 py-1 rounded-none border uppercase ${getStatusBadge(
-                            inv.status
-                          )} bg-white outline-none`}
-                        >
-                          <option value="Draft">Draft</option>
-                          <option value="Sent">Sent</option>
-                          <option value="Approved">Approved</option>
-                          <option value="Paid">Paid</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </select>
-                      </td>
-                      <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => {
-                              setSelectedInvoice(inv);
-                              setShowPrintModal(true);
-                            }}
-                            className="p-2 bg-brand-slateDark text-white hover:bg-slate-800 rounded-none transition-all shadow-sm"
-                            title="Print / Export PDF"
-                          >
-                            <Printer className="w-3.5 h-3.5 text-brand-amber" />
-                          </button>
 
-                          <button
-                            onClick={() => handleWhatsAppShare(inv)}
-                            className="p-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-none transition-all shadow-sm"
-                            title="Share on WhatsApp"
-                          >
-                            <Share2 className="w-3.5 h-3.5" />
-                          </button>
+            {loading ? (
+              <div className="p-8 text-center text-xs text-brand-gray">Loading inquiries...</div>
+            ) : inquiries.length === 0 ? (
+              <div className="p-8 text-center text-xs text-brand-gray">No dealer inquiries submitted yet.</div>
+            ) : (
+              <div className="space-y-3">
+                {inquiries.map((inq) => (
+                  <div key={inq._id} className="border border-brand-sand p-4 hover:border-brand-amber transition-colors space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-sand pb-2">
+                      <div>
+                        <span className="font-mono font-bold text-brand-slateDark text-sm">{inq.inquiryNumber}</span>
+                        <span className="text-xs text-brand-gray ml-3">
+                          Dealer: <strong>{inq.dealerId?.companyName || inq.dealerId?.contactPerson || "Dealer"}</strong> ({inq.dealerId?.phone})
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300">
+                        {inq.status}
+                      </span>
+                    </div>
 
-                          <Link
-                            to={`/admin/invoices/edit/${inv._id}`}
-                            className="p-2 bg-stone-100 border border-brand-sand hover:border-brand-amber text-brand-slateDark rounded-none transition-colors"
-                            title="Edit Invoice"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </Link>
-
-                          <button
-                            onClick={() => handleDelete(inv._id, inv.invoiceNumber)}
-                            className="p-2 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 rounded-none transition-colors"
-                            title="Delete Invoice"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                    {/* Requested Items List */}
+                    <div className="bg-stone-50 p-2.5 text-xs divide-y divide-stone-200">
+                      {(inq.items || []).map((item, idx) => (
+                        <div key={idx} className="py-1 flex justify-between items-center">
+                          <div>
+                            <span className="font-bold text-brand-slateDark">{item.name}</span>
+                            {item.model && <span className="text-brand-gray ml-2">({item.model})</span>}
+                            {item.specification && <p className="text-[10px] text-brand-gray italic">{item.specification}</p>}
+                          </div>
+                          <span className="font-mono font-bold">Qty: {item.quantity}</span>
                         </div>
-                      </td>
+                      ))}
+                    </div>
+
+                    {/* Action */}
+                    <div className="flex justify-end pt-1">
+                      <button
+                        onClick={() => handleOpenPriceModal(inq)}
+                        className="bg-brand-amber hover:bg-brand-slateDark hover:text-white text-brand-slateDark font-bold px-4 py-2 text-xs uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-sm"
+                      >
+                        <DollarSign className="w-4 h-4" /> Set Price & Generate PI
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* --- SUB-TAB 2: PROFORMA INVOICES --- */}
+        {activeTab === "proformas" && (
+          <div className="bg-white border border-brand-sand p-4 space-y-4">
+            <div className="flex justify-between items-center border-b border-brand-sand pb-3">
+              <h2 className="text-sm font-extrabold uppercase text-brand-slateDark flex items-center gap-2">
+                <FileText className="w-4 h-4 text-brand-amber" /> Proforma Invoices & Version History
+              </h2>
+            </div>
+
+            {invoices.length === 0 ? (
+              <div className="p-8 text-center text-xs text-brand-gray">No Proforma Invoices found.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-brand-slateDark text-white uppercase tracking-wider text-[11px]">
+                      <th className="p-3">PI #</th>
+                      <th className="p-3">Version</th>
+                      <th className="p-3">Dealer / Customer</th>
+                      <th className="p-3 text-right">Grand Total</th>
+                      <th className="p-3 text-center">Status</th>
+                      <th className="p-3 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-brand-sand font-semibold text-brand-slateDark">
+                    {invoices.map((inv) => (
+                      <tr key={inv._id} className="hover:bg-stone-50">
+                        <td className="p-3 font-mono font-bold">{inv.invoiceNumber}</td>
+                        <td className="p-3 font-mono font-bold text-amber-700">v{inv.version || 1}</td>
+                        <td className="p-3">
+                          <div className="font-bold">{inv.companyName || inv.customerName}</div>
+                          <div className="text-[10px] text-brand-gray">{inv.phone}</div>
+                        </td>
+                        <td className="p-3 text-right font-mono font-bold text-sm">
+                          ₹{(inv.grandTotal || 0).toLocaleString("en-IN")}
+                        </td>
+                        <td className="p-3 text-center">
+                          <span className="text-[10px] font-bold uppercase px-2 py-0.5 border bg-amber-50 text-amber-800 border-amber-300">
+                            {inv.status}
+                          </span>
+                        </td>
+                        <td className="p-3 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => {
+                                setSelectedInvoice(inv);
+                                setShowPrintModal(true);
+                              }}
+                              className="p-1.5 bg-brand-slateDark text-white hover:bg-slate-800"
+                              title="Print / Save PDF"
+                            >
+                              <Printer className="w-3.5 h-3.5 text-brand-amber" />
+                            </button>
+
+                            <button
+                              onClick={() => handleSendPIToDealer(inv._id)}
+                              className="p-1.5 bg-purple-700 text-white hover:bg-purple-600"
+                              title="Send PI to Dealer"
+                            >
+                              <Send className="w-3.5 h-3.5" />
+                            </button>
+
+                            {!inv.isLocked ? (
+                              <button
+                                onClick={() => handleOpenEditPIModal(inv)}
+                                className="p-1.5 bg-amber-500 text-slate-950 font-bold hover:bg-amber-400"
+                                title="Edit PI Version"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
+                            ) : (
+                              <span className="p-1.5 bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold flex items-center gap-1" title="Confirmed & Locked">
+                                <Lock className="w-3 h-3" /> Locked
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* --- SUB-TAB 3: PURCHASE ORDERS & SIGNED PO VERIFICATION --- */}
+        {activeTab === "purchase-orders" && (
+          <div className="bg-white border border-brand-sand p-4 space-y-4">
+            <div className="flex justify-between items-center border-b border-brand-sand pb-3">
+              <h2 className="text-sm font-extrabold uppercase text-brand-slateDark flex items-center gap-2">
+                <FileCheck className="w-4 h-4 text-brand-amber" /> Customer Purchase Orders & Signed PO Verification
+              </h2>
+            </div>
+
+            {purchaseOrders.length === 0 ? (
+              <div className="p-8 text-center text-xs text-brand-gray">No Customer Purchase Orders generated yet.</div>
+            ) : (
+              <div className="space-y-3">
+                {purchaseOrders.map((po) => {
+                  const isUploaded = po.signedPoDocument?.status === "PENDING" || po.status === "SIGNED_PO_UPLOADED";
+                  const isApproved = po.status === "ORDER_CONFIRMED" || po.signedPoDocument?.status === "APPROVED";
+                  const isRejected = po.status === "SIGNED_PO_REJECTED" || po.signedPoDocument?.status === "REJECTED";
+
+                  return (
+                    <div key={po._id} className="border border-brand-sand p-4 space-y-3 hover:border-brand-amber transition-colors">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-sand pb-2">
+                        <div>
+                          <span className="font-mono font-bold text-brand-slateDark text-base">{po.poNumber}</span>
+                          <span className="text-xs text-brand-gray ml-3">
+                            Ref PI: <strong>{po.proformaInvoiceId?.invoiceNumber || "N/A"}</strong> (v{po.piVersionNumber || 1})
+                          </span>
+                          <span className="text-xs text-brand-gray ml-3">
+                            Dealer: <strong>{po.buyerDetails?.companyName || po.buyerDetails?.dealerName}</strong>
+                          </span>
+                        </div>
+                        <span className={`text-[10px] font-bold uppercase px-2.5 py-1 border ${
+                          isApproved ? "bg-emerald-100 text-emerald-800 border-emerald-300" :
+                          isRejected ? "bg-red-100 text-red-800 border-red-300" :
+                          isUploaded ? "bg-blue-100 text-blue-800 border-blue-300" :
+                          "bg-amber-100 text-amber-800 border-amber-300"
+                        }`}>
+                          {po.status}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs bg-stone-50 p-2.5">
+                        <div>
+                          <p>Total Value: <strong className="font-mono text-emerald-700">₹{(po.financials?.grandTotal || po.totalAmount || 0).toLocaleString("en-IN")}</strong></p>
+                          <p>Payment Terms: <span className="text-brand-gray">{po.commercialTerms?.paymentTerms}</span></p>
+                        </div>
+                        <div>
+                          <p>Signed Document Status: <strong>{po.signedPoDocument?.status || "NOT_UPLOADED"}</strong></p>
+                          {po.signedPoDocument?.fileName && (
+                            <p className="text-blue-700 font-mono underline">
+                              <a href={po.signedPoDocument.fileUrl} target="_blank" rel="noreferrer">
+                                View File: {po.signedPoDocument.fileName}
+                              </a>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                        <button
+                          onClick={() => {
+                            setSelectedPO(po);
+                            setShowPOPrintModal(true);
+                          }}
+                          className="bg-brand-slateDark text-white hover:bg-slate-800 font-bold px-3 py-1.5 text-xs uppercase tracking-wider flex items-center gap-1.5"
+                        >
+                          <Printer className="w-3.5 h-3.5 text-brand-amber" /> View / Print PO PDF
+                        </button>
+
+                        {isUploaded && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                setVerifyingPO(po);
+                                setVerifyPOModalOpen(true);
+                              }}
+                              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-1.5 text-xs uppercase tracking-wider shadow flex items-center gap-1.5"
+                            >
+                              <ShieldCheck className="w-4 h-4" /> Review & Approve Signed PO
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* --- SUB-TAB 4: AUDIT TRAIL & HISTORY LOGS --- */}
+        {activeTab === "summary" && (
+          <div className="bg-white border border-brand-sand p-4 space-y-4">
+            <h2 className="text-sm font-extrabold uppercase text-brand-slateDark flex items-center gap-2">
+              <History className="w-4 h-4 text-brand-amber" /> Immutable Workflow Audit Trail History
+            </h2>
+
+            <div className="space-y-2 text-xs">
+              {invoices.flatMap(inv => (inv.auditTrail || []).map((log, idx) => (
+                <div key={idx} className="bg-stone-50 border border-brand-sand p-3 flex justify-between items-center">
+                  <div>
+                    <span className="font-bold text-brand-slateDark">PI {inv.invoiceNumber} (v{log.version})</span>
+                    <p className="text-brand-gray text-[11px] mt-0.5">{log.reason || "Action performed"}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-brand-slateDark font-semibold">{log.changedBy} ({log.role})</span>
+                    <p className="text-[10px] text-brand-gray">{new Date(log.dateTime || Date.now()).toLocaleString("en-IN")}</p>
+                  </div>
+                </div>
+              )))}
+            </div>
+          </div>
+        )}
+
+        {/* --- MODAL 1: SET PRICE & GENERATE PI --- */}
+        <AnimatePresence>
+          {priceInquiryModalOpen && pricingInquiry && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 overflow-y-auto">
+              <motion.div className="bg-white border-2 border-brand-slateDark p-6 max-w-2xl w-full text-brand-slateDark space-y-4 my-auto">
+                <div className="flex justify-between items-center border-b border-brand-sand pb-3">
+                  <h3 className="font-bold text-sm uppercase text-brand-slateDark">
+                    Set Selling Prices & Generate PI ({pricingInquiry.inquiryNumber})
+                  </h3>
+                  <button onClick={() => setPriceInquiryModalOpen(false)}>
+                    <XCircle className="w-5 h-5 text-brand-gray hover:text-brand-slateDark" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleGeneratePISubmit} className="space-y-4 text-xs">
+                  <div className="space-y-2">
+                    <label className="font-bold uppercase text-brand-gray block">Machine Line Items & Selling Rates (₹)</label>
+                    {pricingForm.items.map((item, idx) => (
+                      <div key={idx} className="bg-stone-50 p-3 border border-brand-sand grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+                        <div>
+                          <span className="font-bold text-brand-slateDark">{item.name}</span>
+                          <span className="text-[10px] text-brand-gray block">Qty: {item.quantity}</span>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-brand-gray">Unit Price (₹):</label>
+                          <input
+                            type="number"
+                            value={item.unitPrice}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              const updated = [...pricingForm.items];
+                              updated[idx].unitPrice = val;
+                              setPricingForm({ ...pricingForm, items: updated });
+                            }}
+                            className="w-full bg-white border border-brand-sand p-1.5 font-mono text-xs font-bold"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-brand-gray">Discount %:</label>
+                          <input
+                            type="number"
+                            value={item.discountPercent}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              const updated = [...pricingForm.items];
+                              updated[idx].discountPercent = val;
+                              setPricingForm({ ...pricingForm, items: updated });
+                            }}
+                            className="w-full bg-white border border-brand-sand p-1.5 font-mono text-xs font-bold"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-bold uppercase text-brand-gray block mb-1">Freight Charges (₹)</label>
+                      <input
+                        type="number"
+                        value={pricingForm.freightCharges}
+                        onChange={(e) => setPricingForm({ ...pricingForm, freightCharges: Number(e.target.value) })}
+                        className="w-full bg-white border border-brand-sand p-1.5 font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold uppercase text-brand-gray block mb-1">Payment Terms</label>
+                      <input
+                        type="text"
+                        value={pricingForm.paymentTerms}
+                        onChange={(e) => setPricingForm({ ...pricingForm, paymentTerms: e.target.value })}
+                        className="w-full bg-white border border-brand-sand p-1.5"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setPriceInquiryModalOpen(false)}
+                      className="px-4 py-2 font-bold uppercase text-brand-gray"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={generatingPI}
+                      className="bg-brand-amber text-brand-slateDark font-bold px-6 py-2 uppercase tracking-wider"
+                    >
+                      {generatingPI ? "Generating..." : "Generate Proforma Invoice"}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
             </div>
           )}
-        </div>
+        </AnimatePresence>
 
-        {/* Print / Preview Modal */}
+        {/* --- MODAL 2: EDIT PI VERSION --- */}
+        <AnimatePresence>
+          {editPIModalOpen && editingPI && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 overflow-y-auto">
+              <motion.div className="bg-white border-2 border-brand-slateDark p-6 max-w-2xl w-full text-brand-slateDark space-y-4 my-auto">
+                <div className="flex justify-between items-center border-b border-brand-sand pb-3">
+                  <h3 className="font-bold text-sm uppercase text-brand-slateDark">
+                    Revise PI Version ({editingPI.invoiceNumber} - Current v{editingPI.version || 1})
+                  </h3>
+                  <button onClick={() => setEditPIModalOpen(false)}>
+                    <XCircle className="w-5 h-5 text-brand-gray hover:text-brand-slateDark" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleUpdatePIVersionSubmit} className="space-y-4 text-xs">
+                  <div className="space-y-2">
+                    {editPIForm.items.map((item, idx) => (
+                      <div key={idx} className="bg-stone-50 p-2.5 border border-brand-sand flex justify-between items-center gap-3">
+                        <span className="font-bold">{item.name}</span>
+                        <div className="flex items-center gap-2">
+                          <label className="text-[10px] text-brand-gray">Rate ₹:</label>
+                          <input
+                            type="number"
+                            value={item.unitPrice}
+                            onChange={(e) => {
+                              const updated = [...editPIForm.items];
+                              updated[idx].unitPrice = Number(e.target.value);
+                              setEditPIForm({ ...editPIForm, items: updated });
+                            }}
+                            className="w-28 bg-white border border-brand-sand p-1 font-mono font-bold"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div>
+                    <label className="font-bold uppercase text-brand-slateDark block mb-1">
+                      Revision Reason / Audit Note (Mandatory for Version History):
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Price negotiated down by 5% as per phone discussion"
+                      value={editPIForm.reason}
+                      onChange={(e) => setEditPIForm({ ...editPIForm, reason: e.target.value })}
+                      className="w-full bg-stone-50 border border-brand-sand p-2 font-semibold"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditPIModalOpen(false)}
+                      className="px-4 py-2 font-bold uppercase text-brand-gray"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={updatingPI}
+                      className="bg-brand-amber text-brand-slateDark font-bold px-6 py-2 uppercase tracking-wider"
+                    >
+                      {updatingPI ? "Saving..." : `Save as Version ${(editingPI.version || 1) + 1}`}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* --- MODAL 3: VERIFY SIGNED PO (APPROVE / REJECT) --- */}
+        <AnimatePresence>
+          {verifyPOModalOpen && verifyingPO && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+              <motion.div className="bg-white border-2 border-brand-slateDark p-6 max-w-lg w-full text-brand-slateDark space-y-4">
+                <div className="flex justify-between items-center border-b border-brand-sand pb-3">
+                  <h3 className="font-bold text-sm uppercase text-brand-slateDark flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-emerald-600" /> Verify Signed PO ({verifyingPO.poNumber})
+                  </h3>
+                  <button onClick={() => setVerifyPOModalOpen(false)}>
+                    <XCircle className="w-5 h-5 text-brand-gray hover:text-brand-slateDark" />
+                  </button>
+                </div>
+
+                <div className="bg-stone-50 p-3 text-xs border border-brand-sand space-y-1">
+                  <p>Uploaded File: <strong className="font-mono text-blue-700">{verifyingPO.signedPoDocument?.fileName}</strong></p>
+                  {verifyingPO.signedPoDocument?.fileUrl && (
+                    <a href={verifyingPO.signedPoDocument.fileUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline block font-bold mt-1">
+                      Open Uploaded Document Preview ↗
+                    </a>
+                  )}
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <label className="font-bold uppercase text-brand-gray block">Rejection Reason (If Rejecting):</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Company stamp is missing or Signature is not visible"
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    className="w-full bg-stone-50 border border-brand-sand p-2"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    disabled={verifyingSubmitting}
+                    onClick={() => handleVerifyPOSubmit("REJECT")}
+                    className="bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-2 text-xs uppercase"
+                  >
+                    Reject Signed PO
+                  </button>
+                  <button
+                    type="button"
+                    disabled={verifyingSubmitting}
+                    onClick={() => handleVerifyPOSubmit("APPROVE")}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2 text-xs uppercase"
+                  >
+                    Approve Signed PO & Lock Order
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* --- PRINT MODALS --- */}
         {showPrintModal && selectedInvoice && (
           <InvoicePrintModal
             isOpen={showPrintModal}
@@ -349,6 +818,17 @@ export default function AdminInvoices() {
             onClose={() => {
               setShowPrintModal(false);
               setSelectedInvoice(null);
+            }}
+          />
+        )}
+
+        {showPOPrintModal && selectedPO && (
+          <PurchaseOrderPrintModal
+            isOpen={showPOPrintModal}
+            po={selectedPO}
+            onClose={() => {
+              setShowPOPrintModal(false);
+              setSelectedPO(null);
             }}
           />
         )}

@@ -200,9 +200,53 @@ const proformaInvoiceSchema = new mongoose.Schema(
       ifscCode: { type: String, default: "BARB0AJIRAJ" },
       branch: { type: String, default: "Aji GIDC, Rajkot" }
     },
+    inquiryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Inquiry",
+      required: false,
+      set: sanitizeObjectId
+    },
+    version: {
+      type: Number,
+      default: 1
+    },
+    versions: [
+      {
+        versionNumber: { type: Number, required: true },
+        items: [invoiceItemSchema],
+        subtotal: { type: Number, required: true },
+        freightCharges: { type: Number, default: 0 },
+        packagingCharges: { type: Number, default: 0 },
+        totalGst: { type: Number, default: 0 },
+        grandTotal: { type: Number, required: true },
+        advancePayment: { type: Number, default: 0 },
+        balanceDue: { type: Number, default: 0 },
+        paymentTerms: { type: String, default: "" },
+        validUntil: { type: Date },
+        notes: { type: String, default: "" },
+        changedBy: { type: String, default: "Admin" },
+        changedAt: { type: Date, default: Date.now },
+        reason: { type: String, default: "" }
+      }
+    ],
+    isLocked: {
+      type: Boolean,
+      default: false
+    },
+    auditTrail: [
+      {
+        version: { type: Number },
+        changedBy: { type: String, required: true },
+        role: { type: String, required: true },
+        dateTime: { type: Date, default: Date.now },
+        previousValue: { type: String, default: "" },
+        newValue: { type: String, default: "" },
+        reason: { type: String, default: "" }
+      }
+    ],
     status: {
       type: String,
-      enum: ["Draft", "Sent", "Approved", "Paid", "Cancelled"],
+      enum: ["Draft", "DRAFT", "Generated", "GENERATED", "Sent", "SENT", "SENT_TO_DEALER", "Revised", "REVISED", "Confirmed", "CONFIRMED", "Paid", "PAID", "Cancelled", "CANCELLED"],
       default: "Sent"
     }
   },
