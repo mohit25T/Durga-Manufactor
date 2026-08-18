@@ -59,7 +59,7 @@ export const getProducts = async (req, res) => {
   try {
 
     const products = await Product.find().sort({ createdAt: -1 });
-    console.log(products);
+
     res.json({
       success: true,
       count: products.length,
@@ -85,7 +85,7 @@ export const getProductById = async (req, res) => {
   try {
 
     const product = await Product.findById(req.params.id);
-    console.log(product);
+
     if (!product) {
       return res.status(404).json({
         success: false,
