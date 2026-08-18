@@ -87,8 +87,19 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /* =========================
+   SINGLE-LINE API LOGGER
+========================= */
+app.use((req, res, next) => {
+  res.on("finish", () => {
+    console.log(`[API] ${req.method} ${req.originalUrl} (${res.statusCode})`);
+  });
+  next();
+});
+
+/* =========================
    ROUTES
 ========================= */
+
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
