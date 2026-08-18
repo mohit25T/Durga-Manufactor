@@ -4,7 +4,6 @@ import PurchaseOrder from "../models/PurchaseOrder.js";
 import DealerOrder from "../models/DealerOrder.js";
 import Dealer from "../models/Dealer.js";
 import DealerNotification from "../models/DealerNotification.js";
-import { sendRealtimeNotification } from "../utils/socket.js";
 
 /**
  * Utility: Generate next sequential inquiry number (e.g. INQ-2026-0001)
@@ -98,13 +97,12 @@ export const createInquiry = async (req, res) => {
       ]
     });
 
-    // Create Notification & Realtime Socket Event
-    await sendRealtimeNotification({
-      dealerId,
+    // Create Notification
+    await DealerNotification.create({
+      dealer: dealerId,
       title: "Inquiry Submitted Successfully",
       message: `Your inquiry ${inquiryNumber} has been received and is submitted for Admin review.`,
-      type: "order_created",
-      data: { inquiryId: inquiry._id, inquiryNumber }
+      type: "order_created"
     });
 
     return res.status(201).json({
@@ -456,12 +454,11 @@ export const updatePIVersion = async (req, res) => {
 
     // Notify Dealer if inquiry linked
     if (pi.dealerId) {
-      await sendRealtimeNotification({
-        dealerId: pi.dealerId,
+      await DealerNotification.create({
+        dealer: pi.dealerId,
         title: `Proforma Invoice ${pi.invoiceNumber} Revised`,
         message: `Admin updated PI ${pi.invoiceNumber} (Version ${nextVersionNum}). New Total: ₹${grandTotal.toLocaleString("en-IN")}.`,
-        type: "price_update",
-        data: { invoiceId: pi._id, version: nextVersionNum }
+        type: "price_update"
       });
     }
 
@@ -509,12 +506,11 @@ export const sendPIToDealer = async (req, res) => {
     }
 
     if (pi.dealerId) {
-      await sendRealtimeNotification({
-        dealerId: pi.dealerId,
+      await DealerNotification.create({
+        dealer: pi.dealerId,
         title: "New Proforma Invoice Available",
         message: `Proforma Invoice ${pi.invoiceNumber} (v${pi.version}) is ready for your review and confirmation.`,
-        type: "order_created",
-        data: { invoiceId: pi._id }
+        type: "order_created"
       });
     }
 
@@ -679,13 +675,12 @@ export const confirmPI = async (req, res) => {
       }
     }
 
-    // Create Dealer Notification & Socket Emit
-    await sendRealtimeNotification({
-      dealerId,
+    // Create Dealer Notification
+    await DealerNotification.create({
+      dealer: dealerId,
       title: `Purchase Order ${poNumber} Generated`,
       message: `Your Purchase Order ${poNumber} has been generated! Please download it, sign, apply company stamp, and upload the signed document.`,
-      type: "order_created",
-      data: { poId: purchaseOrder._id, poNumber }
+      type: "order_created"
     });
 
     return res.status(200).json({
@@ -823,12 +818,11 @@ export const verifySignedPO = async (req, res) => {
         }
       }
 
-      await sendRealtimeNotification({
-        dealerId: po.dealerId,
+      await DealerNotification.create({
+        dealer: po.dealerId,
         title: `Signed PO Action Needed: Rejected`,
         message: `Your uploaded signed PO for ${po.poNumber} was not approved: "${rejectionReason}". Please upload a clear/stamped document.`,
-        type: "approval_update",
-        data: { poId: po._id, rejectionReason }
+        type: "approval_update"
       });
 
       return res.status(200).json({
@@ -893,12 +887,11 @@ export const verifySignedPO = async (req, res) => {
         notes: `Confirmed via Workflow PO ${po.poNumber}`
       });
 
-      await sendRealtimeNotification({
-        dealerId: po.dealerId,
+      await DealerNotification.create({
+        dealer: po.dealerId,
         title: `ORDER CONFIRMED! #${po.poNumber}`,
         message: `Congratulations! Your Purchase Order ${po.poNumber} has been verified & approved by Admin. Your order is officially confirmed.`,
-        type: "approval_update",
-        data: { poId: po._id, poNumber }
+        type: "approval_update"
       });
 
       return res.status(200).json({

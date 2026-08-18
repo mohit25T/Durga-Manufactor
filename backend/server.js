@@ -35,7 +35,6 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests without an Origin header (Postman, mobile apps, server-to-server)
     if (!origin) {
       return callback(null, true);
     }
@@ -124,19 +123,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-import http from "http";
-import { initSocket } from "./utils/socket.js";
-
 /* =========================
-   START SERVER WITH SOCKET.IO
+   START SERVER
 ========================= */
 
 const PORT = process.env.PORT || 5000;
-const httpServer = http.createServer(app);
 
-// Initialize Socket.io
-initSocket(httpServer, corsOptions);
-
-httpServer.listen(PORT, () => {
-  console.log(`🚀 Server with Socket.io running on port ${PORT}`);
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });

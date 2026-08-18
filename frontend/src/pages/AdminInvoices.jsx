@@ -28,8 +28,6 @@ import API from "../services/api";
 import AdminLayout from "../components/admin/AdminLayout";
 import InvoicePrintModal from "../components/admin/InvoicePrintModal";
 import PurchaseOrderPrintModal from "../components/admin/PurchaseOrderPrintModal";
-import socketService from "../services/socketService";
-import notificationService from "../services/notificationService";
 
 export default function AdminInvoices() {
   const [activeTab, setActiveTab] = useState("inquiries"); // "inquiries" | "proformas" | "purchase-orders" | "summary"
@@ -104,23 +102,6 @@ export default function AdminInvoices() {
 
   useEffect(() => {
     fetchAllWorkflowData();
-    notificationService.init();
-
-    socketService.init(null, true);
-    socketService.onAdminNotification((notif) => {
-      notificationService.showSystemNotification(notif.title, notif.message, () => {
-        if (notif.title.includes("PO") || notif.title.includes("Signed")) {
-          setActiveTab("purchase-orders");
-        } else {
-          setActiveTab("inquiries");
-        }
-      });
-      fetchAllWorkflowData();
-    });
-
-    return () => {
-      socketService.disconnect();
-    };
   }, []);
 
   // --- 1. ADMIN SETS PRICE & GENERATES PI ---

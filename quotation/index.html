@@ -1,0 +1,1013 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Durga Manufactor - Quotation Generator</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              heading: ['Outfit', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- React 18, Babel & html2pdf CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+      :root {
+        --font-heading: 'Outfit', sans-serif;
+        --font-body: 'Inter', sans-serif;
+      }
+      body {
+        font-family: var(--font-body);
+        background-color: #020617;
+        color: #f8fafc;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        font-family: var(--font-heading);
+      }
+      /* Quotation Document Paper */
+      .quotation-paper {
+        position: relative;
+        background-color: #ffffff;
+        color: #0f172a;
+        width: 210mm;
+        min-height: 297mm;
+        margin: 0 auto;
+        padding: 15mm;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      /* Watermark */
+      .doc-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-35deg);
+        font-family: var(--font-heading);
+        font-size: 7.5rem;
+        font-weight: 900;
+        letter-spacing: 0.15em;
+        color: rgba(0, 0, 0, 0.08);
+        white-space: nowrap;
+        pointer-events: none;
+        user-select: none;
+        z-index: 1;
+        text-transform: uppercase;
+      }
+      .doc-content {
+        position: relative;
+        z-index: 2;
+      }
+      .doc-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        margin-bottom: 20px;
+        font-size: 0.82rem;
+      }
+      .doc-table th {
+        background-color: #f1f5f9;
+        color: #0f172a;
+        font-family: var(--font-heading);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        padding: 8px 6px;
+        border-top: 2px solid #0f172a;
+        border-bottom: 2px solid #0f172a;
+        text-align: left;
+      }
+      .doc-table td {
+        padding: 8px 6px;
+        border-bottom: 1px solid #cbd5e1;
+        vertical-align: middle;
+      }
+      .doc-table tr:nth-child(even) {
+        background-color: rgba(241, 245, 249, 0.4);
+      }
+      .product-img-thumb {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #cbd5e1;
+      }
+      @media print {
+        body { background: none !important; color: #000 !important; }
+        .no-print { display: none !important; }
+        .quotation-paper { width: 100% !important; margin: 0 !important; box-shadow: none !important; }
+      }
+    </style>
+  </head>
+  <body class="bg-slate-950 text-slate-100 min-h-screen">
+    <div id="root"></div>
+
+    <!-- MAIN REACT APPLICATION CODE -->
+    <script type="text/babel">
+      const { useState, useEffect } = React;
+
+      // Safe Inline SVG Data URLs for default products to guarantee zero CORS issues with PDF Canvas
+      const SVG_WATER_TANK = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" rx="10" fill="%231e3a8a"/><rect x="20" y="25" width="60" height="55" rx="8" fill="%233b82f6"/><path d="M 20 40 L 80 40 M 20 55 L 80 55" stroke="%2360a5fa" stroke-width="3"/><text x="50" y="92" font-size="10" fill="white" text-anchor="middle" font-family="sans-serif" font-weight="bold">DURGA TANK</text></svg>`;
+      
+      const SVG_PROCESS_TANK = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" rx="10" fill="%23065f46"/><path d="M 25,20 L 75,20 C 85,20 85,80 75,80 L 25,80 C 15,80 15,20 25,20 Z" fill="%2310b981"/><text x="50" y="55" font-size="10" fill="white" text-anchor="middle" font-family="sans-serif" font-weight="bold">PROCESS</text></svg>`;
+
+      const SVG_PRESSURE_VESSEL = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" rx="10" fill="%234c1d95"/><circle cx="50" cy="45" r="28" fill="%238b5cf6"/><rect x="40" y="65" width="20" height="20" fill="%23a78bfa"/><text x="50" y="50" font-size="10" fill="white" text-anchor="middle" font-family="sans-serif" font-weight="bold">HYDRAULIC</text></svg>`;
+
+      const SVG_RO_PLANT = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" rx="10" fill="%231e293b"/><rect x="25" y="15" width="16" height="70" rx="4" fill="%230284c7"/><rect x="58" y="15" width="16" height="70" rx="4" fill="%230284c7"/><text x="50" y="52" font-size="9" fill="white" text-anchor="middle" font-family="sans-serif" font-weight="bold">RO VESSEL</text></svg>`;
+
+      // Sample Products Catalog
+      const CATALOG_PRODUCTS = [
+        {
+          id: 'prod-1',
+          itemCode: 'DM-WT-1000',
+          name: 'Durga High-Capacity Water Storage Tank',
+          description: 'Heavy duty multi-layer insulated polyethylene water storage tank with anti-bacterial lining.',
+          dimensions: '1200 x 1200 x 1450 mm',
+          weight: '45.5 kg',
+          capacity: '1,000 Liters',
+          unitPrice: 18500,
+          image: SVG_WATER_TANK,
+        },
+        {
+          id: 'prod-2',
+          itemCode: 'DM-WT-2500',
+          name: 'Durga Commercial Process Water Tank',
+          description: 'Triple-layer UV protected heavy duty industrial water reservoir for chemical & process water storage.',
+          dimensions: '1650 x 1650 x 1950 mm',
+          weight: '98.0 kg',
+          capacity: '2,500 Liters',
+          unitPrice: 38200,
+          image: SVG_PROCESS_TANK,
+        },
+        {
+          id: 'prod-3',
+          itemCode: 'DM-HP-50',
+          name: 'Durga Heavy Duty Hydraulic Pressure Tank',
+          description: 'Stainless steel SS316 grade pressurized water tank engineered for continuous commercial water supply.',
+          dimensions: '800 x 800 x 1200 mm',
+          weight: '62.0 kg',
+          capacity: '500 Liters',
+          unitPrice: 54000,
+          image: SVG_PRESSURE_VESSEL,
+        },
+        {
+          id: 'prod-4',
+          itemCode: 'DM-RO-500L',
+          name: 'Durga Commercial RO Filtration Vessel',
+          description: 'FRP High Pressure Vessel with automatic backwash valve system & digital pressure monitoring.',
+          dimensions: '600 x 600 x 1800 mm',
+          weight: '38.0 kg',
+          capacity: '500 LPH',
+          unitPrice: 72500,
+          image: SVG_RO_PLANT,
+        }
+      ];
+
+      const DEFAULT_COMPANY = {
+        name: 'DURGA MANUFACTOR',
+        tagline: 'Precision Engineering & Industrial Manufacturing Solutions',
+        address: 'Plot No. 42, Industrial Area Phase II, MIDC',
+        city: 'Pune, Maharashtra - 411026, India',
+        phone: '+91 98765 43210 / +91 020 2748 9900',
+        email: 'sales@durgamanufactor.com',
+        gstin: '27AAACD1234E1Z5',
+      };
+
+      const DEFAULT_CUSTOMER = {
+        name: 'Apex Industrial Solutions Pvt Ltd',
+        contactPerson: 'Mr. Rajesh Sharma (Procurement Head)',
+        address: '104, Tech Tower, GIDC Estate',
+        city: 'Ahmedabad, Gujarat - 380015',
+        phone: '+91 98250 11223',
+        email: 'r.sharma@apexindustrial.in',
+        gstin: '24AABCA5678F2Z8',
+      };
+
+      const DEFAULT_META = {
+        quotationNo: 'DM-QT-2026-0842',
+        date: new Date().toISOString().split('T')[0],
+        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        currency: '₹',
+        taxRate: 18,
+        shippingCharge: 0,
+        notes: '1. Prices valid for 30 days from issuance date.\n2. Delivery within 2-3 weeks from confirmed PO.\n3. Standard 12 Months manufacturer warranty.',
+        paymentTerms: '50% Advance with Purchase Order, 50% upon delivery before installation.',
+        watermarkText: 'DURGA',
+        showWatermark: true,
+        watermarkOpacity: 0.08,
+      };
+
+      const INITIAL_COLUMNS = [
+        { id: 'productNo', label: 'Product # / Sr No', visible: true },
+        { id: 'image', label: 'Product Image', visible: true },
+        { id: 'description', label: 'Description / Title', visible: true },
+        { id: 'dimensions', label: 'Dimensions (LxWxH)', visible: true },
+        { id: 'weight', label: 'Weight', visible: true },
+        { id: 'capacity', label: 'Capacity', visible: true },
+        { id: 'unitPrice', label: 'Unit Price', visible: true },
+        { id: 'quantity', label: 'Qty', visible: true },
+        { id: 'totalPrice', label: 'Total Amount', visible: true },
+      ];
+
+      const INITIAL_ITEMS = [
+        {
+          id: 'item-1',
+          itemCode: 'DM-WT-1000',
+          name: 'Durga High-Capacity Water Storage Tank',
+          description: 'Heavy duty multi-layer insulated polyethylene water storage tank with anti-bacterial lining.',
+          dimensions: '1200 x 1200 x 1450 mm',
+          weight: '45.5 kg',
+          capacity: '1,000 Liters',
+          unitPrice: 18500,
+          quantity: 2,
+          image: SVG_WATER_TANK,
+        },
+        {
+          id: 'item-2',
+          itemCode: 'DM-WT-2500',
+          name: 'Durga Commercial Process Water Tank',
+          description: 'Triple-layer UV protected heavy duty industrial water reservoir for chemical & process water storage.',
+          dimensions: '1650 x 1650 x 1950 mm',
+          weight: '98.0 kg',
+          capacity: '2,500 Liters',
+          unitPrice: 38200,
+          quantity: 1,
+          image: SVG_PROCESS_TANK,
+        },
+      ];
+
+      // Main Durga App Component
+      function App() {
+        const [company, setCompany] = useState(DEFAULT_COMPANY);
+        const [customer, setCustomer] = useState(DEFAULT_CUSTOMER);
+        const [meta, setMeta] = useState(DEFAULT_META);
+        const [items, setItems] = useState(INITIAL_ITEMS);
+        const [columns, setColumns] = useState(INITIAL_COLUMNS);
+
+        const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
+        const [isCatalogOpen, setIsCatalogOpen] = useState(false);
+
+        const [activeTab, setActiveTab] = useState('items');
+        const [viewMode, setViewMode] = useState('split');
+        const [isExporting, setIsExporting] = useState(false);
+        const [toast, setToast] = useState('');
+
+        const showToast = (msg) => {
+          setToast(msg);
+          setTimeout(() => setToast(''), 4000);
+        };
+
+        // Item manipulation
+        const handleItemChange = (id, field, value) => {
+          setItems(prev => prev.map(item => {
+            if (item.id === id) {
+              return { ...item, [field]: value };
+            }
+            return item;
+          }));
+        };
+
+        const handleAddItem = () => {
+          const newItem = {
+            id: `item-${Date.now()}`,
+            itemCode: `DM-PROD-${items.length + 101}`,
+            name: 'New Durga Custom Component',
+            description: 'Heavy duty engineered product specification.',
+            dimensions: '500 x 400 x 300 mm',
+            weight: '15.0 kg',
+            capacity: '200 Liters',
+            unitPrice: 6500,
+            quantity: 1,
+            image: SVG_PRESSURE_VESSEL,
+          };
+          setItems(prev => [...prev, newItem]);
+        };
+
+        const handleDeleteItem = (id) => {
+          if (items.length <= 1) {
+            alert('Quotation requires at least 1 line item.');
+            return;
+          }
+          setItems(prev => prev.filter(i => i.id !== id));
+        };
+
+        const handleImageUpload = (id, e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              handleItemChange(id, 'image', reader.result);
+            };
+            reader.readAsDataURL(file);
+          }
+        };
+
+        // Column toggling
+        const toggleColumn = (colId) => {
+          setColumns(prev => prev.map(c => c.id === colId ? { ...c, visible: !c.visible } : c));
+        };
+
+        const isColVisible = (colId) => {
+          const c = columns.find(x => x.id === colId);
+          return c ? c.visible : true;
+        };
+
+        // HIGH PERFORMANCE PDF EXPORT FUNCTION
+        const exportPdf = async () => {
+          setIsExporting(true);
+          showToast('Generating PDF file...');
+
+          const element = document.getElementById('quotation-document-preview');
+          if (!element) {
+            alert('Quotation preview container not found!');
+            setIsExporting(false);
+            return;
+          }
+
+          const fileName = `Durga-Quotation-${meta.quotationNo || 'DM-001'}.pdf`;
+
+          const opt = {
+            margin: [8, 8, 8, 8],
+            filename: fileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+              scale: 2,
+              useCORS: true,
+              allowTaint: true,
+              logging: false,
+              letterRendering: true,
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+          };
+
+          setTimeout(() => {
+            if (window.html2pdf) {
+              window.html2pdf().set(opt).from(element).save().then(() => {
+                setIsExporting(false);
+                showToast('✅ PDF Exported Successfully!');
+              }).catch((err) => {
+                console.error('html2pdf error:', err);
+                setIsExporting(false);
+                // Fallback to browser print to PDF
+                window.print();
+              });
+            } else {
+              setIsExporting(false);
+              window.print();
+            }
+          }, 300);
+        };
+
+        // Native Print to PDF trigger
+        const printPdf = () => {
+          window.print();
+        };
+
+        // Calculate Totals
+        const subtotal = items.reduce((acc, i) => acc + ((parseFloat(i.unitPrice) || 0) * (parseFloat(i.quantity) || 1)), 0);
+        const taxable = subtotal;
+        const taxAmt = (taxable * (parseFloat(meta.taxRate) || 0)) / 100;
+        const grandTotal = taxable + taxAmt + (parseFloat(meta.shippingCharge) || 0);
+
+        const visibleColsList = columns.filter(c => c.visible);
+
+        return (
+          <div className="min-h-screen flex flex-col">
+            {/* Toast */}
+            {toast && (
+              <div className="fixed bottom-6 right-6 z-50 bg-emerald-600 text-white px-5 py-3 rounded-xl shadow-2xl font-bold flex items-center gap-2 no-print border border-emerald-400">
+                ⚡ {toast}
+              </div>
+            )}
+
+            {/* TOP HEADER TOOLBAR */}
+            <header className="no-print bg-slate-900/90 border-b border-slate-800 p-4 sticky top-0 z-40 backdrop-blur-md">
+              <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-blue-500/30 font-heading">
+                    D
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-extrabold tracking-tight text-white font-heading">
+                      DURGA <span className="text-blue-400 font-normal">QUOTATION SYSTEM</span>
+                    </h1>
+                    <p className="text-xs text-slate-400">
+                      Localhost Quotation Builder • Durga Manufactor
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button 
+                    onClick={() => setIsColumnModalOpen(true)}
+                    className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2"
+                  >
+                    <span>⚙️ Hide/Show Columns</span>
+                    <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      {visibleColsList.length}/{columns.length}
+                    </span>
+                  </button>
+
+                  <button 
+                    onClick={() => setIsCatalogOpen(true)}
+                    className="bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 px-3 py-2 rounded-lg text-xs font-semibold"
+                  >
+                    + Add Catalog Item
+                  </button>
+
+                  {/* DIRECT EXPORT PDF BUTTON */}
+                  <button 
+                    onClick={exportPdf}
+                    disabled={isExporting}
+                    className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-lg shadow-blue-600/30 flex items-center gap-2"
+                  >
+                    {isExporting ? '⏳ Generating PDF...' : '📥 Download PDF'}
+                  </button>
+
+                  {/* PRINT / SAVE AS PDF BUTTON */}
+                  <button 
+                    onClick={printPdf}
+                    className="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-2 rounded-lg text-xs shadow-lg shadow-amber-600/20 flex items-center gap-1"
+                    title="Open Print Dialog to Save as PDF"
+                  >
+                    🖨️ Print PDF
+                  </button>
+                </div>
+              </div>
+            </header>
+
+            {/* MAIN CONTENT AREA */}
+            <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
+              {/* Workspace View Mode Selector */}
+              <div className="no-print mb-4 flex items-center justify-between bg-slate-900/60 p-2 rounded-xl border border-slate-800">
+                <span className="text-xs font-bold text-slate-400 px-2">Layout View:</span>
+                <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
+                  <button
+                    onClick={() => setViewMode('split')}
+                    className={`px-3 py-1.5 rounded-md font-semibold transition-all ${
+                      viewMode === 'split' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Split View
+                  </button>
+                  <button
+                    onClick={() => setViewMode('editor')}
+                    className={`px-3 py-1.5 rounded-md font-semibold transition-all ${
+                      viewMode === 'editor' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Form Editor
+                  </button>
+                  <button
+                    onClick={() => setViewMode('preview')}
+                    className={`px-3 py-1.5 rounded-md font-semibold transition-all ${
+                      viewMode === 'preview' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    PDF Preview
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                {/* FORM EDITOR (LEFT) */}
+                {(viewMode === 'split' || viewMode === 'editor') && (
+                  <div className={`${viewMode === 'split' ? 'lg:col-span-6' : 'lg:col-span-12'} bg-slate-900 border border-slate-800 rounded-2xl p-5 no-print space-y-5`}>
+                    
+                    {/* Tabs */}
+                    <div className="flex items-center gap-2 border-b border-slate-800 pb-3 flex-wrap">
+                      <button
+                        onClick={() => setActiveTab('items')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          activeTab === 'items' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Products ({items.length})
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('customer')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          activeTab === 'customer' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Client Details
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('company')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          activeTab === 'company' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Company Info
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('settings')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          activeTab === 'settings' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Taxes & Watermark
+                      </button>
+                    </div>
+
+                    {/* TAB 1: PRODUCT LINE ITEMS */}
+                    {activeTab === 'items' && (
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-sm font-bold text-white">Line Items</h3>
+                          <button
+                            onClick={handleAddItem}
+                            className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold"
+                          >
+                            + Add Custom Item
+                          </button>
+                        </div>
+
+                        {items.map((item, idx) => (
+                          <div key={item.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3 relative">
+                            <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                              <span className="text-xs font-bold text-blue-400">Item #{idx + 1}</span>
+                              <button onClick={() => handleDeleteItem(item.id)} className="text-red-400 text-xs font-bold hover:underline">
+                                Remove
+                              </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                              {isColVisible('productNo') && (
+                                <div>
+                                  <label className="block text-slate-400 mb-1">Product #</label>
+                                  <input
+                                    type="text"
+                                    value={item.itemCode}
+                                    onChange={(e) => handleItemChange(item.id, 'itemCode', e.target.value)}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white"
+                                  />
+                                </div>
+                              )}
+
+                              <div>
+                                <label className="block text-slate-400 mb-1">Product Title</label>
+                                <input
+                                  type="text"
+                                  value={item.name}
+                                  onChange={(e) => handleItemChange(item.id, 'name', e.target.value)}
+                                  className="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white font-medium"
+                                />
+                              </div>
+
+                              {isColVisible('image') && (
+                                <div className="sm:col-span-2">
+                                  <label className="block text-slate-400 mb-1">Image URL or File Upload</label>
+                                  <div className="flex gap-2 items-center">
+                                    <input
+                                      type="text"
+                                      placeholder="Image URL or SVG data..."
+                                      value={item.image.startsWith('data:image/svg') ? '[Default SVG Image]' : item.image}
+                                      onChange={(e) => handleItemChange(item.id, 'image', e.target.value)}
+                                      className="flex-1 bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-[11px]"
+                                    />
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={(e) => handleImageUpload(item.id, e)}
+                                      className="text-[10px] text-slate-400"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {isColVisible('description') && (
+                                <div className="sm:col-span-2">
+                                  <label className="block text-slate-400 mb-1">Description</label>
+                                  <textarea
+                                    value={item.description}
+                                    onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
+                                    rows={2}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white text-[11px]"
+                                  />
+                                </div>
+                              )}
+
+                              {isColVisible('dimensions') && (
+                                <div>
+                                  <label className="block text-slate-400 mb-1">Dimensions</label>
+                                  <input
+                                    type="text"
+                                    value={item.dimensions}
+                                    onChange={(e) => handleItemChange(item.id, 'dimensions', e.target.value)}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white"
+                                  />
+                                </div>
+                              )}
+
+                              {isColVisible('weight') && (
+                                <div>
+                                  <label className="block text-slate-400 mb-1">Weight</label>
+                                  <input
+                                    type="text"
+                                    value={item.weight}
+                                    onChange={(e) => handleItemChange(item.id, 'weight', e.target.value)}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white"
+                                  />
+                                </div>
+                              )}
+
+                              {isColVisible('capacity') && (
+                                <div>
+                                  <label className="block text-slate-400 mb-1">Capacity</label>
+                                  <input
+                                    type="text"
+                                    value={item.capacity}
+                                    onChange={(e) => handleItemChange(item.id, 'capacity', e.target.value)}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white"
+                                  />
+                                </div>
+                              )}
+
+                              {isColVisible('unitPrice') && (
+                                <div>
+                                  <label className="block text-slate-400 mb-1">Unit Price ({meta.currency})</label>
+                                  <input
+                                    type="number"
+                                    value={item.unitPrice}
+                                    onChange={(e) => handleItemChange(item.id, 'unitPrice', e.target.value)}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-emerald-400 font-bold"
+                                  />
+                                </div>
+                              )}
+
+                              {isColVisible('quantity') && (
+                                <div>
+                                  <label className="block text-slate-400 mb-1">Quantity</label>
+                                  <input
+                                    type="number"
+                                    value={item.quantity}
+                                    onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white font-bold"
+                                  />
+                                </div>
+                              )}
+
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* TAB 2: CLIENT */}
+                    {activeTab === 'customer' && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <label className="block text-slate-400 mb-1">Client Company</label>
+                          <input
+                            type="text"
+                            value={customer.name}
+                            onChange={(e) => setCustomer({...customer, name: e.target.value})}
+                            className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 mb-1">Contact Person</label>
+                          <input
+                            type="text"
+                            value={customer.contactPerson}
+                            onChange={(e) => setCustomer({...customer, contactPerson: e.target.value})}
+                            className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-slate-400 mb-1">Client Address</label>
+                          <input
+                            type="text"
+                            value={customer.address}
+                            onChange={(e) => setCustomer({...customer, address: e.target.value})}
+                            className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 mb-1">City / State</label>
+                          <input
+                            type="text"
+                            value={customer.city}
+                            onChange={(e) => setCustomer({...customer, city: e.target.value})}
+                            className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 mb-1">Client GSTIN</label>
+                          <input
+                            type="text"
+                            value={customer.gstin}
+                            onChange={(e) => setCustomer({...customer, gstin: e.target.value})}
+                            className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 3: COMPANY */}
+                    {activeTab === 'company' && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <label className="block text-slate-400 mb-1">Our Company Name</label>
+                          <input
+                            type="text"
+                            value={company.name}
+                            onChange={(e) => setCompany({...company, name: e.target.value})}
+                            className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-blue-400 font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 mb-1">Tagline</label>
+                          <input
+                            type="text"
+                            value={company.tagline}
+                            onChange={(e) => setCompany({...company, tagline: e.target.value})}
+                            className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-slate-400 mb-1">Address</label>
+                          <input
+                            type="text"
+                            value={company.address}
+                            onChange={(e) => setCompany({...company, address: e.target.value})}
+                            className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 4: SETTINGS & WATERMARK */}
+                    {activeTab === 'settings' && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <label className="block text-slate-400 mb-1">Quotation #</label>
+                          <input
+                            type="text"
+                            value={meta.quotationNo}
+                            onChange={(e) => setMeta({...meta, quotationNo: e.target.value})}
+                            className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 mb-1">Currency</label>
+                          <select
+                            value={meta.currency}
+                            onChange={(e) => setMeta({...meta, currency: e.target.value})}
+                            className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"
+                          >
+                            <option value="₹">₹ (INR)</option>
+                            <option value="$">$ (USD)</option>
+                            <option value="€">€ (EUR)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 mb-1">GST / Tax (%)</label>
+                          <input
+                            type="number"
+                            value={meta.taxRate}
+                            onChange={(e) => setMeta({...meta, taxRate: e.target.value})}
+                            className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 mb-1">Watermark Text</label>
+                          <input
+                            type="text"
+                            value={meta.watermarkText}
+                            onChange={(e) => setMeta({...meta, watermarkText: e.target.value})}
+                            className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-amber-400 font-bold uppercase"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                )}
+
+                {/* PDF DOCUMENT PREVIEW (RIGHT) */}
+                {(viewMode === 'split' || viewMode === 'preview') && (
+                  <div className={`${viewMode === 'split' ? 'lg:col-span-6' : 'lg:col-span-12'} overflow-x-auto py-2`}>
+                    <div id="quotation-document-preview" className="quotation-paper">
+                      
+                      {/* DURGA WATERMARK */}
+                      {meta.showWatermark && (
+                        <div className="doc-watermark" style={{ opacity: meta.watermarkOpacity || 0.08 }}>
+                          {meta.watermarkText || 'DURGA'}
+                        </div>
+                      )}
+
+                      <div className="doc-content">
+                        {/* Header */}
+                        <div className="flex justify-between items-start border-b-2 border-slate-900 pb-4 mb-4">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="w-8 h-8 bg-blue-700 text-white rounded font-black text-lg flex items-center justify-center font-heading">
+                                D
+                              </div>
+                              <h1 className="text-xl font-extrabold text-slate-900 uppercase font-heading">
+                                {company.name}
+                              </h1>
+                            </div>
+                            <p className="text-[10px] font-bold text-blue-700 uppercase">{company.tagline}</p>
+                            <p className="text-[10px] text-slate-600 mt-1">{company.address}, {company.city}</p>
+                            <p className="text-[10px] text-slate-600">GSTIN: <b>{company.gstin}</b></p>
+                          </div>
+
+                          <div className="text-right">
+                            <div className="bg-slate-900 text-white px-3 py-1 rounded font-heading font-extrabold text-sm uppercase tracking-wider mb-1">
+                              QUOTATION
+                            </div>
+                            <p className="text-xs font-bold text-slate-800"># {meta.quotationNo}</p>
+                            <p className="text-[10px] text-slate-600">Date: {meta.date}</p>
+                            <p className="text-[10px] text-slate-600">Valid: {meta.validUntil}</p>
+                          </div>
+                        </div>
+
+                        {/* Customer Box */}
+                        <div className="grid grid-cols-2 gap-4 mb-4 text-xs">
+                          <div className="bg-slate-50 p-3 rounded border border-slate-200">
+                            <p className="font-bold text-blue-900 uppercase text-[10px] mb-1">Customer / Bill To:</p>
+                            <p className="font-bold text-slate-900">{customer.name}</p>
+                            <p className="text-slate-600 text-[11px]">{customer.address}, {customer.city}</p>
+                            <p className="text-slate-600 text-[11px]">GSTIN: {customer.gstin}</p>
+                          </div>
+                          <div className="bg-slate-50 p-3 rounded border border-slate-200">
+                            <p className="font-bold text-blue-900 uppercase text-[10px] mb-1">Details:</p>
+                            <p className="text-slate-700 text-[11px]">Currency: <b>{meta.currency}</b></p>
+                            <p className="text-slate-700 text-[11px]">GST: <b>{meta.taxRate}%</b></p>
+                          </div>
+                        </div>
+
+                        {/* TABLE WITH DYNAMIC COLUMNS */}
+                        <table className="doc-table">
+                          <thead>
+                            <tr>
+                              {visibleColsList.map(col => (
+                                <th key={col.id} className={col.id === 'unitPrice' || col.id === 'totalPrice' || col.id === 'quantity' ? 'text-right' : ''}>
+                                  {col.label}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {items.map((item, idx) => (
+                              <tr key={item.id}>
+                                {visibleColsList.map(col => {
+                                  if (col.id === 'productNo') return <td key={col.id} className="font-mono text-[10px] font-bold">{item.itemCode}</td>;
+                                  if (col.id === 'image') return (
+                                    <td key={col.id}>
+                                      {item.image ? <img src={item.image} className="product-img-thumb" /> : <span className="text-[9px] text-slate-400">No Image</span>}
+                                    </td>
+                                  );
+                                  if (col.id === 'description') return (
+                                    <td key={col.id}>
+                                      <p className="font-bold text-slate-900 text-xs">{item.name}</p>
+                                      <p className="text-[10px] text-slate-600">{item.description}</p>
+                                    </td>
+                                  );
+                                  if (col.id === 'dimensions') return <td key={col.id} className="font-mono text-[10px]">{item.dimensions}</td>;
+                                  if (col.id === 'weight') return <td key={col.id} className="font-mono text-[10px]">{item.weight}</td>;
+                                  if (col.id === 'capacity') return <td key={col.id} className="font-mono text-[10px]">{item.capacity}</td>;
+                                  if (col.id === 'unitPrice') return <td key={col.id} className="text-right font-mono font-medium">{meta.currency} {parseFloat(item.unitPrice||0).toLocaleString('en-IN')}</td>;
+                                  if (col.id === 'quantity') return <td key={col.id} className="text-right font-mono font-bold">{item.quantity}</td>;
+                                  if (col.id === 'totalPrice') return <td key={col.id} className="text-right font-mono font-bold">{meta.currency} {((parseFloat(item.unitPrice||0)*parseFloat(item.quantity||1))).toLocaleString('en-IN')}</td>;
+                                  return <td key={col.id}>-</td>;
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+
+                        {/* Financial Totals */}
+                        <div className="flex justify-between items-start gap-4 mb-4">
+                          <div className="w-7/12 text-[10px] text-slate-600 space-y-1">
+                            <p className="font-bold text-slate-900 uppercase">Terms & Conditions:</p>
+                            <p className="whitespace-pre-line">{meta.notes}</p>
+                          </div>
+
+                          <div className="w-5/12 bg-slate-50 p-3 rounded border border-slate-200 text-xs space-y-1.5">
+                            <div className="flex justify-between text-slate-700">
+                              <span>Subtotal:</span>
+                              <span className="font-mono font-bold">{meta.currency} {subtotal.toLocaleString('en-IN')}</span>
+                            </div>
+                            <div className="flex justify-between text-slate-700">
+                              <span>GST ({meta.taxRate}%):</span>
+                              <span className="font-mono">{meta.currency} {taxAmt.toLocaleString('en-IN')}</span>
+                            </div>
+                            <div className="border-t border-slate-900 pt-1.5 flex justify-between font-bold text-slate-900">
+                              <span>Grand Total:</span>
+                              <span className="font-mono text-blue-700 text-sm">{meta.currency} {grandTotal.toLocaleString('en-IN')}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Signatory */}
+                        <div className="pt-6 border-t border-slate-300 flex justify-between items-end text-[10px] text-slate-600">
+                          <div>
+                            <p className="font-bold text-slate-800">For DURGA MANUFACTOR</p>
+                          </div>
+                          <div className="text-center">
+                            <div className="border-b border-slate-400 pb-8 mb-1 w-36"></div>
+                            <p className="font-bold text-slate-900">Authorized Signatory</p>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </main>
+
+            {/* MODAL: COLUMNS TOGGLE */}
+            {isColumnModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm no-print">
+                <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 max-w-md w-full shadow-2xl space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <h3 className="font-bold text-white text-base">Toggle Table Columns</h3>
+                    <button onClick={() => setIsColumnModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+                  </div>
+
+                  <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                    {columns.map(col => (
+                      <label key={col.id} onClick={() => toggleColumn(col.id)} className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer ${col.visible ? 'bg-blue-600/20 border-blue-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-500'}`}>
+                        <span className="font-semibold text-xs">{col.label}</span>
+                        <span className="text-[10px] font-bold uppercase">{col.visible ? '✓ Visible' : '✗ Hidden'}</span>
+                      </label>
+                    ))}
+                  </div>
+
+                  <button onClick={() => setIsColumnModalOpen(false)} className="w-full bg-blue-600 text-white font-bold py-2 rounded-lg text-xs">
+                    Apply & Close
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* MODAL: CATALOG */}
+            {isCatalogOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm no-print">
+                <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 max-w-lg w-full shadow-2xl space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <h3 className="font-bold text-white text-base">Durga Product Catalog</h3>
+                    <button onClick={() => setIsCatalogOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+                  </div>
+
+                  <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                    {CATALOG_PRODUCTS.map(prod => (
+                      <div key={prod.id} className="bg-slate-950 border border-slate-800 p-3 rounded-lg flex items-center justify-between gap-3 text-xs">
+                        <div>
+                          <p className="font-bold text-white">{prod.name}</p>
+                          <p className="text-[10px] text-slate-400">{prod.itemCode} • {prod.dimensions} • {prod.capacity}</p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setItems([...items, { ...prod, id: `item-${Date.now()}`, quantity: 1 }]);
+                            showToast(`Added ${prod.name}`);
+                          }}
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded text-[11px]"
+                        >
+                          + Insert
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+  </body>
+</html>
