@@ -86,34 +86,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* =========================
-   GLOBAL API RESPONSE LOGGER
-========================= */
-app.use((req, res, next) => {
-  const startTime = Date.now();
-  const originalJson = res.json;
-  let responseSummary = "";
 
-  res.json = function (body) {
-    if (body && typeof body === "object") {
-      if (body.message) {
-        responseSummary = body.message;
-      } else if (body.success !== undefined) {
-        responseSummary = body.success ? "Success" : "Failed";
-      }
-    }
-    return originalJson.apply(this, arguments);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - startTime;
-    const msgInfo = responseSummary ? ` | Res: "${responseSummary}"` : "";
-    console.log(`[API HIT] ${req.method} ${req.originalUrl} | Status: ${res.statusCode} | Time: ${duration}ms${msgInfo}`);
-    console.log(res.body)
-  });
-
-  next();
-});
 
 /* =========================
    ROUTES
