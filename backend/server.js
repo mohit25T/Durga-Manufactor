@@ -91,6 +91,7 @@ app.use(express.urlencoded({ extended: true }));
 ========================= */
 app.use((req, res, next) => {
   res.on("finish", () => {
+    console.log(res.body)
     console.log(`[API] ${req.method} ${req.originalUrl} (${res.statusCode})`);
   });
   next();
