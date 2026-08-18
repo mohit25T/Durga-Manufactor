@@ -85,7 +85,7 @@ export const getProductById = async (req, res) => {
   try {
 
     const product = await Product.findById(req.params.id);
-    console.log(product);
+    console.log(product.price);
     if (!product) {
       return res.status(404).json({
         success: false,
