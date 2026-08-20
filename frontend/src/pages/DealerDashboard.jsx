@@ -436,6 +436,43 @@ function DealerDashboard() {
     reader.readAsDataURL(file);
   };
 
+  const handleOpenDocument = (fileUrl, fileName) => {
+    if (!fileUrl) {
+      alert("No document payload available.");
+      return;
+    }
+
+    if (fileUrl.startsWith("data:")) {
+      try {
+        const parts = fileUrl.split(",");
+        const mimeMatch = parts[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : "application/pdf";
+        const bstr = atob(parts[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+        const win = window.open(blobUrl, "_blank");
+        if (!win) {
+          const a = document.createElement("a");
+          a.href = blobUrl;
+          a.download = fileName || "Signed_PO.pdf";
+          a.click();
+        }
+      } catch (err) {
+        console.error("Base64 document view error:", err);
+        alert("Failed to parse base64 document stream.");
+      }
+    } else if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://") || fileUrl.startsWith("blob:")) {
+      window.open(fileUrl, "_blank");
+    } else {
+      alert(`Document Path: ${fileUrl}\n\nDocument stored at path: ${fileName || fileUrl}`);
+    }
+  };
+
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     setUpdatingProfile(true);
@@ -1318,9 +1355,15 @@ function DealerDashboard() {
                           <strong className="font-mono text-emerald-400 text-sm">₹{(po.financials?.grandTotal || po.totalAmount || 0).toLocaleString("en-IN")}</strong>
                         </div>
                         {po.signedPoDocument?.fileName && (
-                          <div className="flex justify-between py-1 text-slate-400">
+                          <div className="flex items-center justify-between py-1 text-slate-400">
                             <span>Uploaded Signed Document:</span>
-                            <span className="font-mono text-slate-200">{po.signedPoDocument.fileName}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDocument(po.signedPoDocument?.fileUrl, po.signedPoDocument?.fileName)}
+                              className="font-mono text-emerald-400 hover:underline font-bold flex items-center gap-1"
+                            >
+                              <Eye className="w-3.5 h-3.5" /> {po.signedPoDocument.fileName}
+                            </button>
                           </div>
                         )}
                       </div>
