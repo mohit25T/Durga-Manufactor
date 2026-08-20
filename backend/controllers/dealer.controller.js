@@ -274,10 +274,40 @@ export const updateDealerProfile = async (req, res) => {
       });
     }
 
-    if (companyName) dealer.companyName = companyName;
+    // GST & Company Details Locking Rule:
+    // Once approved by admin (and GST number is set), dealer CANNOT change GST number or Company Name.
+    const isApproved = dealer.status === "approved";
+    const existingGST = (dealer.gstNumber || "").trim();
+
+    if (isApproved && existingGST.length > 0) {
+      if (gstNumber !== undefined && gstNumber.trim().toUpperCase() !== existingGST.toUpperCase()) {
+        return res.status(403).json({
+          success: false,
+          message: "GST Number is locked after Admin approval and cannot be modified. Contact Durga Admin to request tax detail updates."
+        });
+      }
+      if (companyName && companyName.trim() !== dealer.companyName.trim()) {
+        return res.status(403).json({
+          success: false,
+          message: "Company Name is locked after Admin approval and cannot be modified. Contact Durga Admin to request profile updates."
+        });
+      }
+    }
+
+    // Allow adding/setting GST number for the first time or updating allowed details
+    if (gstNumber !== undefined) {
+      if (!isApproved || existingGST.length === 0) {
+        dealer.gstNumber = gstNumber.trim().toUpperCase();
+      }
+    }
+    if (companyName) {
+      if (!isApproved || existingGST.length === 0) {
+        dealer.companyName = companyName;
+      }
+    }
+
     if (contactPerson) dealer.contactPerson = contactPerson;
     if (phone) dealer.phone = phone;
-    if (gstNumber !== undefined) dealer.gstNumber = gstNumber;
     if (address !== undefined) dealer.address = address;
     if (city !== undefined) dealer.city = city;
     if (state !== undefined) dealer.state = state;

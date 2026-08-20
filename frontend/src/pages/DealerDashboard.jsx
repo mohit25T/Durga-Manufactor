@@ -1453,12 +1453,20 @@ function DealerDashboard() {
             <form onSubmit={handleProfileUpdate} className="bg-slate-900 border border-slate-800 p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Company / Firm Name</label>
+                  <label className="block text-xs font-bold uppercase text-slate-400 mb-1 flex items-center justify-between">
+                    <span>Company / Firm Name</span>
+                    {dealer?.status === "approved" && dealer?.gstNumber && (
+                      <span className="text-[10px] text-amber-400 flex items-center gap-1 font-mono uppercase">
+                        <Lock className="w-3 h-3" /> Locked
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="text"
                     value={profileForm.companyName}
+                    disabled={dealer?.status === "approved" && Boolean(dealer?.gstNumber)}
                     onChange={(e) => setProfileForm({ ...profileForm, companyName: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-brand-amber px-3 py-2 text-xs text-white focus:outline-none"
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-brand-amber px-3 py-2 text-xs text-white focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -1483,13 +1491,26 @@ function DealerDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-400 mb-1">GST Number</label>
+                  <label className="block text-xs font-bold uppercase text-slate-400 mb-1 flex items-center justify-between">
+                    <span>GST Number</span>
+                    {dealer?.status === "approved" && dealer?.gstNumber && (
+                      <span className="text-[10px] text-amber-400 flex items-center gap-1 font-mono uppercase">
+                        <Lock className="w-3 h-3" /> Verified & Locked
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="text"
                     value={profileForm.gstNumber}
+                    disabled={dealer?.status === "approved" && Boolean(dealer?.gstNumber)}
                     onChange={(e) => setProfileForm({ ...profileForm, gstNumber: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-brand-amber px-3 py-2 text-xs text-white uppercase focus:outline-none"
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-brand-amber px-3 py-2 text-xs text-white uppercase focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                   />
+                  {dealer?.status === "approved" && dealer?.gstNumber && (
+                    <p className="text-[10px] text-slate-500 mt-1 italic">
+                      GST Number is locked after Admin approval. Contact Durga Admin to request changes.
+                    </p>
+                  )}
                 </div>
               </div>
 
