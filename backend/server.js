@@ -82,9 +82,9 @@ const corsOptions = {
 /* CORS MUST COME BEFORE ROUTES */
 app.use(cors(corsOptions));
 
-/* Body Parser */
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+/* Body Parser (Configured for up to 5MB document uploads + base64 encoding margin) */
+app.use(express.json({ limit: "15mb" }));
+app.use(express.urlencoded({ limit: "15mb", extended: true }));
 
 
 

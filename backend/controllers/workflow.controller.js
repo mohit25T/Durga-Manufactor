@@ -727,7 +727,8 @@ function verifyDocumentSignatureAndStamp({ fileUrl, fileName, fileType }) {
     };
   }
 
-  // 2. Base64 / Data URL Content Payload Check
+  // 2. Base64 / Data URL Content Payload & File Size Check (Max 5 MB)
+  const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
   if (cleanUrl.startsWith("data:")) {
     const base64Parts = cleanUrl.split(",");
     if (base64Parts.length < 2 || !base64Parts[1] || base64Parts[1].length < 100) {
@@ -742,6 +743,14 @@ function verifyDocumentSignatureAndStamp({ fileUrl, fileName, fileType }) {
       return {
         isValid: false,
         reason: "Backend Verification Failed: File size is too small to contain valid signature and official stamp."
+      };
+    }
+
+    if (payloadBuffer.length > MAX_FILE_SIZE_BYTES) {
+      const fileSizeMB = (payloadBuffer.length / (1024 * 1024)).toFixed(2);
+      return {
+        isValid: false,
+        reason: `Backend Verification Failed: Uploaded file size (${fileSizeMB} MB) exceeds maximum allowed limit of 5 MB.`
       };
     }
 

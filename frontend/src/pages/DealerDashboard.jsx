@@ -419,6 +419,15 @@ function DealerDashboard() {
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+    if (file.size > MAX_FILE_SIZE) {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      alert(`Selected file size (${fileSizeMB} MB) exceeds maximum allowed limit of 5 MB. Please select a smaller file.`);
+      e.target.value = "";
+      setSignedFileName("");
+      setSignedFileUrl("");
+      return;
+    }
     setSignedFileName(file.name);
     const reader = new FileReader();
     reader.onload = (event) => {
