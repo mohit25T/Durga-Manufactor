@@ -217,11 +217,7 @@ export default function InvoicePrintModal({ invoice, isOpen, onClose }) {
                         <td className="border border-slate-900 p-1.5 text-center font-bold">{index + 1}</td>
                         <td className="border border-slate-900 p-1.5 font-bold text-slate-900">
                           {item.name}
-                          {item.discountPercent > 0 && (
-                            <span className="text-[9px] text-emerald-800 font-bold block">
-                              ({item.discountPercent}% Dealer Discount Applied)
-                            </span>
-                          )}
+
                         </td>
                         <td className="border border-slate-900 p-1.5 text-center font-mono font-bold">{item.hsnCode || "8438"}</td>
                         <td className="border border-slate-900 p-1.5 text-center font-bold">{item.quantity} {item.unit || "Set"}</td>

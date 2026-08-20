@@ -242,11 +242,35 @@ export const updateDealerProfile = async (req, res) => {
   try {
     const { companyName, contactPerson, phone, gstNumber, address, city, state } = req.body;
 
-    const dealer = await Dealer.findById(req.dealer.id);
+    let dealer = await Dealer.findById(req.dealer.id);
     if (!dealer) {
+      const admin = await Admin.findById(req.dealer.id);
+      if (admin) {
+        if (contactPerson) admin.name = contactPerson;
+        await admin.save();
+        return res.status(200).json({
+          success: true,
+          message: "Admin profile updated successfully.",
+          dealer: {
+            id: admin._id,
+            companyName: companyName || "Durga Admin Portal",
+            contactPerson: admin.name || contactPerson || "System Administrator",
+            email: admin.email,
+            phone: phone || "+91 94281 56213",
+            gstNumber: gstNumber || "24AAAAA0000A1Z5",
+            status: "approved",
+            role: "admin",
+            address: address || "",
+            city: city || "",
+            state: state || "",
+            discountPercent: 0
+          }
+        });
+      }
+
       return res.status(404).json({
         success: false,
-        message: "Dealer account not found."
+        message: "Account not found."
       });
     }
 

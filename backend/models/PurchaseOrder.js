@@ -111,7 +111,14 @@ const purchaseOrderSchema = new mongoose.Schema(
       },
       rejectionReason: { type: String, default: "" },
       reviewedAt: { type: Date },
-      reviewedBy: { type: String, default: "" }
+      reviewedBy: { type: String, default: "" },
+      verifiedByBackend: { type: Boolean, default: false },
+      verificationDetails: {
+        signatureDetected: { type: Boolean, default: false },
+        stampDetected: { type: Boolean, default: false },
+        score: { type: Number, default: 0 },
+        verifiedAt: { type: Date }
+      }
     },
     status: {
       type: String,

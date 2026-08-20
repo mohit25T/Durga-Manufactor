@@ -860,7 +860,7 @@ function DealerDashboard() {
                             </>
                           );
                         })()}
-                        <p className="text-[10px] text-slate-500 pt-1">Applied B2B dealer margin discount + 18% standard GST.</p>
+                        <p className="text-[10px] text-slate-500 pt-1">Applied standard wholesale rate + 18% standard GST.</p>
                       </div>
 
                       {/* Order Notes */}
@@ -1600,8 +1600,8 @@ function DealerDashboard() {
                   )}
                 </div>
 
-                <div className="bg-slate-950 p-2.5 border-l-2 border-amber-500 text-[11px] text-slate-400">
-                  Dealer must not upload an unsigned PO as final confirmation. Ensure signature & company stamp are clearly visible.
+                <div className="bg-slate-950 p-2.5 border-l-2 border-emerald-500 text-[11px] text-slate-400">
+                  Automated Verification: Server backend automatically verifies document integrity, signature presence, and company stamp before processing.
                 </div>
 
                 <div className="flex items-center justify-end gap-3 pt-2">

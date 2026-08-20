@@ -705,7 +705,6 @@ export default function CreateInvoice() {
                   <th className="p-3 w-28 text-center">HSN</th>
                   <th className="p-3 w-24 text-center">Qty</th>
                   <th className="p-3 w-36 text-right">Unit Price (₹)</th>
-                  <th className="p-3 w-24 text-center">Disc %</th>
                   <th className="p-3 w-36 text-right">Total (₹)</th>
                   <th className="p-3 w-16 text-center">Action</th>
                 </tr>
@@ -764,17 +763,6 @@ export default function CreateInvoice() {
                         value={item.unitPrice}
                         onChange={(e) => handleItemChange(index, "unitPrice", e.target.value)}
                         className="w-full px-3 py-2 bg-stone-50 border border-brand-sand text-right text-xs font-mono font-bold text-brand-slateDark"
-                      />
-                    </td>
-
-                    <td className="p-3 text-center">
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={item.discountPercent}
-                        onChange={(e) => handleItemChange(index, "discountPercent", e.target.value)}
-                        className="w-full px-2 py-2 bg-stone-50 border border-brand-sand text-center text-xs font-bold text-orange-600"
                       />
                     </td>
 

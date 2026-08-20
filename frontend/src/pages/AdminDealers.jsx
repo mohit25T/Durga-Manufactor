@@ -519,7 +519,7 @@ function AdminDealers() {
                           </span>
                           {d.status === "approved" && (
                             <span className="text-[10px] px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase">
-                              {d.discountPercent}% B2B Discount
+                              Authorized Dealer
                             </span>
                           )}
                         </div>
@@ -646,7 +646,7 @@ function AdminDealers() {
                               {ord.dealer?.companyName || "Dealer"}
                             </span>
                             <span className="text-xs px-2 py-0.5 bg-slate-800 text-slate-300 border border-slate-700">
-                              {ord.dealer?.discountPercent ?? 0}% B2B Discount
+                              Authorized Dealer
                             </span>
                           </div>
                           <p className="text-xs text-slate-400 mt-0.5">

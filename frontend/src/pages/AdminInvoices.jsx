@@ -620,20 +620,6 @@ export default function AdminInvoices() {
                             required
                           />
                         </div>
-                        <div>
-                          <label className="text-[10px] font-bold text-brand-gray">Discount %:</label>
-                          <input
-                            type="number"
-                            value={item.discountPercent}
-                            onChange={(e) => {
-                              const val = Number(e.target.value);
-                              const updated = [...pricingForm.items];
-                              updated[idx].discountPercent = val;
-                              setPricingForm({ ...pricingForm, items: updated });
-                            }}
-                            className="w-full bg-white border border-brand-sand p-1.5 font-mono text-xs font-bold"
-                          />
-                        </div>
                       </div>
                     ))}
                   </div>
