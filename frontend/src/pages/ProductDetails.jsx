@@ -21,6 +21,32 @@ function ProductDetails() {
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isUserInteracting, setIsUserInteracting] = useState(false);
+  const userTouchTimeout = useRef(null);
+  const swipeDirection = useRef("");
+
+  const handleUserGesture = () => {
+    setIsUserInteracting(true);
+    if (userTouchTimeout.current) clearTimeout(userTouchTimeout.current);
+    userTouchTimeout.current = setTimeout(() => {
+      setIsUserInteracting(false);
+    }, 4000);
+  };
+
+  useEffect(() => {
+    if (!product?.images || product.images.length <= 1 || isUserInteracting || isZoomOpen) return;
+
+    const timer = setInterval(() => {
+      setSelectedImage((prev) => {
+        const currIdx = product.images.indexOf(prev);
+        const nextIdx = (currIdx + 1) % product.images.length;
+        swipeDirection.current = "left";
+        return product.images[nextIdx];
+      });
+    }, 3500);
+
+    return () => clearInterval(timer);
+  }, [product, isUserInteracting, isZoomOpen]);
 
   const [reviewForm, setReviewForm] = useState({
     name: "",
@@ -79,9 +105,9 @@ function ProductDetails() {
 
   const handleZoomDragMove = (e) => {
     if (!isDragging.current || zoomScale <= 1) return;
-    // Panning bounds grow with zoomScale level
-    const limitX = 350 * (zoomScale - 1);
-    const limitY = 250 * (zoomScale - 1);
+    // Panning bounds grow with zoomScale level for complete edge-to-edge coverage
+    const limitX = 750 * (zoomScale - 1);
+    const limitY = 550 * (zoomScale - 1);
     const newX = Math.max(-limitX, Math.min(limitX, e.clientX - dragStartPos.current.x));
     const newY = Math.max(-limitY, Math.min(limitY, e.clientY - dragStartPos.current.y));
     setPanOffset({ x: newX, y: newY });
@@ -127,25 +153,6 @@ function ProductDetails() {
 
     fetchProduct();
   }, [id]);
-
-  // Auto scroll/slide images
-  const swipeDirection = useRef("");
-
-  useEffect(() => {
-    if (!product || !product.images || product.images.length <= 1 || isZoomOpen) return;
-
-    const interval = setInterval(() => {
-      setSelectedImage((current) => {
-        const images = product.images;
-        const currentIndex = images.indexOf(current);
-        const nextIndex = (currentIndex + 1) % images.length;
-        swipeDirection.current = "left";
-        return images[nextIndex];
-      });
-    }, 4000); // cycle every 4 seconds
-
-    return () => clearInterval(interval);
-  }, [product, isZoomOpen, selectedImage]);
 
   // Gesture Swipe State Management
   const swipeStartX = useRef(0);
@@ -274,25 +281,35 @@ Thank you.
             <div className="lg:col-span-2 space-y-4">
               <div 
                 className="bg-white border border-brand-sand p-3 shadow-sm cursor-zoom-in relative group/img overflow-hidden select-none touch-pan-y"
-                onClick={handleImageClick}
-                onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
-                onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
-                onPointerDown={(e) => handleDragStart(e.clientX)}
-                onPointerMove={(e) => {
-                  if (e.buttons === 1) handleDragMove(e.clientX);
+                onClick={(e) => {
+                  handleUserGesture();
+                  setIsZoomOpen(true);
+                }}
+                onTouchStart={(e) => {
+                  handleUserGesture();
+                }}
+                onPointerDown={(e) => {
+                  handleUserGesture();
                 }}
               >
+                {/* Auto Scroll / Gesture Indicator Badge */}
+                {isUserInteracting && (
+                  <div className="absolute top-4 left-4 z-20 bg-slate-900/80 text-amber-400 border border-amber-500/30 text-[9px] font-bold px-2 py-0.5 uppercase tracking-widest backdrop-blur-xs">
+                    Manual Scanner Active
+                  </div>
+                )}
+
                 {/* Hover zoom cue */}
                 <div className="absolute inset-0 bg-black/5 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center z-10 pointer-events-none">
-                  <span className="bg-white/80 backdrop-blur-sm border border-brand-sand/80 px-4 py-2 font-bold text-xs uppercase tracking-widest text-brand-forest shadow-md">
-                    Click to Zoom
+                  <span className="bg-white/90 backdrop-blur-sm border border-brand-sand/80 px-4 py-2 font-bold text-xs uppercase tracking-widest text-brand-forest shadow-md">
+                    Screen-Center Zoom
                   </span>
                 </div>
                 <motion.div
                   key={selectedImage}
-                  initial={{ opacity: 0, x: swipeDirection.current === "left" ? 50 : swipeDirection.current === "right" ? -50 : 0 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                   className="w-full h-full"
                 >
                   <ProgressiveImage
@@ -308,7 +325,7 @@ Thank you.
                       20
                     )}
                     alt={product.name}
-                    className="w-full h-auto object-contain bg-brand-cream aspect-square border border-brand-sand/40"
+                    className="w-full max-h-[460px] object-contain bg-brand-cream border border-brand-sand/40"
                   />
                 </motion.div>
               </div>
@@ -320,6 +337,7 @@ Thank you.
                     <button
                       key={index}
                       onClick={() => {
+                        handleUserGesture();
                         const currIdx = product.images.indexOf(selectedImage);
                         if (index > currIdx) {
                           swipeDirection.current = "left";
@@ -332,7 +350,7 @@ Thank you.
                       }}
                       className={`cursor-pointer bg-white p-1 border aspect-square transition-all ${
                         selectedImage === img
-                          ? "border-brand-forest"
+                          ? "border-brand-forest ring-2 ring-brand-forest/20"
                           : "border-brand-sand hover:border-brand-gray"
                       }`}
                     >
@@ -445,6 +463,36 @@ Thank you.
                     No specifications list available for this unit.
                   </p>
                 )}
+              </div>
+
+              {/* YOUTUBE DEMO VIDEO CARD (COMING SOON) */}
+              <div 
+                onClick={() => alert("🎬 High-Definition YouTube Factory Demo Video feature is Coming Soon! You can request a live video demonstration via WhatsApp.")}
+                className="bg-gradient-to-r from-red-950/20 via-slate-900 to-slate-950 border border-red-500/30 p-4 shadow-sm cursor-pointer hover:border-red-500/60 transition-all group"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-red-600/20 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <span className="text-red-500 text-lg font-bold">▶</span>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-serif text-sm font-bold text-white group-hover:text-amber-400 transition-colors">
+                          YouTube Factory Video Walkthrough
+                        </h4>
+                        <span className="bg-red-600 text-white text-[9px] font-extrabold px-2 py-0.5 uppercase tracking-widest rounded-xs shadow-xs">
+                          Coming Soon 🎬
+                        </span>
+                      </div>
+                      <p className="text-slate-400 text-xs font-medium mt-0.5">
+                        Watch HD live operational demo of this machine processing at 100% capacity in our Rajkot factory.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-slate-500 text-xs font-bold uppercase tracking-wider group-hover:text-amber-400 transition-colors shrink-0">
+                    Notify Me 🔒
+                  </span>
+                </div>
               </div>
 
               {/* CLIENT INQUIRY FORM */}

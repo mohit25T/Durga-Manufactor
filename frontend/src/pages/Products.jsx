@@ -32,12 +32,12 @@ function Products() {
 
         if (finalProducts.length === 0) {
           finalProducts = [
-            { _id: '1', name: 'Heavy Duty Potato Slicer HP-500', description: 'Cuts 500kg/hr. Stainless steel body with premium blades.', category: 'Slicers', price: '45000', images: ['https://images.unsplash.com/photo-1581091226825-a6a2a5aee158'] },
-            { _id: '2', name: 'Commercial Flour Mill FM-X', description: 'High speed grinding with stone mechanism. 20HP motor.', category: 'Mills', price: '85000', images: ['https://images.unsplash.com/photo-1581092160607-ee22621dd758'] },
-            { _id: '3', name: 'Industrial Veg Cutter V-300', description: 'Multifunctional cutting blades included. Continuous operation.', category: 'Cutters', price: '38000', images: ['https://images.unsplash.com/photo-1581092335397-9583fe92d232'] },
-            { _id: '4', name: 'Dough Kneader DK-50', description: '50kg capacity spiral kneader for commercial bakeries.', category: 'Kneaders', price: '62000', images: ['https://images.unsplash.com/photo-1581092162384-8987c1d64718'] },
-            { _id: '5', name: 'Onion Peeler OP-Pro', description: 'Automatic onion peeling machine, 200kg/hr output.', category: 'Peelers', price: '54000', images: ['https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc'] },
-            { _id: '6', name: 'Pulverizer Machine P-Max', description: 'Heavy duty spices grinding machine with double chamber.', category: 'Mills', price: '72000', images: ['https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0'] }
+            { _id: '1', name: 'Heavy Duty Potato Slicer HP-500', description: 'Cuts 500kg/hr. Stainless steel body with premium blades.', category: 'Slicers', price: 0, images: ['https://images.unsplash.com/photo-1581091226825-a6a2a5aee158'] },
+            { _id: '2', name: 'Commercial Flour Mill FM-X', description: 'High speed grinding with stone mechanism. 20HP motor.', category: 'Mills', price: 0, images: ['https://images.unsplash.com/photo-1581092160607-ee22621dd758'] },
+            { _id: '3', name: 'Industrial Veg Cutter V-300', description: 'Multifunctional cutting blades included. Continuous operation.', category: 'Cutters', price: 0, images: ['https://images.unsplash.com/photo-1581092335397-9583fe92d232'] },
+            { _id: '4', name: 'Dough Kneader DK-50', description: '50kg capacity spiral kneader for commercial bakeries.', category: 'Kneaders', price: 0, images: ['https://images.unsplash.com/photo-1581092162384-8987c1d64718'] },
+            { _id: '5', name: 'Onion Peeler OP-Pro', description: 'Automatic onion peeling machine, 200kg/hr output.', category: 'Peelers', price: 0, images: ['https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc'] },
+            { _id: '6', name: 'Pulverizer Machine P-Max', description: 'Heavy duty spices grinding machine with double chamber.', category: 'Mills', price: 0, images: ['https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0'] }
           ];
         }
 
@@ -53,12 +53,12 @@ function Products() {
       } catch (error) {
         console.log(error);
         setProducts([
-          { _id: '1', name: 'Heavy Duty Potato Slicer HP-500', description: 'Cuts 500kg/hr. Stainless steel body with premium blades.', category: 'Slicers', price: '45000', images: ['https://images.unsplash.com/photo-1581091226825-a6a2a5aee158'] },
-          { _id: '2', name: 'Commercial Flour Mill FM-X', description: 'High speed grinding with stone mechanism. 20HP motor.', category: 'Mills', price: '85000', images: ['https://images.unsplash.com/photo-1581092160607-ee22621dd758'] },
-          { _id: '3', name: 'Industrial Veg Cutter V-300', description: 'Multifunctional cutting blades included. Continuous operation.', category: 'Cutters', price: '38000', images: ['https://images.unsplash.com/photo-1581092335397-9583fe92d232'] },
-          { _id: '4', name: 'Dough Kneader DK-50', description: '50kg capacity spiral kneader for commercial bakeries.', category: 'Kneaders', price: '62000', images: ['https://images.unsplash.com/photo-1581092162384-8987c1d64718'] },
-          { _id: '5', name: 'Onion Peeler OP-Pro', description: 'Automatic onion peeling machine, 200kg/hr output.', category: 'Peelers', price: '54000', images: ['https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc'] },
-          { _id: '6', name: 'Pulverizer Machine P-Max', description: 'Heavy duty spices grinding machine with double chamber.', category: 'Mills', price: '72000', images: ['https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0'] }
+          { _id: '1', name: 'Heavy Duty Potato Slicer HP-500', description: 'Cuts 500kg/hr. Stainless steel body with premium blades.', category: 'Slicers', price: 0, images: ['https://images.unsplash.com/photo-1581091226825-a6a2a5aee158'] },
+          { _id: '2', name: 'Commercial Flour Mill FM-X', description: 'High speed grinding with stone mechanism. 20HP motor.', category: 'Mills', price: 0, images: ['https://images.unsplash.com/photo-1581092160607-ee22621dd758'] },
+          { _id: '3', name: 'Industrial Veg Cutter V-300', description: 'Multifunctional cutting blades included. Continuous operation.', category: 'Cutters', price: 0, images: ['https://images.unsplash.com/photo-1581092335397-9583fe92d232'] },
+          { _id: '4', name: 'Dough Kneader DK-50', description: '50kg capacity spiral kneader for commercial bakeries.', category: 'Kneaders', price: 0, images: ['https://images.unsplash.com/photo-1581092162384-8987c1d64718'] },
+          { _id: '5', name: 'Onion Peeler OP-Pro', description: 'Automatic onion peeling machine, 200kg/hr output.', category: 'Peelers', price: 0, images: ['https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc'] },
+          { _id: '6', name: 'Pulverizer Machine P-Max', description: 'Heavy duty spices grinding machine with double chamber.', category: 'Mills', price: 0, images: ['https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0'] }
         ]);
       } finally {
         setLoading(false);
