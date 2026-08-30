@@ -4,6 +4,7 @@ import PurchaseOrder from "../models/PurchaseOrder.js";
 import DealerOrder from "../models/DealerOrder.js";
 import Dealer from "../models/Dealer.js";
 import DealerNotification from "../models/DealerNotification.js";
+import { createAndSendDealerNotification } from "../services/notification.service.js";
 
 /**
  * Utility: Generate next sequential inquiry number (e.g. INQ-2026-0001)
@@ -98,8 +99,8 @@ export const createInquiry = async (req, res) => {
     });
 
     // Create Notification
-    await DealerNotification.create({
-      dealer: dealerId,
+    await createAndSendDealerNotification({
+      dealerId: dealerId,
       title: "Inquiry Submitted Successfully",
       message: `Your inquiry ${inquiryNumber} has been received and is submitted for Admin review.`,
       type: "order_created"
@@ -454,8 +455,8 @@ export const updatePIVersion = async (req, res) => {
 
     // Notify Dealer if inquiry linked
     if (pi.dealerId) {
-      await DealerNotification.create({
-        dealer: pi.dealerId,
+      await createAndSendDealerNotification({
+        dealerId: pi.dealerId,
         title: `Proforma Invoice ${pi.invoiceNumber} Revised`,
         message: `Admin updated PI ${pi.invoiceNumber} (Version ${nextVersionNum}). New Total: ₹${grandTotal.toLocaleString("en-IN")}.`,
         type: "price_update"
@@ -506,8 +507,8 @@ export const sendPIToDealer = async (req, res) => {
     }
 
     if (pi.dealerId) {
-      await DealerNotification.create({
-        dealer: pi.dealerId,
+      await createAndSendDealerNotification({
+        dealerId: pi.dealerId,
         title: "New Proforma Invoice Available",
         message: `Proforma Invoice ${pi.invoiceNumber} (v${pi.version}) is ready for your review and confirmation.`,
         type: "order_created"
@@ -676,8 +677,8 @@ export const confirmPI = async (req, res) => {
     }
 
     // Create Dealer Notification
-    await DealerNotification.create({
-      dealer: dealerId,
+    await createAndSendDealerNotification({
+      dealerId: dealerId,
       title: `Purchase Order ${poNumber} Generated`,
       message: `Your Purchase Order ${poNumber} has been generated! Please download it, sign, apply company stamp, and upload the signed document.`,
       type: "order_created"
@@ -915,8 +916,8 @@ export const verifySignedPO = async (req, res) => {
         }
       }
 
-      await DealerNotification.create({
-        dealer: po.dealerId,
+      await createAndSendDealerNotification({
+        dealerId: po.dealerId,
         title: `Signed PO Action Needed: Rejected`,
         message: `Your uploaded signed PO for ${po.poNumber} was not approved: "${rejectionReason}". Please upload a clear/stamped document.`,
         type: "approval_update"
@@ -984,8 +985,8 @@ export const verifySignedPO = async (req, res) => {
         notes: `Confirmed via Workflow PO ${po.poNumber}`
       });
 
-      await DealerNotification.create({
-        dealer: po.dealerId,
+      await createAndSendDealerNotification({
+        dealerId: po.dealerId,
         title: `ORDER CONFIRMED! #${po.poNumber}`,
         message: `Congratulations! Your Purchase Order ${po.poNumber} has been verified & approved by Admin. Your order is officially confirmed.`,
         type: "approval_update"

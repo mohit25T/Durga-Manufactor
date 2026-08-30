@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import axios from "axios";
 import { sendOrderStatusEmail } from "../utils/sendEmailNotification.js";
+import { createAndSendDealerNotification } from "../services/notification.service.js";
 
 // Dealer Register (Self Application)
 export const registerDealer = async (req, res) => {
@@ -380,10 +381,10 @@ export const createDealerOrder = async (req, res) => {
       notes: notes || ""
     });
 
-    // Create In-App Notification for Dealer
-    await DealerNotification.create({
-      dealer: req.dealer.id,
-      order: order._id,
+    // Create In-App & Push Notification for Dealer
+    await createAndSendDealerNotification({
+      dealerId: req.dealer.id,
+      orderId: order._id,
       title: "Bulk Order / Quote Submitted",
       message: `Your machinery order #${order._id.toString().slice(-8).toUpperCase()} for ₹${totalAmount.toLocaleString("en-IN")} has been submitted successfully.`,
       type: "order_created"
@@ -476,8 +477,8 @@ export const updateDealerStatusAdmin = async (req, res) => {
     await dealer.save();
 
     if (status === "approved") {
-      await DealerNotification.create({
-        dealer: dealer._id,
+      await createAndSendDealerNotification({
+        dealerId: dealer._id,
         title: "Dealership Account Approved!",
         message: "Congratulations! Your Durga Manufacturer authorized dealership account is now fully active.",
         type: "approval_update"
@@ -573,9 +574,9 @@ export const createOrderAdmin = async (req, res) => {
       notes: notes || ""
     });
 
-    await DealerNotification.create({
-      dealer: dealerId,
-      order: order._id,
+    await createAndSendDealerNotification({
+      dealerId: dealerId,
+      orderId: order._id,
       title: `New Order Created by Admin`,
       message: `Official machinery order #${order._id.toString().slice(-8)} has been created for your dealership. Total: ₹${totalAmount.toLocaleString("en-IN")}.`,
       type: "order_created"
@@ -645,9 +646,9 @@ export const updateOrderStatusAdmin = async (req, res) => {
 
     // Trigger In-App & Push Notification for Dealer
     if (status && status !== previousStatus) {
-      await DealerNotification.create({
-        dealer: order.dealer,
-        order: order._id,
+      await createAndSendDealerNotification({
+        dealerId: order.dealer,
+        orderId: order._id,
         title: `Order Status: ${status.toUpperCase()}`,
         message: `Your order #${order._id.toString().slice(-8).toUpperCase()} has been updated to ${status}. Total: ₹${order.totalAmount.toLocaleString("en-IN")}.`,
         type: "status_update"
@@ -669,9 +670,9 @@ export const updateOrderStatusAdmin = async (req, res) => {
         console.error("Status update email fetch error:", e);
       }
     } else if (items && items.length > 0) {
-      await DealerNotification.create({
-        dealer: order.dealer,
-        order: order._id,
+      await createAndSendDealerNotification({
+        dealerId: order.dealer,
+        orderId: order._id,
         title: `Wholesale Rates / Tax Split Updated`,
         message: `Pricing or tax breakdown updated for order #${order._id.toString().slice(-8).toUpperCase()}. Total: ₹${order.totalAmount.toLocaleString("en-IN")}.`,
         type: "price_update"
