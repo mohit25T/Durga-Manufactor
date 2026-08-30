@@ -99,6 +99,8 @@ export default function CreateInvoice() {
     status: "Sent"
   });
 
+  const [useCatalogPrices, setUseCatalogPrices] = useState(true);
+
   // Fetch initial datasets & next invoice number
   useEffect(() => {
     const fetchData = async () => {
@@ -261,12 +263,14 @@ export default function CreateInvoice() {
     const updated = [...formData.items];
     updated[index][field] = value;
 
-    // Auto fill price if product selected
+    // Auto fill price if product selected and catalog pricing is enabled
     if (field === "productId") {
       const selProduct = products.find((p) => p._id === value);
       if (selProduct) {
         updated[index].name = selProduct.name || selProduct.title || "";
-        updated[index].unitPrice = selProduct.appPrice || selProduct.price || 0;
+        if (useCatalogPrices) {
+          updated[index].unitPrice = selProduct.appPrice || selProduct.price || 0;
+        }
         updated[index].hsnCode = "8438";
       }
     }
@@ -678,7 +682,7 @@ export default function CreateInvoice() {
 
         {/* 3. Machinery & Product Line Items Table */}
         <div className="bg-brand-light p-6 md:p-8 rounded-none shadow border border-brand-sand space-y-6">
-          <div className="flex items-center justify-between border-b border-brand-sand pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-brand-sand pb-4">
             <div className="flex items-center gap-3">
               <Calculator className="w-5 h-5 text-brand-amber" />
               <h2 className="text-lg font-bold text-brand-slateDark">
@@ -686,13 +690,46 @@ export default function CreateInvoice() {
               </h2>
             </div>
 
-            <button
-              type="button"
-              onClick={addItemRow}
-              className="inline-flex items-center gap-1.5 bg-brand-slateDark text-white hover:bg-slate-800 px-4 py-2 rounded-none text-xs font-bold uppercase tracking-wider transition-all shadow"
-            >
-              <Plus className="w-4 h-4 text-brand-amber" /> Add Line Item
-            </button>
+            <div className="flex items-center gap-4">
+              {/* Take Price from Catalogue Checkbox */}
+              <label className="flex items-center gap-2 text-xs font-bold text-brand-slateDark cursor-pointer bg-white px-3 py-1.5 border border-brand-sand shadow-sm select-none">
+                <input
+                  type="checkbox"
+                  checked={useCatalogPrices}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setUseCatalogPrices(checked);
+                    if (checked) {
+                      const updated = formData.items.map((item) => {
+                        if (item.productId) {
+                          const p = products.find((prod) => prod._id === item.productId);
+                          if (p) {
+                            return {
+                              ...item,
+                              unitPrice: p.appPrice || p.price || item.unitPrice
+                            };
+                          }
+                        }
+                        return item;
+                      });
+                      recalculateTotals(updated);
+                    }
+                  }}
+                  className="w-3.5 h-3.5 text-brand-amber accent-brand-amber rounded"
+                />
+                <span className={useCatalogPrices ? "text-emerald-700 font-bold" : "text-slate-600 font-medium"}>
+                  Take Price from Catalogue
+                </span>
+              </label>
+
+              <button
+                type="button"
+                onClick={addItemRow}
+                className="inline-flex items-center gap-1.5 bg-brand-slateDark text-white hover:bg-slate-800 px-4 py-2 rounded-none text-xs font-bold uppercase tracking-wider transition-all shadow"
+              >
+                <Plus className="w-4 h-4 text-brand-amber" /> Add Line Item
+              </button>
+            </div>
           </div>
 
           {/* Line Items Table */}

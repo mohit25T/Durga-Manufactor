@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import { motion } from "framer-motion";
-import { Lock, Mail, ArrowRight, ShieldCheck } from "lucide-react";
+import { Lock as LockIcon, Mail, ArrowRight, ShieldCheck } from "lucide-react";
 
 function Login() {
   const navigate = useNavigate();
@@ -115,7 +115,7 @@ function Login() {
               <label className="text-sm font-bold text-brand-slate uppercase tracking-wide ml-1">Password</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-brand-gray group-focus-within:text-brand-amber transition-colors">
-                  <Lock className="h-5 w-5" />
+                  <LockIcon className="h-5 w-5" />
                 </div>
                 <input
                   type="password"

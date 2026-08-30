@@ -56,6 +56,10 @@ const dealerSchema = new mongoose.Schema(
     discountPercent: {
       type: Number,
       default: 10
+    },
+    fcmToken: {
+      type: String,
+      default: ""
     }
   },
   { timestamps: true }

@@ -27,6 +27,18 @@ const reviewSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
+const supplierPriceSchema = new mongoose.Schema(
+    {
+        supplierId: { type: String, default: "" },
+        supplierName: { type: String, default: "" },
+        price: { type: Number, required: true, min: 0 },
+        minQuantity: { type: Number, default: 1 },
+        notes: { type: String, default: "" },
+        updatedAt: { type: Date, default: Date.now }
+    },
+    { _id: true }
+);
+
 const productSchema = new mongoose.Schema(
     {
         name: {
@@ -68,6 +80,9 @@ const productSchema = new mongoose.Schema(
             type: Number,
             min: 0
         },
+
+        /* Supplier-Specific Wholesale / Cost Rates */
+        supplierPrices: [supplierPriceSchema],
 
         images: [
             {

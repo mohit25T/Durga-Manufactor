@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import ScrollToTop from "../ScrollTop";
 import FloatingActionButton from "../components/FloatingActionButton";
 import AiChatbot from "../components/AiChatbot";
@@ -11,6 +11,8 @@ import Products from "../pages/Products";
 import ProductDetails from "../pages/ProductDetails";
 import About from "../pages/About";
 import Contact from "../pages/Contact";
+import PrivacyPolicy from "../pages/PrivacyPolicy";
+import TermsConditions from "../pages/TermsConditions";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 /* Admin Pages */
@@ -44,8 +46,11 @@ function AppRouter() {
           <Route path="/products/:id" element={<ProductDetails />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-and-conditions" element={<TermsConditions />} />
 
           {/* Dealer Portal Routes */}
+          <Route path="/dealer" element={<Navigate to="/dealer/login" replace />} />
           <Route path="/dealer/login" element={<DealerLogin />} />
           <Route
             path="/dealer/dashboard"
@@ -138,6 +143,11 @@ function AppRouter() {
               </ProtectedRoute>
             }
           />
+          {/* Admin Redirect */}
+          <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+
+          {/* Fallback Catch-all Route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </CompareProvider>
     </HashRouter>

@@ -27,6 +27,7 @@ function AdminDealers() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCityFilter, setSelectedCityFilter] = useState("ALL");
 
   // Edit discount state
   const [editingDealerId, setEditingDealerId] = useState(null);
@@ -69,6 +70,7 @@ function AdminDealers() {
   const [createWithoutBillAmount, setCreateWithoutBillAmount] = useState(0);
   const [createNotes, setCreateNotes] = useState("");
   const [creatingOrder, setCreatingOrder] = useState(false);
+  const [createUseCatalogPrice, setCreateUseCatalogPrice] = useState(true);
 
   // Selected product input state for admin order creation
   const [selProductId, setSelProductId] = useState("");
@@ -371,6 +373,10 @@ function AdminDealers() {
     }
   };
 
+  const availableCities = Array.from(
+    new Set(dealers.map((d) => (d.city || "").trim()).filter(Boolean))
+  );
+
   const pendingDealers = dealers.filter((d) => (d.status || "pending").toString().toLowerCase() === "pending");
   const approvedDealers = dealers.filter((d) => (d.status || "").toString().toLowerCase() === "approved");
   const rejectedDealers = dealers.filter((d) => (d.status || "").toString().toLowerCase() === "rejected");
@@ -383,14 +389,19 @@ function AdminDealers() {
       : rejectedDealers
   ).filter((d) => {
     const q = searchQuery.toLowerCase();
-    return (
+    const matchesCity =
+      selectedCityFilter === "ALL" ||
+      (d.city || "").toLowerCase() === selectedCityFilter.toLowerCase();
+
+    const matchesQuery =
       (d.companyName || "").toLowerCase().includes(q) ||
       (d.contactPerson || "").toLowerCase().includes(q) ||
       (d.email || "").toLowerCase().includes(q) ||
       (d.phone || "").toLowerCase().includes(q) ||
       (d.gstNumber || "").toLowerCase().includes(q) ||
-      (d.city || "").toLowerCase().includes(q)
-    );
+      (d.city || "").toLowerCase().includes(q);
+
+    return matchesCity && matchesQuery;
   });
 
   return (
@@ -476,15 +487,31 @@ function AdminDealers() {
             </div>
 
             {activeSubTab !== "orders" && (
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
-                <input
-                  type="text"
-                  placeholder="Search dealer..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-900 border border-white/10 focus:border-brand-amber pl-9 pr-3 py-2 text-xs text-white focus:outline-none"
-                />
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                {/* Available City Filter Dropdown */}
+                <select
+                  value={selectedCityFilter}
+                  onChange={(e) => setSelectedCityFilter(e.target.value)}
+                  className="bg-slate-900 border border-white/10 focus:border-brand-amber px-3 py-2 text-xs text-brand-amber font-bold focus:outline-none w-full sm:w-auto"
+                >
+                  <option value="ALL">All Available Cities ({dealers.length})</option>
+                  {availableCities.map((city, idx) => (
+                    <option key={idx} value={city}>
+                      📍 {city} ({dealers.filter(d => (d.city || "").toLowerCase() === city.toLowerCase()).length})
+                    </option>
+                  ))}
+                </select>
+
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                  <input
+                    type="text"
+                    placeholder="Search dealer..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-slate-900 border border-white/10 focus:border-brand-amber pl-9 pr-3 py-2 text-xs text-white focus:outline-none"
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -917,13 +944,49 @@ function AdminDealers() {
 
                       {/* Add Product Items */}
                       <div className="bg-slate-950 p-4 border border-slate-800 space-y-3">
-                        <label className="block text-xs font-bold text-brand-amber uppercase">
-                          Add Machinery Products to Order
-                        </label>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <label className="block text-xs font-bold text-brand-amber uppercase">
+                            Add Machinery Products to Order
+                          </label>
+
+                          {/* Take Price from Catalogue Checkbox */}
+                          <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={createUseCatalogPrice}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                setCreateUseCatalogPrice(checked);
+                                if (checked && selProductId && selProductId !== "CUSTOM") {
+                                  const p = productList.find((prod) => prod._id === selProductId);
+                                  if (p) {
+                                    setSelCustomRate((p.appPrice && Number(p.appPrice) > 0 ? p.appPrice : p.price || 0).toString());
+                                  }
+                                }
+                              }}
+                              className="w-3.5 h-3.5 text-brand-amber accent-brand-amber rounded"
+                            />
+                            <span className={createUseCatalogPrice ? "text-emerald-400" : "text-slate-400"}>
+                              Take Price from Catalogue
+                            </span>
+                          </label>
+                        </div>
+
                         <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                           <select
                             value={selProductId}
-                            onChange={(e) => setSelProductId(e.target.value)}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setSelProductId(val);
+                              if (val && val !== "CUSTOM" && createUseCatalogPrice) {
+                                const p = productList.find((prod) => prod._id === val);
+                                if (p) {
+                                  setSelCustomRate((p.appPrice && Number(p.appPrice) > 0 ? p.appPrice : p.price || 0).toString());
+                                }
+                              } else if (val === "CUSTOM") {
+                                setSelCustomRate("");
+                              }
+                            }}
                             className="sm:col-span-2 bg-slate-900 border border-slate-700 text-xs text-white p-2 focus:outline-none font-medium"
                           >
                             <option value="">-- Select Catalog Product --</option>
@@ -944,10 +1007,12 @@ function AdminDealers() {
                           />
                           <input
                             type="number"
-                            placeholder="Rate (₹)"
+                            placeholder={createUseCatalogPrice ? "Catalogue Rate (₹)" : "Custom Rate (₹)"}
                             value={selCustomRate}
                             onChange={(e) => setSelCustomRate(e.target.value)}
-                            className="bg-slate-900 border border-slate-700 text-xs text-white p-2 focus:outline-none"
+                            className={`bg-slate-900 border text-xs text-white p-2 focus:outline-none ${
+                              createUseCatalogPrice ? "border-emerald-500/50 text-emerald-300 font-bold" : "border-slate-700"
+                            }`}
                           />
                         </div>
 

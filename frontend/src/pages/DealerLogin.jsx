@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Building2, User, Mail, Lock, Phone, MapPin, FileText, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle, Search, X } from "lucide-react";
+import { Building2, User, Mail, Lock as LockIcon, Phone, MapPin, FileText, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle, Search, X } from "lucide-react";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -311,7 +311,7 @@ function DealerLogin() {
                     Password
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
+                    <LockIcon className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
                     <input
                       type="password"
                       required
@@ -425,7 +425,7 @@ function DealerLogin() {
                     Password *
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
+                    <LockIcon className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
                     <input
                       type="password"
                       required

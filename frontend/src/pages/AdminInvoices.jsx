@@ -22,7 +22,7 @@ import {
   XCircle,
   ShieldCheck,
   History,
-  Lock
+  Lock as LockIcon
 } from "lucide-react";
 import API from "../services/api";
 import AdminLayout from "../components/admin/AdminLayout";
@@ -490,7 +490,7 @@ export default function AdminInvoices() {
                               </button>
                             ) : (
                               <span className="p-1.5 bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold flex items-center gap-1" title="Confirmed & Locked">
-                                <Lock className="w-3 h-3" /> Locked
+                                <LockIcon className="w-3 h-3" /> Locked
                               </span>
                             )}
                           </div>

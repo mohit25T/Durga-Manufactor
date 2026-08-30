@@ -224,7 +224,7 @@ export const updateProduct = async (req, res) => {
 export const updateMachinePriceAdmin = async (req, res) => {
   try {
     const { id } = req.params;
-    const { appPrice, price } = req.body;
+    const { appPrice, price, supplierPrices, supplierPrice } = req.body;
 
     const updateFields = {};
     if (appPrice !== undefined && appPrice !== null) {
@@ -233,19 +233,43 @@ export const updateMachinePriceAdmin = async (req, res) => {
     if (price !== undefined && price !== null) {
       updateFields.price = Number(price);
     }
+    if (Array.isArray(supplierPrices)) {
+      updateFields.supplierPrices = supplierPrices;
+    }
 
-    const product = await Product.findByIdAndUpdate(
-      id,
-      { $set: updateFields },
-      { new: true }
-    );
-
+    const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({
         success: false,
         message: "Product not found"
       });
     }
+
+    // If single supplierPrice object provided: { supplierId, supplierName, price, notes }
+    if (supplierPrice && supplierPrice.price !== undefined) {
+      const sId = supplierPrice.supplierId || supplierPrice.supplierName;
+      const existingIdx = product.supplierPrices.findIndex(
+        (sp) => sp.supplierId === sId || (sp.supplierName && sp.supplierName.toLowerCase() === (supplierPrice.supplierName || "").toLowerCase())
+      );
+
+      if (existingIdx > -1) {
+        product.supplierPrices[existingIdx].price = Number(supplierPrice.price);
+        if (supplierPrice.notes !== undefined) product.supplierPrices[existingIdx].notes = supplierPrice.notes;
+        product.supplierPrices[existingIdx].updatedAt = new Date();
+      } else {
+        product.supplierPrices.push({
+          supplierId: supplierPrice.supplierId || "",
+          supplierName: supplierPrice.supplierName || "Supplier",
+          price: Number(supplierPrice.price),
+          minQuantity: Number(supplierPrice.minQuantity) || 1,
+          notes: supplierPrice.notes || "",
+          updatedAt: new Date()
+        });
+      }
+    }
+
+    Object.assign(product, updateFields);
+    await product.save();
 
     res.json({
       success: true,

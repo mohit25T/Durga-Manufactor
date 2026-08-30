@@ -27,7 +27,8 @@ import {
   FileCheck,
   CheckCircle2,
   XCircle,
-  ShieldAlert
+  ShieldAlert,
+  Lock as LockIcon
 } from "lucide-react";
 import axios from "axios";
 import Navbar from "../components/Navbar";
@@ -1457,7 +1458,7 @@ function DealerDashboard() {
                     <span>Company / Firm Name</span>
                     {dealer?.status === "approved" && dealer?.gstNumber && (
                       <span className="text-[10px] text-amber-400 flex items-center gap-1 font-mono uppercase">
-                        <Lock className="w-3 h-3" /> Locked
+                        <LockIcon className="w-3 h-3" /> Locked
                       </span>
                     )}
                   </label>
@@ -1495,7 +1496,7 @@ function DealerDashboard() {
                     <span>GST Number</span>
                     {dealer?.status === "approved" && dealer?.gstNumber && (
                       <span className="text-[10px] text-amber-400 flex items-center gap-1 font-mono uppercase">
-                        <Lock className="w-3 h-3" /> Verified & Locked
+                        <LockIcon className="w-3 h-3" /> Verified & Locked
                       </span>
                     )}
                   </label>
