@@ -79,9 +79,9 @@ export default function AdminInvoices() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [verifyingSubmitting, setVerifyingSubmitting] = useState(false);
 
-  const fetchAllWorkflowData = async () => {
+  const fetchAllWorkflowData = async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent) setLoading(true);
       const [inqRes, invRes, poRes, sumRes] = await Promise.all([
         API.get("/workflow/inquiries/admin").catch(() => ({ data: { success: false } })),
         API.get("/invoices").catch(() => ({ data: { success: false } })),
@@ -96,12 +96,16 @@ export default function AdminInvoices() {
     } catch (err) {
       console.error("Error loading workflow data:", err);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchAllWorkflowData();
+    const interval = setInterval(() => {
+      fetchAllWorkflowData(true);
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   // --- 1. ADMIN SETS PRICE & GENERATES PI ---

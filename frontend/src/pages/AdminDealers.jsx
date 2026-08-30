@@ -78,9 +78,9 @@ function AdminDealers() {
   const [selQty, setSelQty] = useState(1);
   const [selCustomRate, setSelCustomRate] = useState("");
 
-  const fetchAdminDealerData = async () => {
+  const fetchAdminDealerData = async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent) setLoading(true);
       const dealersRes = await API.get("/dealers/admin/all");
       if (dealersRes.data.success) {
         setDealers(dealersRes.data.dealers || []);
@@ -98,7 +98,7 @@ function AdminDealers() {
     } catch (err) {
       console.error("Admin Dealers Fetch Error:", err);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 
@@ -303,6 +303,10 @@ function AdminDealers() {
 
   useEffect(() => {
     fetchAdminDealerData();
+    const interval = setInterval(() => {
+      fetchAdminDealerData(true);
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleUpdateDealerStatus = async (dealerId, newStatus) => {

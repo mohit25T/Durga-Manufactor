@@ -114,9 +114,9 @@ function DealerDashboard() {
     return { headers: { Authorization: `Bearer ${token}` } };
   };
 
-  const fetchDealerData = async () => {
+  const fetchDealerData = async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent) setLoading(true);
       const profileRes = await axios.get(`${API_BASE}/dealers/profile`, getAuthHeaders());
       if (profileRes.data.success) {
         setDealer(profileRes.data.dealer);
@@ -230,7 +230,7 @@ function DealerDashboard() {
         navigate("/dealer/login");
       }
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 
@@ -249,6 +249,10 @@ function DealerDashboard() {
 
   useEffect(() => {
     fetchDealerData();
+    const interval = setInterval(() => {
+      fetchDealerData(true);
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogout = () => {

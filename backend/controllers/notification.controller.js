@@ -54,6 +54,9 @@ export async function updateDealerFcmToken(req, res) {
       });
     }
 
+    console.log(`📲 [BACKEND FCM SYNC] Updating FCM token for Dealer ID: ${dealerId}`);
+    console.log(`   Token: ${fcmToken.slice(0, 20)}...`);
+
     const dealer = await Dealer.findByIdAndUpdate(
       dealerId,
       { fcmToken },
@@ -61,11 +64,14 @@ export async function updateDealerFcmToken(req, res) {
     );
 
     if (!dealer) {
+      console.warn(`⚠️ [BACKEND FCM SYNC FAILED] Dealer ID ${dealerId} not found in DB`);
       return res.status(404).json({
         success: false,
         message: "Dealer not found",
       });
     }
+
+    console.log(`✅ [BACKEND FCM SYNC SUCCESS] Token stored in DB for Dealer (${dealer.companyName || dealer.contactPerson})`);
 
     res.status(200).json({
       success: true,
