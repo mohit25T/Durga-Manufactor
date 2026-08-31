@@ -2,6 +2,8 @@ import ProformaInvoice from "../models/ProformaInvoice.js";
 import DealerOrder from "../models/DealerOrder.js";
 import Dealer from "../models/Dealer.js";
 import Product from "../models/Product.js";
+import Inquiry from "../models/Inquiry.js";
+import PurchaseOrder from "../models/PurchaseOrder.js";
 
 /**
  * Generate next sequential invoice number (e.g. PI-2026-0001)
@@ -218,17 +220,30 @@ export const updateInvoice = async (req, res) => {
  */
 export const deleteInvoice = async (req, res) => {
   try {
-    const deleted = await ProformaInvoice.findByIdAndDelete(req.params.id);
-    if (!deleted) {
+    const invoice = await ProformaInvoice.findById(req.params.id);
+    if (!invoice) {
       return res.status(404).json({
         success: false,
         message: "Invoice not found"
       });
     }
 
+    // Reset linked inquiry status back to SUBMITTED if inquiry exists
+    if (invoice.inquiryId) {
+      await Inquiry.findByIdAndUpdate(invoice.inquiryId, {
+        $set: { status: "SUBMITTED" }
+      });
+    }
+
+    // Delete any Purchase Orders created from this Proforma Invoice
+    await PurchaseOrder.deleteMany({ proformaInvoiceId: invoice._id });
+
+    // Delete the Proforma Invoice
+    await ProformaInvoice.findByIdAndDelete(req.params.id);
+
     return res.status(200).json({
       success: true,
-      message: "Invoice deleted successfully!"
+      message: "Proforma Invoice deleted successfully!"
     });
   } catch (err) {
     console.error("Error deleting invoice:", err);

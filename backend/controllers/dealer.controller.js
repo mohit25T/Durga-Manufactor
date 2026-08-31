@@ -72,7 +72,7 @@ export const registerDealer = async (req, res) => {
 // Dealer Login
 export const loginDealer = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, deviceId, deviceName, forceLogin, fcmToken } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({
@@ -88,6 +88,15 @@ export const loginDealer = async (req, res) => {
       if (admin) {
         const isAdminMatch = await bcrypt.compare(password, admin.password);
         if (isAdminMatch) {
+          // Add Admin device FCM token to fcmTokens array
+          if (fcmToken) {
+            if (!Array.isArray(admin.fcmTokens)) admin.fcmTokens = [];
+            if (!admin.fcmTokens.includes(fcmToken)) {
+              admin.fcmTokens.push(fcmToken);
+              await admin.save();
+            }
+          }
+
           const token = jwt.sign(
             {
               id: admin._id,
@@ -146,6 +155,35 @@ export const loginDealer = async (req, res) => {
         message: "Your dealer account application was not approved. Please contact Durga Manufactor support."
       });
     }
+
+    // Check Single Device Session enforcement for Dealers
+    const existingDeviceId = dealer.activeSession?.deviceId;
+    const existingDeviceName = dealer.activeSession?.deviceName || "another device";
+
+    if (existingDeviceId && deviceId && existingDeviceId !== deviceId && !forceLogin) {
+      return res.status(200).json({
+        success: false,
+        requiresConfirmation: true,
+        activeDeviceName: existingDeviceName,
+        message: `Your account is currently logged in on ${existingDeviceName}. Logging in on this device will automatically log out ${existingDeviceName}.`
+      });
+    }
+
+    // Update active session and FCM token for current device
+    if (deviceId || deviceName) {
+      dealer.activeSession = {
+        deviceId: deviceId || "",
+        deviceName: deviceName || "Mobile Device",
+        sessionToken: jwt.sign({ id: dealer._id, deviceId }, process.env.JWT_SECRET || "defaultsecret"),
+        loggedInAt: new Date()
+      };
+    }
+
+    if (fcmToken) {
+      dealer.fcmToken = fcmToken;
+    }
+
+    await dealer.save();
 
     const token = jwt.sign(
       {

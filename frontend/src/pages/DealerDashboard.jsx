@@ -28,11 +28,14 @@ import {
   CheckCircle2,
   XCircle,
   ShieldAlert,
-  Lock as LockIcon
+  Lock as LockIcon,
+  RefreshCw,
+  AlertTriangle
 } from "lucide-react";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { isPIExpired } from "../utils/isPIExpired";
 import DownloadApkButton from "../components/DownloadApkButton";
 import InvoicePrintModal from "../components/admin/InvoicePrintModal";
 import PurchaseOrderPrintModal from "../components/admin/PurchaseOrderPrintModal";
@@ -249,16 +252,45 @@ function DealerDashboard() {
 
   useEffect(() => {
     fetchDealerData();
-    const interval = setInterval(() => {
-      fetchDealerData(true);
-    }, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("dealerToken");
     localStorage.removeItem("dealerInfo");
     navigate("/dealer/login");
+  };
+
+  const handleRegeneratePI = async (piId) => {
+    try {
+      const res = await axios.post(`${API_BASE}/workflow/pi/${piId}/regenerate`, {}, getAuthHeaders());
+      if (res.data.success) {
+        alert(res.data.message || "Proforma Invoice regenerated successfully! Valid for 30 more days.");
+        fetchDealerData();
+      } else {
+        alert(res.data.message || "Failed to regenerate PI.");
+      }
+    } catch (err) {
+      console.error("Error regenerating PI:", err);
+      alert(err.response?.data?.message || "Failed to regenerate PI.");
+    }
+  };
+
+  const handleDeleteInquiry = async (inquiryId, inquiryNumber) => {
+    if (!window.confirm(`Are you sure you want to delete Inquiry ${inquiryNumber || ''}? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      const res = await axios.delete(`${API_BASE}/workflow/inquiries/${inquiryId}`, getAuthHeaders());
+      if (res.data.success) {
+        alert("Inquiry deleted successfully.");
+        fetchDealerData();
+      } else {
+        alert(res.data.message || "Failed to delete inquiry.");
+      }
+    } catch (err) {
+      console.error("Error deleting inquiry:", err);
+      alert(err.response?.data?.message || "Cannot delete inquiry: A Proforma Invoice (PI) has already been generated.");
+    }
   };
 
   // Cart operations
@@ -1119,6 +1151,15 @@ function DealerDashboard() {
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
+                        {inq.status === "SUBMITTED" && (
+                          <button
+                            onClick={() => handleDeleteInquiry(inq._id, inq.inquiryNumber)}
+                            className="px-2.5 py-1 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/40 text-[10px] font-bold uppercase transition-colors flex items-center gap-1"
+                            title="Delete Inquiry (Only allowed before PI is generated)"
+                          >
+                            <Trash2 className="w-3 h-3" /> Delete Inquiry
+                          </button>
+                        )}
                         <span className="text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30">
                           {inq.status}
                         </span>
@@ -1186,8 +1227,9 @@ function DealerDashboard() {
               <div className="space-y-4">
                 {proformas.map((pi) => {
                   const isConfirmed = pi.isLocked || ["CONFIRMED", "Confirmed"].includes(pi.status);
+                  const expired = isPIExpired(pi);
                   return (
-                    <div key={pi._id} className="bg-slate-900 border border-slate-800 p-5 space-y-4 hover:border-brand-amber/40 transition-colors">
+                    <div key={pi._id} className={`bg-slate-900 border ${expired ? 'border-red-600/60' : 'border-slate-800'} p-5 space-y-4 hover:border-brand-amber/40 transition-colors relative`}>
                       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
                         <div>
                           <div className="flex items-center gap-3">
@@ -1198,6 +1240,11 @@ function DealerDashboard() {
                             {isConfirmed && (
                               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                                 <CheckCircle2 className="w-3 h-3" /> Confirmed & Locked
+                              </span>
+                            )}
+                            {expired && (
+                              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-red-500/20 text-red-400 border border-red-500/50 flex items-center gap-1 animate-pulse">
+                                <AlertTriangle className="w-3 h-3" /> EXPIRED (30 Days Passed)
                               </span>
                             )}
                           </div>
@@ -1240,7 +1287,14 @@ function DealerDashboard() {
                           <Download className="w-4 h-4 text-brand-amber" /> View & Download PI PDF
                         </button>
 
-                        {!isConfirmed ? (
+                        {expired ? (
+                          <button
+                            onClick={() => handleRegeneratePI(pi._id)}
+                            className="bg-amber-600 hover:bg-amber-500 text-white font-bold px-5 py-2 text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-lg"
+                          >
+                            <RefreshCw className="w-4 h-4" /> Regenerate PI (30-Day Extension)
+                          </button>
+                        ) : !isConfirmed ? (
                           <button
                             onClick={() => {
                               setConfirmingPI(pi);

@@ -87,3 +87,50 @@ export async function updateDealerFcmToken(req, res) {
     });
   }
 }
+
+/**
+ * Remove FCM token on logout (Dealer or Admin)
+ */
+export async function removeFcmToken(req, res) {
+  try {
+    const { fcmToken } = req.body;
+    const userId = req.dealer?.id || req.user?.id;
+
+    if (userId) {
+      // Check Dealer
+      const dealer = await Dealer.findById(userId);
+      if (dealer) {
+        dealer.fcmToken = "";
+        dealer.activeSession = { deviceId: "", deviceName: "", sessionToken: "", loggedInAt: null };
+        await dealer.save();
+        console.log(`📱 [FCM TOKEN CLEARED] Cleared FCM token & session for Dealer ${dealer.companyName}`);
+      }
+
+      // Check Admin
+      const Admin = (await import("../models/Admin.js")).default;
+      const adminDoc = await Admin.findById(userId);
+      if (adminDoc && fcmToken) {
+        adminDoc.fcmTokens = (adminDoc.fcmTokens || []).filter((t) => t !== fcmToken);
+        await adminDoc.save();
+        console.log(`📱 [FCM TOKEN CLEARED] Removed FCM token for Admin ${adminDoc.email}`);
+      }
+    } else if (fcmToken) {
+      await Dealer.updateMany({ fcmToken }, { $set: { fcmToken: "", "activeSession.deviceId": "" } });
+      const Admin = (await import("../models/Admin.js")).default;
+      await Admin.updateMany({}, { $pull: { fcmTokens: fcmToken } });
+      console.log(`📱 [FCM TOKEN CLEARED] Unregistered token from database on logout.`);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "FCM token removed successfully"
+    });
+  } catch (error) {
+    console.error("Remove FCM Token Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to remove FCM token",
+      error: error.message
+    });
+  }
+}

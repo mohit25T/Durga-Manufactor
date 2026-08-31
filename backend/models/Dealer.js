@@ -60,6 +60,12 @@ const dealerSchema = new mongoose.Schema(
     fcmToken: {
       type: String,
       default: ""
+    },
+    activeSession: {
+      deviceId: { type: String, default: "" },
+      deviceName: { type: String, default: "" },
+      sessionToken: { type: String, default: "" },
+      loggedInAt: { type: Date }
     }
   },
   { timestamps: true }

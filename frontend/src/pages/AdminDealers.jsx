@@ -303,10 +303,6 @@ function AdminDealers() {
 
   useEffect(() => {
     fetchAdminDealerData();
-    const interval = setInterval(() => {
-      fetchAdminDealerData(true);
-    }, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   const handleUpdateDealerStatus = async (dealerId, newStatus) => {

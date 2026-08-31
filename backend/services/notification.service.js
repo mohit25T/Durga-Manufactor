@@ -145,18 +145,83 @@ export async function createAndSendDealerNotification({
     });
 
     const dealer = await Dealer.findById(dealerId);
+
+    console.log(`\n🔔 ==================== NOTIFICATION DISPATCHED ====================`);
+    console.log(`📌 RECIPIENT DEALER ID : ${dealerId} (${dealer?.companyName || "Dealer"})`);
+    console.log(`📌 TITLE               : ${title}`);
+    console.log(`📌 MESSAGE             : ${message}`);
+    console.log(`📌 TYPE                : ${type}`);
     if (dealer && dealer.fcmToken) {
+      console.log(`📱 FCM TOKEN           : ${dealer.fcmToken.substring(0, 20)}...`);
       await sendPushNotification(dealer.fcmToken, title, message, {
         ...data,
         type,
         notificationId: notif._id.toString(),
         orderId: orderId ? orderId.toString() : "",
       });
+    } else {
+      console.log(`⚠️ FCM TOKEN STATUS     : No FCM token registered for dealer ${dealerId} yet.`);
     }
+    console.log(`========================================================================\n`);
 
     return notif;
   } catch (error) {
     console.error("Error creating/sending dealer notification:", error);
+  }
+}
+
+/**
+ * Helper to dispatch FCM push notification to ALL logged-in Admin devices
+ */
+export async function createAndSendAdminNotification({
+  orderId = null,
+  title,
+  message,
+  type = "admin_alert",
+  data = {}
+}) {
+  try {
+    const Admin = (await import("../models/Admin.js")).default;
+    const Dealer = (await import("../models/Dealer.js")).default;
+
+    // Collect FCM tokens across all Admin accounts
+    const admins = await Admin.find({});
+    let adminTokens = [];
+
+    admins.forEach((adminDoc) => {
+      if (Array.isArray(adminDoc.fcmTokens)) {
+        adminTokens.push(...adminDoc.fcmTokens);
+      }
+    });
+
+    // Also check any Dealer documents marked with role: 'admin'
+    const adminDealers = await Dealer.find({ role: "admin" });
+    adminDealers.forEach((d) => {
+      if (d.fcmToken) adminTokens.push(d.fcmToken);
+    });
+
+    adminTokens = [...new Set(adminTokens)].filter(Boolean);
+
+    console.log(`\n🔔 ==================== ADMIN NOTIFICATION DISPATCHED ====================`);
+    console.log(`📌 RECIPIENT           : ALL ADMIN DEVICES (${adminTokens.length} active tokens)`);
+    console.log(`📌 TITLE               : ${title}`);
+    console.log(`📌 MESSAGE             : ${message}`);
+    console.log(`📌 TYPE                : ${type}`);
+
+    if (adminTokens.length > 0) {
+      await sendPushNotificationToMany(adminTokens, title, message, {
+        ...data,
+        type,
+        orderId: orderId ? orderId.toString() : "",
+      });
+    } else {
+      console.log(`⚠️ FCM TOKEN STATUS     : No active Admin FCM tokens found.`);
+    }
+    console.log(`========================================================================\n`);
+
+    return true;
+  } catch (error) {
+    console.error("Error creating/sending admin notification:", error);
   }
 }
 

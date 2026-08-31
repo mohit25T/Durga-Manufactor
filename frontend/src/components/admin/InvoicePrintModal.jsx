@@ -1,9 +1,12 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Printer, Download, Share2, X, Phone, Mail, MapPin, Building2, CheckCircle2 } from "lucide-react";
 import { numberToWords } from "../../utils/numberToWords";
+import { isPIExpired } from "../../utils/isPIExpired";
 
 export default function InvoicePrintModal({ invoice, isOpen, onClose }) {
   if (!isOpen || !invoice) return null;
+
+  const expired = isPIExpired(invoice);
 
   const handlePrint = () => {
     window.print();
@@ -129,6 +132,15 @@ export default function InvoicePrintModal({ invoice, isOpen, onClose }) {
               className="w-[750px] max-w-none object-contain select-none transform -rotate-45"
             />
           </div>
+
+          {/* EXPIRED Watermark Stamp Overlay */}
+          {expired && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50 overflow-hidden">
+              <div className="border-[7px] border-red-600/90 text-red-600/90 font-black text-6xl md:text-8xl uppercase tracking-[0.2em] px-10 py-4 -rotate-12 select-none shadow-2xl rounded-2xl bg-white/60 backdrop-blur-[1px]">
+                EXPIRED
+              </div>
+            </div>
+          )}
 
           <div className="relative z-10 flex flex-col justify-between flex-1 space-y-3">
             {/* Top Section: Header + Customer Info + Line Items Table */}

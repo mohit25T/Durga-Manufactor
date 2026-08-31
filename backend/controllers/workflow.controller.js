@@ -4,7 +4,8 @@ import PurchaseOrder from "../models/PurchaseOrder.js";
 import DealerOrder from "../models/DealerOrder.js";
 import Dealer from "../models/Dealer.js";
 import DealerNotification from "../models/DealerNotification.js";
-import { createAndSendDealerNotification } from "../services/notification.service.js";
+import DealerProductPrice from "../models/DealerProductPrice.js";
+import { createAndSendDealerNotification, createAndSendAdminNotification } from "../services/notification.service.js";
 
 /**
  * Utility: Generate next sequential inquiry number (e.g. INQ-2026-0001)
@@ -98,12 +99,18 @@ export const createInquiry = async (req, res) => {
       ]
     });
 
-    // Create Notification
+    // Create Notifications
     await createAndSendDealerNotification({
       dealerId: dealerId,
       title: "Inquiry Submitted Successfully",
       message: `Your inquiry ${inquiryNumber} has been received and is submitted for Admin review.`,
       type: "order_created"
+    });
+
+    await createAndSendAdminNotification({
+      title: `New Inquiry #${inquiryNumber}`,
+      message: `Dealer ${dealer.companyName || dealer.contactPerson} submitted a new inquiry #${inquiryNumber} (${formattedItems.length} machine items).`,
+      type: "new_inquiry"
     });
 
     return res.status(201).json({
@@ -252,7 +259,7 @@ export const generatePIFromInquiry = async (req, res) => {
       advancePayment,
       balanceDue,
       paymentTerms: paymentTerms || "50% Advance with Purchase Order, 50% before Dispatch.",
-      validUntil: validUntil ? new Date(validUntil) : new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+      validUntil: validUntil ? new Date(validUntil) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       notes: notes || "Factory Service Included. Subject to Rajkot Jurisdiction.",
       changedBy: req.user?.name || "Admin",
       changedAt: new Date(),
@@ -552,6 +559,19 @@ export const confirmPI = async (req, res) => {
       return res.status(400).json({ success: false, message: "PI is already confirmed." });
     }
 
+    // Expiration check: if PI is older than 30 days or past validUntil
+    const isExpired = pi.validUntil
+      ? new Date() > new Date(pi.validUntil)
+      : pi.createdAt && (Date.now() - new Date(pi.createdAt).getTime() > 30 * 24 * 60 * 60 * 1000);
+
+    if (isExpired) {
+      return res.status(400).json({
+        success: false,
+        isExpired: true,
+        message: "This Proforma Invoice has expired after 30 days. Please click 'Regenerate PI' to re-issue a fresh 30-day PI."
+      });
+    }
+
     // 1. Lock PI and update status
     pi.status = "CONFIRMED";
     pi.isLocked = true;
@@ -676,12 +696,18 @@ export const confirmPI = async (req, res) => {
       }
     }
 
-    // Create Dealer Notification
+    // Create Notifications
     await createAndSendDealerNotification({
       dealerId: dealerId,
       title: `Purchase Order ${poNumber} Generated`,
       message: `Your Purchase Order ${poNumber} has been generated! Please download it, sign, apply company stamp, and upload the signed document.`,
       type: "order_created"
+    });
+
+    await createAndSendAdminNotification({
+      title: `PI Confirmed & PO #${poNumber} Generated`,
+      message: `Dealer ${dealerDoc?.companyName || dealerDoc?.contactPerson || "Dealer"} confirmed PI #${pi.invoiceNumber}. PO #${poNumber} generated automatically.`,
+      type: "pi_confirmed"
     });
 
     return res.status(200).json({
@@ -856,6 +882,12 @@ export const uploadSignedPO = async (req, res) => {
       }
     }
 
+    await createAndSendAdminNotification({
+      title: `Signed PO Uploaded for #${po.poNumber}`,
+      message: `Dealer ${req.dealer.companyName || "Dealer"} uploaded signed & stamped PO #${po.poNumber} for verification.`,
+      type: "po_uploaded"
+    });
+
     return res.status(200).json({
       success: true,
       message: "Signed Purchase Order uploaded successfully! Submitted for Admin verification.",
@@ -985,6 +1017,31 @@ export const verifySignedPO = async (req, res) => {
         notes: `Confirmed via Workflow PO ${po.poNumber}`
       });
 
+      // Save/update dealer-specific product prices in DealerProductPrice model
+      if (po.items && Array.isArray(po.items)) {
+        for (const item of po.items) {
+          if (item.productId && item.unitPrice > 0) {
+            try {
+              await DealerProductPrice.findOneAndUpdate(
+                { dealerId: po.dealerId, productId: item.productId },
+                {
+                  dealerId: po.dealerId,
+                  productId: item.productId,
+                  productName: item.name,
+                  customPrice: item.unitPrice,
+                  lastAgreedDate: new Date(),
+                  poNumber: po.poNumber || "",
+                  piNumber: po.proformaInvoiceId?.invoiceNumber || "",
+                },
+                { upsert: true, new: true }
+              );
+            } catch (err) {
+              console.error("Error saving DealerProductPrice:", err);
+            }
+          }
+        }
+      }
+
       await createAndSendDealerNotification({
         dealerId: po.dealerId,
         title: `ORDER CONFIRMED! #${po.poNumber}`,
@@ -1079,5 +1136,207 @@ export const getWorkflowSummary = async (req, res) => {
   } catch (error) {
     console.error("GET WORKFLOW SUMMARY ERROR:", error);
     return res.status(500).json({ success: false, message: "Failed to fetch workflow summary." });
+  }
+};
+
+/**
+ * Regenerate Expired PI (Dealer or Admin)
+ */
+export const regeneratePI = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const pi = await ProformaInvoice.findById(id);
+    if (!pi) {
+      return res.status(404).json({ success: false, message: "Proforma Invoice not found." });
+    }
+
+    const newValidUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const newVersionNumber = (pi.version || 1) + 1;
+
+    const newVersion = {
+      versionNumber: newVersionNumber,
+      items: pi.items,
+      subtotal: pi.subtotal,
+      freightCharges: pi.freightCharges,
+      packagingCharges: pi.packagingCharges,
+      totalGst: pi.totalGst,
+      grandTotal: pi.grandTotal,
+      advancePayment: pi.advancePayment,
+      balanceDue: pi.balanceDue,
+      paymentTerms: pi.paymentTerms,
+      validUntil: newValidUntil,
+      notes: pi.notes,
+      changedBy: req.dealer?.companyName || req.user?.name || "Dealer Request",
+      changedAt: new Date(),
+      reason: "Regenerated expired PI with 30-day extended validity"
+    };
+
+    pi.invoiceDate = new Date();
+    pi.validUntil = newValidUntil;
+    pi.version = newVersionNumber;
+    pi.versions.push(newVersion);
+    pi.status = "SENT_TO_DEALER";
+    pi.isLocked = false;
+
+    pi.auditTrail.push({
+      version: newVersionNumber,
+      changedBy: req.dealer?.companyName || req.user?.name || "Dealer",
+      role: req.dealer ? "Dealer" : "Admin",
+      dateTime: new Date(),
+      previousValue: "EXPIRED",
+      newValue: "SENT_TO_DEALER",
+      reason: "Regenerated expired PI with 30-day extended validity"
+    });
+
+    await pi.save();
+
+    if (pi.inquiryId) {
+      await Inquiry.findByIdAndUpdate(pi.inquiryId, {
+        $set: { status: "PI_SENT_TO_DEALER" }
+      });
+    }
+
+    if (pi.dealerId) {
+      await createAndSendDealerNotification({
+        dealerId: pi.dealerId,
+        title: "Proforma Invoice Regenerated",
+        message: `Proforma Invoice ${pi.invoiceNumber} has been regenerated as Version ${newVersionNumber} and is valid for 30 more days.`,
+        type: "order_updated"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Proforma Invoice regenerated successfully as Version ${newVersionNumber}! Valid for 30 more days.`,
+      proformaInvoice: pi
+    });
+  } catch (error) {
+    console.error("REGENERATE PI ERROR:", error);
+    return res.status(500).json({ success: false, message: "Failed to regenerate PI." });
+  }
+};
+
+/**
+ * Get all saved custom agreed product prices for a specific dealer
+ */
+export const getDealerPrices = async (req, res) => {
+  try {
+    const { dealerId } = req.params;
+    const customPrices = await DealerProductPrice.find({ dealerId }).lean();
+    const priceMap = {};
+    customPrices.forEach((p) => {
+      priceMap[p.productId.toString()] = p.customPrice;
+    });
+    return res.status(200).json({
+      success: true,
+      data: customPrices,
+      priceMap,
+    });
+  } catch (error) {
+    console.error("GET DEALER PRICES ERROR:", error);
+    return res.status(500).json({ success: false, message: error.message || "Failed to fetch dealer custom prices." });
+  }
+};
+
+/**
+ * Delete Inquiry (ONLY allowed if Proforma Invoice has NOT been generated)
+ */
+export const deleteInquiry = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const inquiry = await Inquiry.findById(id);
+    if (!inquiry) {
+      return res.status(404).json({ success: false, message: "Inquiry not found." });
+    }
+
+    // Check if a Proforma Invoice has already been generated for this inquiry
+    const existingPI = await ProformaInvoice.findOne({ inquiryId: id });
+    const nonDeletableStatuses = ["PI_GENERATED", "PI_SENT_TO_DEALER", "PI_CONFIRMED", "AWAITING_SIGNED_PO", "ORDER_CONFIRMED"];
+
+    if (existingPI || nonDeletableStatuses.includes(inquiry.status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete inquiry: A Proforma Invoice (PI) has already been generated for this inquiry."
+      });
+    }
+
+    await Inquiry.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Inquiry deleted successfully."
+    });
+  } catch (error) {
+    console.error("DELETE INQUIRY ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to delete inquiry."
+    });
+  }
+};
+
+/**
+ * Dealer: Edit / Update Inquiry (ONLY allowed before PI is generated)
+ */
+export const updateInquiry = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { items, requiredDeliveryDate, dealerRemarks } = req.body;
+
+    const inquiry = await Inquiry.findById(id);
+    if (!inquiry) {
+      return res.status(404).json({ success: false, message: "Inquiry not found." });
+    }
+
+    const existingPI = await ProformaInvoice.findOne({ inquiryId: id });
+    const nonEditableStatuses = ["PI_GENERATED", "PI_SENT_TO_DEALER", "PI_CONFIRMED", "AWAITING_SIGNED_PO", "ORDER_CONFIRMED"];
+
+    if (existingPI || nonEditableStatuses.includes(inquiry.status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot edit inquiry: A Proforma Invoice (PI) has already been generated for this inquiry."
+      });
+    }
+
+    if (items && Array.isArray(items) && items.length > 0) {
+      inquiry.items = items.map((item) => ({
+        productId: item.productId || item._id || null,
+        name: item.name || item.productTitle || "Commercial Machine",
+        model: item.model || "",
+        quantity: Number(item.quantity) || 1,
+        specification: item.specification || item.configuration || "",
+        dealerRemarks: item.dealerRemarks || item.remarks || ""
+      }));
+    }
+
+    if (requiredDeliveryDate) {
+      inquiry.requiredDeliveryDate = new Date(requiredDeliveryDate);
+    }
+    if (dealerRemarks !== undefined) {
+      inquiry.dealerRemarks = dealerRemarks;
+    }
+
+    inquiry.auditTrail.push({
+      action: "Inquiry Updated",
+      performedBy: req.dealer?.contactPerson || req.dealer?.companyName || "Dealer",
+      role: "Dealer",
+      timestamp: new Date(),
+      note: "Dealer updated inquiry details."
+    });
+
+    await inquiry.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Inquiry updated successfully.",
+      inquiry
+    });
+  } catch (error) {
+    console.error("UPDATE INQUIRY ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update inquiry."
+    });
   }
 };

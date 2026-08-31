@@ -22,12 +22,14 @@ import {
   XCircle,
   ShieldCheck,
   History,
-  Lock as LockIcon
+  Lock as LockIcon,
+  RefreshCw
 } from "lucide-react";
 import API from "../services/api";
 import AdminLayout from "../components/admin/AdminLayout";
 import InvoicePrintModal from "../components/admin/InvoicePrintModal";
 import PurchaseOrderPrintModal from "../components/admin/PurchaseOrderPrintModal";
+import { isPIExpired } from "../utils/isPIExpired";
 
 export default function AdminInvoices() {
   const [activeTab, setActiveTab] = useState("inquiries"); // "inquiries" | "proformas" | "purchase-orders" | "summary"
@@ -102,25 +104,47 @@ export default function AdminInvoices() {
 
   useEffect(() => {
     fetchAllWorkflowData();
-    const interval = setInterval(() => {
-      fetchAllWorkflowData(true);
-    }, 30000);
-    return () => clearInterval(interval);
   }, []);
 
+  const [useCatalogPrice, setUseCatalogPrice] = useState(true);
+
   // --- 1. ADMIN SETS PRICE & GENERATES PI ---
-  const handleOpenPriceModal = (inquiry) => {
+  const handleOpenPriceModal = async (inquiry) => {
     setPricingInquiry(inquiry);
-    const preparedItems = (inquiry.items || []).map((item) => ({
-      productId: item.productId?._id || item.productId || null,
-      name: item.name,
-      model: item.model || "",
-      quantity: item.quantity || 1,
-      unitPrice: item.unitPrice || item.productId?.price || 50000,
-      discountPercent: 0,
-      hsnCode: "8438",
-      gstRate: 18
-    }));
+    setUseCatalogPrice(true);
+
+    let dealerPriceMap = {};
+    const dId = inquiry.dealerId?._id || inquiry.dealerId;
+    if (dId) {
+      try {
+        const pRes = await API.get(`/workflow/dealer-prices/${dId}`);
+        if (pRes.data.success && pRes.data.priceMap) {
+          dealerPriceMap = pRes.data.priceMap;
+        }
+      } catch (err) {
+        console.error("Fetch dealer custom prices error:", err);
+      }
+    }
+
+    const preparedItems = (inquiry.items || []).map((item) => {
+      const pId = (item.productId?._id || item.productId || "").toString();
+      const catalogPrice = item.productId?.price || item.unitPrice || 50000;
+      const customDealerPrice = dealerPriceMap[pId] || null;
+      const finalPrice = customDealerPrice || item.unitPrice || catalogPrice;
+
+      return {
+        productId: pId,
+        name: item.name,
+        model: item.model || "",
+        quantity: item.quantity || 1,
+        catalogPrice: catalogPrice,
+        customDealerPrice: customDealerPrice,
+        unitPrice: finalPrice,
+        discountPercent: 0,
+        hsnCode: "8438",
+        gstRate: 18
+      };
+    });
 
     setPricingForm({
       items: preparedItems,
@@ -291,6 +315,51 @@ export default function AdminInvoices() {
     }
   };
 
+  const handleDeletePI = async (invoiceId, invoiceNumber) => {
+    if (!window.confirm(`Are you sure you want to delete Proforma Invoice ${invoiceNumber || ''}? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      const res = await API.delete(`/invoices/${invoiceId}`);
+      if (res.data.success) {
+        alert("Proforma Invoice deleted successfully.");
+        fetchAllWorkflowData();
+      } else {
+        alert(res.data.message || "Failed to delete Proforma Invoice.");
+      }
+  const handleDeleteInquiry = async (inquiryId, inquiryNumber) => {
+    if (!window.confirm(`Are you sure you want to delete Inquiry ${inquiryNumber || ''}? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      const res = await API.delete(`/workflow/inquiries/${inquiryId}`);
+      if (res.data.success) {
+        alert("Inquiry deleted successfully.");
+        fetchAllWorkflowData();
+      } else {
+        alert(res.data.message || "Failed to delete inquiry.");
+      }
+    } catch (err) {
+      console.error("Error deleting inquiry:", err);
+      alert(err.response?.data?.message || "Cannot delete inquiry: A Proforma Invoice (PI) has already been generated.");
+    }
+  };
+
+  const handleRegeneratePI = async (invoiceId) => {
+    try {
+      const res = await API.post(`/workflow/pi/${invoiceId}/regenerate-admin`);
+      if (res.data.success) {
+        alert(res.data.message || "Proforma Invoice regenerated successfully! Valid for 30 more days.");
+        fetchAllWorkflowData();
+      } else {
+        alert(res.data.message || "Failed to regenerate PI.");
+      }
+    } catch (err) {
+      console.error("Error regenerating PI:", err);
+      alert(err.response?.data?.message || "Failed to regenerate PI.");
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6 font-sans">
@@ -407,7 +476,16 @@ export default function AdminInvoices() {
                     </div>
 
                     {/* Action */}
-                    <div className="flex justify-end pt-1">
+                    <div className="flex justify-end gap-2 pt-1">
+                      {inq.status === "SUBMITTED" && (
+                        <button
+                          onClick={() => handleDeleteInquiry(inq._id, inq.inquiryNumber)}
+                          className="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-2 text-xs uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-sm"
+                          title="Delete Inquiry (Only allowed before PI generation)"
+                        >
+                          <Trash2 className="w-4 h-4" /> Delete Inquiry
+                        </button>
+                      )}
                       <button
                         onClick={() => handleOpenPriceModal(inq)}
                         className="bg-brand-amber hover:bg-brand-slateDark hover:text-white text-brand-slateDark font-bold px-4 py-2 text-xs uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-sm"
@@ -447,60 +525,87 @@ export default function AdminInvoices() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-brand-sand font-semibold text-brand-slateDark">
-                    {invoices.map((inv) => (
-                      <tr key={inv._id} className="hover:bg-stone-50">
-                        <td className="p-3 font-mono font-bold">{inv.invoiceNumber}</td>
-                        <td className="p-3 font-mono font-bold text-amber-700">v{inv.version || 1}</td>
-                        <td className="p-3">
-                          <div className="font-bold">{inv.companyName || inv.customerName}</div>
-                          <div className="text-[10px] text-brand-gray">{inv.phone}</div>
-                        </td>
-                        <td className="p-3 text-right font-mono font-bold text-sm">
-                          ₹{(inv.grandTotal || 0).toLocaleString("en-IN")}
-                        </td>
-                        <td className="p-3 text-center">
-                          <span className="text-[10px] font-bold uppercase px-2 py-0.5 border bg-amber-50 text-amber-800 border-amber-300">
-                            {inv.status}
-                          </span>
-                        </td>
-                        <td className="p-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => {
-                                setSelectedInvoice(inv);
-                                setShowPrintModal(true);
-                              }}
-                              className="p-1.5 bg-brand-slateDark text-white hover:bg-slate-800"
-                              title="Print / Save PDF"
-                            >
-                              <Printer className="w-3.5 h-3.5 text-brand-amber" />
-                            </button>
-
-                            <button
-                              onClick={() => handleSendPIToDealer(inv._id)}
-                              className="p-1.5 bg-purple-700 text-white hover:bg-purple-600"
-                              title="Send PI to Dealer"
-                            >
-                              <Send className="w-3.5 h-3.5" />
-                            </button>
-
-                            {!inv.isLocked ? (
-                              <button
-                                onClick={() => handleOpenEditPIModal(inv)}
-                                className="p-1.5 bg-amber-500 text-slate-950 font-bold hover:bg-amber-400"
-                                title="Edit PI Version"
-                              >
-                                <Edit className="w-3.5 h-3.5" />
-                              </button>
+                    {invoices.map((inv) => {
+                      const expired = isPIExpired(inv);
+                      return (
+                        <tr key={inv._id} className={expired ? "bg-red-50/70 hover:bg-red-100/70" : "hover:bg-stone-50"}>
+                          <td className="p-3 font-mono font-bold">{inv.invoiceNumber}</td>
+                          <td className="p-3 font-mono font-bold text-amber-700">v{inv.version || 1}</td>
+                          <td className="p-3">
+                            <div className="font-bold">{inv.companyName || inv.customerName}</div>
+                            <div className="text-[10px] text-brand-gray">{inv.phone}</div>
+                          </td>
+                          <td className="p-3 text-right font-mono font-bold text-sm">
+                            ₹{(inv.grandTotal || 0).toLocaleString("en-IN")}
+                          </td>
+                          <td className="p-3 text-center">
+                            {expired ? (
+                              <span className="text-[10px] font-bold uppercase px-2 py-0.5 border bg-red-100 text-red-800 border-red-300">
+                                EXPIRED
+                              </span>
                             ) : (
-                              <span className="p-1.5 bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold flex items-center gap-1" title="Confirmed & Locked">
-                                <LockIcon className="w-3 h-3" /> Locked
+                              <span className="text-[10px] font-bold uppercase px-2 py-0.5 border bg-amber-50 text-amber-800 border-amber-300">
+                                {inv.status}
                               </span>
                             )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="p-3 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {expired && (
+                                <button
+                                  onClick={() => handleRegeneratePI(inv._id)}
+                                  className="p-1.5 bg-amber-600 text-white font-bold hover:bg-amber-500"
+                                  title="Regenerate Expired PI (30-Day Extension)"
+                                >
+                                  <RefreshCw className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => {
+                                  setSelectedInvoice(inv);
+                                  setShowPrintModal(true);
+                                }}
+                                className="p-1.5 bg-brand-slateDark text-white hover:bg-slate-800"
+                                title="Print / Save PDF"
+                              >
+                                <Printer className="w-3.5 h-3.5 text-brand-amber" />
+                              </button>
+
+                              <button
+                                onClick={() => handleSendPIToDealer(inv._id)}
+                                className="p-1.5 bg-purple-700 text-white hover:bg-purple-600"
+                                title="Send PI to Dealer"
+                              >
+                                <Send className="w-3.5 h-3.5" />
+                              </button>
+
+                              {!inv.isLocked ? (
+                                <button
+                                  onClick={() => handleOpenEditPIModal(inv)}
+                                  className="p-1.5 bg-amber-500 text-slate-950 font-bold hover:bg-amber-400"
+                                  title="Edit PI Version"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
+                              ) : (
+                                <span className="p-1.5 bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold flex items-center gap-1" title="Confirmed & Locked">
+                                  <LockIcon className="w-3 h-3" /> Locked
+                                </span>
+                              )}
+                              
+                              <button
+                                onClick={() => handleDeletePI(inv._id, inv.invoiceNumber)}
+                                className="p-1.5 bg-red-600 text-white hover:bg-red-700 transition-colors"
+                                title="Delete Unwanted PI"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -640,13 +745,44 @@ export default function AdminInvoices() {
                 </div>
 
                 <form onSubmit={handleGeneratePISubmit} className="space-y-4 text-xs">
+                  {/* Take Price from Catalogue Checkbox */}
+                  <div className="bg-amber-50/90 border border-amber-300 p-2.5 flex items-center justify-between">
+                    <label className="flex items-center gap-2 text-xs font-bold text-slate-800 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={useCatalogPrice}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setUseCatalogPrice(checked);
+                          if (checked) {
+                            const resetItems = pricingForm.items.map((item) => ({
+                              ...item,
+                              unitPrice: item.catalogPrice || item.unitPrice
+                            }));
+                            setPricingForm({ ...pricingForm, items: resetItems });
+                          }
+                        }}
+                        className="w-4 h-4 accent-amber-600 cursor-pointer"
+                      />
+                      Take Price from Catalogue
+                    </label>
+                    <span className="text-[11px] text-amber-800 font-semibold">
+                      {useCatalogPrice ? "✓ Auto-filled prices directly from product catalogue" : "Custom manual pricing enabled"}
+                    </span>
+                  </div>
+
                   <div className="space-y-2">
                     <label className="font-bold uppercase text-brand-gray block">Machine Line Items & Selling Rates (₹)</label>
                     {pricingForm.items.map((item, idx) => (
                       <div key={idx} className="bg-stone-50 p-3 border border-brand-sand grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
                         <div>
-                          <span className="font-bold text-brand-slateDark">{item.name}</span>
+                          <span className="font-bold text-brand-slateDark block">{item.name}</span>
                           <span className="text-[10px] text-brand-gray block">Qty: {item.quantity}</span>
+                          {item.customDealerPrice && (
+                            <span className="text-[10px] text-emerald-700 font-bold block mt-0.5">
+                              ✓ Saved Agreed Price for this Dealer: ₹{item.customDealerPrice.toLocaleString("en-IN")}
+                            </span>
+                          )}
                         </div>
                         <div>
                           <label className="text-[10px] font-bold text-brand-gray">Unit Price (₹):</label>
@@ -658,6 +794,7 @@ export default function AdminInvoices() {
                               const updated = [...pricingForm.items];
                               updated[idx].unitPrice = val;
                               setPricingForm({ ...pricingForm, items: updated });
+                              setUseCatalogPrice(false); // Automatically uncheck catalogue box when price is changed!
                             }}
                             className="w-full bg-white border border-brand-sand p-1.5 font-mono text-xs font-bold"
                             required
