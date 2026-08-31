@@ -327,6 +327,12 @@ export default function AdminInvoices() {
       } else {
         alert(res.data.message || "Failed to delete Proforma Invoice.");
       }
+    } catch (err) {
+      console.error("Error deleting PI:", err);
+      alert(err.response?.data?.message || "Failed to delete Proforma Invoice.");
+    }
+  };
+
   const handleDeleteInquiry = async (inquiryId, inquiryNumber) => {
     if (!window.confirm(`Are you sure you want to delete Inquiry ${inquiryNumber || ''}? This action cannot be undone.`)) {
       return;
