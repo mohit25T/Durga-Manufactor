@@ -146,10 +146,10 @@ function DealerDashboard() {
         console.error("Failed to fetch categoryOrder setting:", e);
       }
 
-      // Fetch products catalog
+      // Fetch products catalog (with dealer auth headers to resolve confirmed PO prices)
       let prodArray = [];
       try {
-        const prodRes = await axios.get(`${API_BASE}/products`);
+        const prodRes = await axios.get(`${API_BASE}/products`, getAuthHeaders());
         const rawData = prodRes.data.data || prodRes.data.products || prodRes.data;
         if (Array.isArray(rawData)) {
           prodArray = rawData;
@@ -823,10 +823,26 @@ function DealerDashboard() {
                                 {/* Pricing */}
                                 <div className="flex items-center justify-between pt-2 border-t border-slate-800">
                                   <div>
-                                    <span className="text-[10px] uppercase text-brand-amber block font-bold">Dealer Price</span>
-                                    <span className="text-lg font-serif font-bold text-white">
-                                      ₹{dealerPrice.toLocaleString("en-IN")}
-                                    </span>
+                                    {p.isConfirmedPrice ? (
+                                      <div className="flex items-center gap-1.5 mb-1">
+                                        <span className="inline-flex items-center gap-1 text-[10px] uppercase font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-0.5 rounded">
+                                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                          Agreed PO Price {p.confirmedPoNumber ? `(#${p.confirmedPoNumber})` : ""}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <span className="text-[10px] uppercase text-brand-amber block font-bold">Dealer Price</span>
+                                    )}
+                                    <div className="flex items-baseline gap-2">
+                                      <span className="text-lg font-serif font-bold text-white">
+                                        ₹{dealerPrice.toLocaleString("en-IN")}
+                                      </span>
+                                      {p.isConfirmedPrice && p.originalPrice > 0 && p.originalPrice !== dealerPrice && (
+                                        <span className="text-xs text-slate-500 line-through font-serif">
+                                          ₹{Number(p.originalPrice).toLocaleString("en-IN")}
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               </div>

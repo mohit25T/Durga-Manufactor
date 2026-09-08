@@ -1,4 +1,72 @@
 import Product from "../models/Product.js";
+import jwt from "jsonwebtoken";
+import DealerProductPrice from "../models/DealerProductPrice.js";
+import PurchaseOrder from "../models/PurchaseOrder.js";
+
+/**
+ * Resolves authenticated dealer ID from Authorization header Bearer token or ?dealerId query param
+ */
+const resolveDealerIdFromReq = (req) => {
+  let dealerId = null;
+  const authHeader = req.headers?.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.split(" ")[1];
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || "defaultsecret");
+      if (decoded && (decoded.role === "dealer" || decoded.dealerId || decoded.id)) {
+        dealerId = decoded.id || decoded.dealerId || decoded._id;
+      }
+    } catch (_) {}
+  }
+  if (!dealerId && req.query?.dealerId) {
+    dealerId = req.query.dealerId;
+  }
+  return dealerId;
+};
+
+/**
+ * Builds a map of productId -> { customPrice, poNumber, agreedDate } for a specific dealer
+ * by aggregating confirmed PurchaseOrders and DealerProductPrice records.
+ */
+const getDealerCustomPriceMap = async (dealerId) => {
+  if (!dealerId) return {};
+  try {
+    const priceMap = {};
+    // 1. Fetch confirmed Purchase Orders for this dealer
+    const pos = await PurchaseOrder.find({ dealerId }).sort({ createdAt: 1 }).lean();
+    for (const po of pos) {
+      if (po.items && Array.isArray(po.items)) {
+        for (const item of po.items) {
+          const rawId = item.productId?._id || item.productId || item._id;
+          if (rawId && item.unitPrice > 0) {
+            priceMap[rawId.toString()] = {
+              customPrice: Number(item.unitPrice),
+              poNumber: po.poNumber || "",
+              agreedDate: po.createdAt || po.poDate,
+            };
+          }
+        }
+      }
+    }
+
+    // 2. Fetch DealerProductPrice records (updates latest agreed/confirmed prices)
+    const customPrices = await DealerProductPrice.find({ dealerId }).lean();
+    for (const cp of customPrices) {
+      if (cp.productId && cp.customPrice > 0) {
+        const pId = cp.productId.toString();
+        priceMap[pId] = {
+          customPrice: Number(cp.customPrice),
+          poNumber: cp.poNumber || priceMap[pId]?.poNumber || "",
+          agreedDate: cp.lastAgreedDate || cp.updatedAt || priceMap[pId]?.agreedDate,
+        };
+      }
+    }
+    return priceMap;
+  } catch (err) {
+    console.error("Error getting dealer custom price map:", err);
+    return {};
+  }
+};
 
 /* =========================
    CREATE PRODUCT
@@ -57,22 +125,42 @@ export const createProduct = async (req, res) => {
 
 export const getProducts = async (req, res) => {
   try {
+    const products = await Product.find().sort({ createdAt: -1 }).lean();
+    const dealerId = resolveDealerIdFromReq(req);
+    const dealerPriceMap = dealerId ? await getDealerCustomPriceMap(dealerId) : {};
 
-    const products = await Product.find().sort({ createdAt: -1 });
+    const formattedProducts = products.map((prod) => {
+      const prodId = prod._id?.toString();
+      if (dealerPriceMap[prodId]) {
+        const custom = dealerPriceMap[prodId];
+        return {
+          ...prod,
+          originalPrice: prod.price,
+          price: custom.customPrice,
+          isConfirmedPrice: true,
+          isCustomDealerPrice: true,
+          confirmedPoNumber: custom.poNumber,
+          agreedDate: custom.agreedDate,
+        };
+      }
+      return {
+        ...prod,
+        isConfirmedPrice: false,
+        isCustomDealerPrice: false,
+      };
+    });
 
     res.json({
       success: true,
-      count: products.length,
-      data: products
+      count: formattedProducts.length,
+      data: formattedProducts,
     });
-
   } catch (error) {
     console.error("GET PRODUCTS ERROR:", error);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
-
   }
 };
 
@@ -83,28 +171,42 @@ export const getProducts = async (req, res) => {
 
 export const getProductById = async (req, res) => {
   try {
-
-    const product = await Product.findById(req.params.id);
-    console.log(product.price);
+    const product = await Product.findById(req.params.id).lean();
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
+    }
+
+    const dealerId = resolveDealerIdFromReq(req);
+    const dealerPriceMap = dealerId ? await getDealerCustomPriceMap(dealerId) : {};
+    const prodId = product._id?.toString();
+
+    let finalProduct = { ...product, isConfirmedPrice: false, isCustomDealerPrice: false };
+    if (dealerPriceMap[prodId]) {
+      const custom = dealerPriceMap[prodId];
+      finalProduct = {
+        ...product,
+        originalPrice: product.price,
+        price: custom.customPrice,
+        isConfirmedPrice: true,
+        isCustomDealerPrice: true,
+        confirmedPoNumber: custom.poNumber,
+        agreedDate: custom.agreedDate,
+      };
     }
 
     res.json({
       success: true,
-      data: product
+      data: finalProduct,
     });
-
   } catch (error) {
     console.error("GET PRODUCT BY ID ERROR:", error);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
-
   }
 };
 

@@ -726,6 +726,9 @@ export const confirmPI = async (req, res) => {
       ]
     });
 
+    // Auto-save confirmed dealer product prices in DealerProductPrice collection
+    await updateDealerProductPricesHelper(dealerId, poItems, pi.invoiceNumber, poNumber);
+
     // Update Inquiry status if linked
     if (pi.inquiryId) {
       const inquiry = await Inquiry.findById(pi.inquiryId);
