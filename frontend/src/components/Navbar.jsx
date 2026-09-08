@@ -1,6 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import DownloadApkButton from "./DownloadApkButton";
 
 function Navbar() {
   const location = useLocation();
@@ -17,8 +16,8 @@ function Navbar() {
         <span className="font-medium truncate">
           Free Pan-India Delivery & Demo Support | Call <a href="tel:+91 94281 56213" className="text-brand-amber font-bold hover:underline">+91 94281 56213</a>
         </span>
-        <div className="hidden sm:block">
-          <DownloadApkButton variant="minimal" />
+        <div className="hidden sm:flex items-center gap-4 text-[11px]">
+          <span className="text-white/60">Quality Food Machinery Since 2010</span>
         </div>
       </div>
 
@@ -62,7 +61,6 @@ function Navbar() {
 
         {/* Action Buttons */}
         <div className="hidden sm:flex items-center gap-3">
-          <DownloadApkButton variant="secondary" />
           <Link
             to="/dealer/login"
             className="border border-brand-amber/40 hover:border-brand-amber text-brand-amber hover:bg-brand-amber/10 px-4 py-2.5 font-bold font-sans text-[11px] tracking-widest uppercase transition-all duration-300 rounded-lg"
