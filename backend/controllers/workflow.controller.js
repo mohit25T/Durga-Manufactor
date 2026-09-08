@@ -1271,28 +1271,62 @@ export const regeneratePI = async (req, res) => {
 export const getDealerPrices = async (req, res) => {
   try {
     const { dealerId } = req.params;
-    let customPrices = await DealerProductPrice.find({ dealerId }).lean();
+    if (!dealerId) {
+      return res.status(400).json({ success: false, message: "dealerId is required." });
+    }
 
-    // Auto-backfill if empty: extract agreed prices from all ProformaInvoices for this dealer
-    if (customPrices.length === 0 && dealerId) {
+    // 1. Sync from confirmed Purchase Orders if any
+    const confirmedPOs = await PurchaseOrder.find({ dealerId }).sort({ createdAt: 1 }).lean();
+    for (const po of confirmedPOs) {
+      if (po.items && Array.isArray(po.items)) {
+        await updateDealerProductPricesHelper(dealerId, po.items, po.proformaInvoiceId?.invoiceNumber || "", po.poNumber);
+      }
+    }
+
+    // 2. Auto-backfill if empty from Proforma Invoices
+    let customPrices = await DealerProductPrice.find({ dealerId })
+      .populate("productId", "name category images price")
+      .sort({ updatedAt: -1 })
+      .lean();
+
+    if (customPrices.length === 0) {
       const latestPIs = await ProformaInvoice.find({ dealerId }).sort({ createdAt: -1 }).lean();
       for (const pi of latestPIs) {
         if (pi.items && pi.items.length > 0) {
           await updateDealerProductPricesHelper(dealerId, pi.items, pi.invoiceNumber);
         }
       }
-      customPrices = await DealerProductPrice.find({ dealerId }).lean();
+      customPrices = await DealerProductPrice.find({ dealerId })
+        .populate("productId", "name category images price")
+        .sort({ updatedAt: -1 })
+        .lean();
     }
 
     const priceMap = {};
-    customPrices.forEach((p) => {
-      if (p.productId) {
-        priceMap[p.productId.toString()] = p.customPrice;
+    const formattedList = customPrices.map((p) => {
+      const pIdStr = p.productId?._id ? p.productId._id.toString() : (p.productId ? p.productId.toString() : "");
+      if (pIdStr) {
+        priceMap[pIdStr] = p.customPrice;
       }
+      const prodObj = (p.productId && typeof p.productId === "object") ? p.productId : null;
+      return {
+        _id: p._id,
+        productId: pIdStr,
+        productName: p.productName || prodObj?.name || "Machine",
+        category: prodObj?.category || "Industrial",
+        image: prodObj?.images?.[0] || "",
+        globalPrice: prodObj?.price || 0,
+        customPrice: p.customPrice,
+        poNumber: p.poNumber || "",
+        piNumber: p.piNumber || "",
+        lastAgreedDate: p.lastAgreedDate || p.updatedAt,
+      };
     });
+
     return res.status(200).json({
       success: true,
-      data: customPrices,
+      count: formattedList.length,
+      data: formattedList,
       priceMap,
     });
   } catch (error) {
@@ -1300,6 +1334,7 @@ export const getDealerPrices = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message || "Failed to fetch dealer custom prices." });
   }
 };
+
 
 /**
  * Save / Update custom agreed dealer product price directly

@@ -11,6 +11,8 @@ import {
   Menu,
   Plus,
   ChevronDown,
+  ChevronUp,
+  Tag,
   ShoppingBag,
   Trash2,
   MessageSquare
@@ -32,6 +34,35 @@ function AdminDealers() {
   const [editingDealerId, setEditingDealerId] = useState(null);
   const [editDiscount, setEditDiscount] = useState(10);
   const [savingEdit, setSavingEdit] = useState(false);
+
+  // Dealer confirmed machine prices dropdown state
+  const [expandedPricesDealerId, setExpandedPricesDealerId] = useState(null);
+  const [dealerPricesMap, setDealerPricesMap] = useState({});
+  const [loadingDealerPrices, setLoadingDealerPrices] = useState(false);
+
+  const toggleDealerPrices = async (dealerId) => {
+    if (expandedPricesDealerId === dealerId) {
+      setExpandedPricesDealerId(null);
+      return;
+    }
+    setExpandedPricesDealerId(dealerId);
+    if (!dealerPricesMap[dealerId]) {
+      try {
+        setLoadingDealerPrices(true);
+        const res = await API.get(`/workflow/dealer-prices/${dealerId}`);
+        if (res.data?.success) {
+          setDealerPricesMap((prev) => ({
+            ...prev,
+            [dealerId]: res.data.data || [],
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to load dealer prices:", err);
+      } finally {
+        setLoadingDealerPrices(false);
+      }
+    }
+  };
 
   // Edit order items & split billing state
   const [editingOrderId, setEditingOrderId] = useState(null);
@@ -525,10 +556,8 @@ function AdminDealers() {
               {activeSubTab !== "orders" && (
                 <div className="space-y-4">
                   {filteredDealers.map((d) => (
-                    <div
-                      key={d._id}
-                      className="bg-slate-900 border border-white/10 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
-                    >
+                    <div key={d._id} className="space-y-1">
+                      <div className="bg-slate-900 border border-white/10 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-3">
                           <h3 className="text-base font-bold text-white">{d.companyName}</h3>
@@ -634,9 +663,100 @@ function AdminDealers() {
                             Re-Approve
                           </button>
                         )}
+
+                        {/* Confirmed Machine Prices Dropdown Toggle */}
+                        <button
+                          onClick={() => toggleDealerPrices(d._id)}
+                          className={`px-3 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-all ${
+                            expandedPricesDealerId === d._id
+                              ? "bg-brand-amber text-slate-950 border-brand-amber"
+                              : "bg-slate-800 hover:bg-slate-700 text-slate-200 border-white/10"
+                          }`}
+                          title="View last confirmed machine prices for this dealer"
+                        >
+                          <Tag className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Confirmed Prices</span>
+                          {expandedPricesDealerId === d._id ? (
+                            <ChevronUp className="w-3.5 h-3.5" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          )}
+                        </button>
                       </div>
                     </div>
-                  ))}
+
+                    {/* Expandable Confirmed Machine Prices Drawer */}
+                    {expandedPricesDealerId === d._id && (
+                      <div className="mt-2 bg-slate-950 border border-slate-800 p-4 animate-in fade-in duration-200">
+                        <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-brand-amber flex items-center gap-2">
+                            <Tag className="w-4 h-4 text-emerald-400" />
+                            Last Confirmed Machine Prices — {d.companyName}
+                          </h4>
+                          <span className="text-[11px] text-slate-400 font-medium">
+                            {(dealerPricesMap[d._id] || []).length} Machine(s) Confirmed
+                          </span>
+                        </div>
+
+                        {loadingDealerPrices && !dealerPricesMap[d._id] ? (
+                          <div className="py-6 text-center text-xs text-slate-400 uppercase tracking-widest">
+                            Loading confirmed rates...
+                          </div>
+                        ) : (dealerPricesMap[d._id] || []).length === 0 ? (
+                          <div className="py-6 text-center text-xs text-slate-500 bg-slate-900/40 border border-slate-800">
+                            No confirmed machine prices found yet for this dealer. (Rates are auto-confirmed when a PO is generated).
+                          </div>
+                        ) : (
+                          <div className="overflow-x-auto border border-slate-800">
+                            <table className="w-full text-left text-xs text-slate-300">
+                              <thead className="bg-slate-900 text-[10px] uppercase text-slate-400 font-bold border-b border-slate-800">
+                                <tr>
+                                  <th className="p-2.5">Machine / Equipment</th>
+                                  <th className="p-2.5">Category</th>
+                                  <th className="p-2.5 text-right">Confirmed Price (₹)</th>
+                                  <th className="p-2.5 text-right">Catalogue Rate</th>
+                                  <th className="p-2.5 text-center">PO Number</th>
+                                  <th className="p-2.5 text-right">Date Confirmed</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-800/60">
+                                {(dealerPricesMap[d._id] || []).map((cp) => (
+                                  <tr key={cp._id || cp.productId} className="hover:bg-white/[0.02] transition-colors">
+                                    <td className="p-2.5 font-bold text-white flex items-center gap-2">
+                                      {cp.image && (
+                                        <img src={cp.image} alt={cp.productName} className="w-7 h-7 object-cover rounded bg-slate-900" />
+                                      )}
+                                      <span>{cp.productName}</span>
+                                    </td>
+                                    <td className="p-2.5 text-slate-400">{cp.category || "Machinery"}</td>
+                                    <td className="p-2.5 text-right font-serif font-bold text-emerald-400 text-sm">
+                                      ₹{Number(cp.customPrice || 0).toLocaleString("en-IN")}
+                                    </td>
+                                    <td className="p-2.5 text-right font-serif text-slate-500">
+                                      {cp.globalPrice > 0 ? `₹${Number(cp.globalPrice).toLocaleString("en-IN")}` : "—"}
+                                    </td>
+                                    <td className="p-2.5 text-center">
+                                      {cp.poNumber ? (
+                                        <span className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded">
+                                          #{cp.poNumber}
+                                        </span>
+                                      ) : (
+                                        <span className="text-slate-500 text-[11px]">—</span>
+                                      )}
+                                    </td>
+                                    <td className="p-2.5 text-right text-slate-400 text-[11px]">
+                                      {cp.lastAgreedDate ? new Date(cp.lastAgreedDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
 
                   {filteredDealers.length === 0 && (
                     <div className="bg-slate-900 border border-white/10 p-12 text-center text-slate-400 text-xs uppercase tracking-widest">
