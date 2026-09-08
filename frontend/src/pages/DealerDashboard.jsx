@@ -254,9 +254,16 @@ function DealerDashboard() {
     fetchDealerData();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("dealerToken");
-    localStorage.removeItem("dealerInfo");
+  const handleLogout = async () => {
+    try {
+      const fcmToken = localStorage.getItem("fcmToken");
+      if (fcmToken) {
+        await axios.post(`${API_BASE}/notifications/remove-fcm-token`, { fcmToken }, getAuthHeaders());
+      }
+    } catch (e) {
+      console.error("Dealer FCM logout error:", e);
+    }
+    localStorage.clear();
     navigate("/dealer/login");
   };
 

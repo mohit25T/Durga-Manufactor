@@ -16,8 +16,19 @@ function AdminSidebar({ isOpen, setIsOpen }) {
     { name: "Proforma Invoices", path: "/admin/invoices", icon: Icons.FileText },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
+  const handleLogout = async () => {
+    try {
+      const fcmToken = localStorage.getItem("fcmToken");
+      const token = localStorage.getItem("token");
+      if (fcmToken) {
+        await axios.post("/api/notifications/remove-fcm-token", { fcmToken }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+    } catch (e) {
+      console.error("Admin FCM logout error:", e);
+    }
+    localStorage.clear();
     navigate("/admin/login");
   };
 

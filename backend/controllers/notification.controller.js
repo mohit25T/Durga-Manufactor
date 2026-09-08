@@ -109,16 +109,22 @@ export async function removeFcmToken(req, res) {
       // Check Admin
       const Admin = (await import("../models/Admin.js")).default;
       const adminDoc = await Admin.findById(userId);
-      if (adminDoc && fcmToken) {
-        adminDoc.fcmTokens = (adminDoc.fcmTokens || []).filter((t) => t !== fcmToken);
+      if (adminDoc) {
+        if (fcmToken) {
+          adminDoc.fcmTokens = (adminDoc.fcmTokens || []).filter((t) => t !== fcmToken);
+        } else {
+          adminDoc.fcmTokens = [];
+        }
         await adminDoc.save();
         console.log(`📱 [FCM TOKEN CLEARED] Removed FCM token for Admin ${adminDoc.email}`);
       }
-    } else if (fcmToken) {
+    }
+
+    if (fcmToken) {
       await Dealer.updateMany({ fcmToken }, { $set: { fcmToken: "", "activeSession.deviceId": "" } });
       const Admin = (await import("../models/Admin.js")).default;
       await Admin.updateMany({}, { $pull: { fcmTokens: fcmToken } });
-      console.log(`📱 [FCM TOKEN CLEARED] Unregistered token from database on logout.`);
+      console.log(`📱 [FCM TOKEN CLEARED] Unregistered FCM token ${fcmToken} from database on logout.`);
     }
 
     return res.status(200).json({
