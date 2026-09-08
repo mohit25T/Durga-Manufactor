@@ -1,9 +1,9 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import AdminLayout from "../components/admin/AdminLayout";
 import API from "../services/api";
 import { ArrowLeft, Info, CheckCircle2, RefreshCw, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
 import FormattedDescription from "../components/FormattedDescription";
 
 function AddProduct() {

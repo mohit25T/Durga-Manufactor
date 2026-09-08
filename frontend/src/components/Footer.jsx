@@ -8,13 +8,16 @@ function Footer() {
       <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8 relative z-10">
         {/* Brand Info */}
         <div>
-          <div className="mb-3">
+          <div className="mb-3 flex items-center gap-2">
             <span className="font-serif text-2xl font-bold tracking-wide text-brand-amber">
-              Durga Manufactures
+              Millzon
+            </span>
+            <span className="text-[10px] text-white/50 font-sans uppercase tracking-widest border border-white/20 px-1.5 py-0.5">
+              Food Machinery
             </span>
           </div>
           <p className="text-white/70 mb-4 max-w-sm leading-relaxed text-sm font-medium">
-            Premium commercial food processing machinery engineered for durability, precision, and efficiency in demanding commercial environments.
+            Millzon produces premium commercial food processing machinery engineered for durability, high production yield, and precision in commercial environments.
           </p>
           <div className="mt-3">
             <DownloadApkButton variant="secondary" />
@@ -147,7 +150,7 @@ function Footer() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 mt-6 pt-4 border-t border-white/10 text-center text-white/60 text-xs md:text-sm font-medium relative z-10 flex flex-col md:flex-row justify-between items-center gap-2">
-        <p>&copy; {new Date().getFullYear()} Durga Manufactures. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} Millzon (Durga Manufactures). All rights reserved.</p>
         <p className="font-serif text-brand-amber font-bold">Engineered for Excellence</p>
       </div>
     </footer>

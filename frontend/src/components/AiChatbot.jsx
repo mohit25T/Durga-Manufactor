@@ -102,11 +102,6 @@ export default function AiChatbot() {
     return a.localeCompare(b);
   });
 
-  // Derive HP options for currently selected category
-  const hpOptionsForCategory = activeCategory
-    ? [...new Set(products.filter((p) => p.category === activeCategory).map((p) => extractHP(p) || "Standard / NA"))].sort((a, b) => parseFloat(a) - parseFloat(b))
-    : [];
-
   // Handle Category Selection
   const handleSelectCategory = (categoryName) => {
     setActiveCategory(categoryName);

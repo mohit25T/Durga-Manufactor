@@ -30,7 +30,9 @@ import {
   ShieldAlert,
   Lock as LockIcon,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  Trash2,
+  Eye
 } from "lucide-react";
 import axios from "axios";
 import Navbar from "../components/Navbar";
@@ -250,6 +252,7 @@ function DealerDashboard() {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchDealerData();
   }, []);
@@ -583,17 +586,6 @@ function DealerDashboard() {
     acc[cat].push(p);
     return acc;
   }, {});
-
-  const getBadgeColor = (tier) => {
-    switch (tier) {
-      case "Platinum":
-        return "bg-purple-500/20 text-purple-300 border-purple-500/30";
-      case "Gold":
-        return "bg-amber-500/20 text-amber-300 border-amber-500/30";
-      default:
-        return "bg-slate-700 text-slate-300 border-slate-600";
-    }
-  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -1191,7 +1183,6 @@ function DealerDashboard() {
                           <div>
                             <span className="font-bold text-white">{item.name}</span>
                             {item.model && <span className="text-slate-400 text-[11px] ml-2">({item.model})</span>}
-                            {item.specification && <p className="text-[11px] text-slate-400 italic mt-0.5">{item.specification}</p>}
                           </div>
                           <div className="text-right sm:text-right">
                             <span className="font-mono text-slate-300 font-bold">Qty: {item.quantity}</span>

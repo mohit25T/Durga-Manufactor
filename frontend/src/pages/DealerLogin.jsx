@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Building2, User, Mail, Lock as LockIcon, Phone, MapPin, FileText, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle, Search, X } from "lucide-react";
 import axios from "axios";
 import Navbar from "../components/Navbar";

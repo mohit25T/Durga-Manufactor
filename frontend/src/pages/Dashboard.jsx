@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import AdminLayout from "../components/admin/AdminLayout";
 import API from "../services/api";
@@ -9,7 +10,6 @@ import {
   TrendingUp,
   Activity,
 } from "lucide-react";
-import { motion } from "framer-motion";
 
 function Dashboard() {
   const [stats, setStats] = useState([

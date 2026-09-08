@@ -7,7 +7,7 @@ export function CompareProvider({ children }) {
     try {
       const saved = localStorage.getItem("durga_compare_items");
       return saved ? JSON.parse(saved) : [];
-    } catch (e) {
+    } catch {
       return [];
     }
   });
@@ -38,6 +38,10 @@ export function CompareProvider({ children }) {
     setCompareItems((prev) => prev.filter((p) => p._id !== productId));
   };
 
+  const isInCompare = (productId) => {
+    return compareItems.some((p) => p._id === productId);
+  };
+
   const toggleCompare = (product) => {
     if (isInCompare(product._id)) {
       removeFromCompare(product._id);
@@ -49,10 +53,6 @@ export function CompareProvider({ children }) {
   const clearCompare = () => {
     setCompareItems([]);
     setIsModalOpen(false);
-  };
-
-  const isInCompare = (productId) => {
-    return compareItems.some((p) => p._id === productId);
   };
 
   return (

@@ -1,11 +1,33 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import SEO from "../components/SEO";
 import { motion } from "framer-motion";
 import { Award, Factory, Globe2, ShieldCheck } from "lucide-react";
 
 function About() {
+  const aboutJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "name": "About Millzon",
+    "url": "https://www.durgamanufactures.com/about",
+    "description": "Millzon is a premier manufacturer of commercial food processing machinery headquartered in Shapar (Veraval), Rajkot, Gujarat, India.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Millzon",
+      "legalName": "Durga Manufactures",
+      "logo": "https://www.durgamanufactures.com/millzon-logo.png"
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-brand-cream text-brand-charcoal">
+      <SEO
+        title="About Millzon - Commercial Food Machinery Manufacturer | Millzon"
+        description="Learn about Millzon, a premier manufacturer of commercial food processing machinery in Rajkot, Gujarat. Built with 304 food-grade stainless steel for maximum yield and reliability."
+        canonicalUrl="/about"
+        jsonLd={aboutJsonLd}
+        keywords="About Millzon, food processing machinery manufacturer, Durga Manufactures, Rajkot Gujarat food equipment, 304 stainless steel machinery"
+      />
       <Navbar />
 
       <main className="flex-grow">
@@ -17,7 +39,7 @@ function About() {
               animate={{ opacity: 1, y: 0 }}
               className="font-serif text-3xl md:text-5xl font-bold mb-4 text-brand-forest tracking-tight"
             >
-              Engineered for <span className="text-brand-charcoal">Excellence</span>
+              Engineered for <span className="text-brand-charcoal">Excellence</span> | Millzon
             </motion.h1>
             
             <motion.p 
@@ -26,7 +48,7 @@ function About() {
               transition={{ delay: 0.1 }}
               className="text-sm md:text-base text-brand-gray max-w-2xl mx-auto leading-relaxed font-semibold"
             >
-              We are Durga Manufactures, pioneers in industrial food processing machinery. Based in Rajkot, Gujarat, we have been delivering uncompromised quality and innovation to commercial kitchens across India.
+              Millzon (manufactured by Durga Manufactures) is a pioneer in industrial food processing machinery. Based in Rajkot, Gujarat, we deliver uncompromised quality and engineering innovation to commercial kitchens across India.
             </motion.p>
           </div>
         </section>
@@ -41,14 +63,14 @@ function About() {
               transition={{ duration: 0.6 }}
             >
               <h2 className="font-serif text-2xl md:text-3xl font-bold text-brand-forest tracking-tight mb-6">
-                Our Legacy of <span className="border-b-2 border-brand-forest pb-1">Precision</span>
+                Our Legacy of <span className="border-b-2 border-brand-forest pb-1">Precision & Yield</span>
               </h2>
               <div className="space-y-4 text-sm font-semibold text-brand-gray leading-relaxed">
                 <p>
-                  Starting as a small workshop, Durga Manufactures has grown into a leading facility stretching thousands of square feet. Our core philosophy is simple: build machines that don't just work, but outlast the competition.
+                  From our modern engineering facility in Rajkot, Millzon has grown into a leading food machinery brand. Our core philosophy is simple: build machinery that delivers maximum production yield with long-term structural durability.
                 </p>
                 <p>
-                  By integrating state-of-the-art 304 grade stainless steel and advanced engineering techniques, our cutters, slicers, and mills deliver maximum yield with minimum downtime. We believe in empowering the food industry with reliable tools.
+                  By integrating state-of-the-art 304 grade stainless steel and advanced mechanical design, our pulverizers, cutters, slicers, flour mills, and dough kneaders ensure sanitary food processing and reliable operation for commercial kitchens, hotels, and food processing plants.
                 </p>
               </div>
             </motion.div>
@@ -62,7 +84,10 @@ function About() {
             >
               <img 
                 src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=1000&auto=format&fit=crop" 
-                alt="Factory Floor" 
+                alt="Millzon Manufacturing Facility Floor in Rajkot" 
+                width="600"
+                height="450"
+                loading="lazy"
                 className="w-full h-[450px] object-cover grayscale opacity-90 hover:grayscale-0 transition-all duration-700"
               />
             </motion.div>
@@ -73,15 +98,15 @@ function About() {
         <section className="bg-white py-12 border-t border-b border-brand-sand">
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center mb-10">
-              <h2 className="font-serif text-2xl md:text-3xl font-bold text-brand-forest tracking-tight">Why Choose Us</h2>
+              <h2 className="font-serif text-2xl md:text-3xl font-bold text-brand-forest tracking-tight">Why Choose Millzon</h2>
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
-                { icon: Factory, title: 'In-House Production', desc: 'Every component is strictly monitored in our Rajkot facility.' },
-                { icon: ShieldCheck, title: '304 Grade Quality', desc: 'We never compromise. Food-grade steel ensures absolute safety.' },
-                { icon: Award, title: 'Trusted By Brands', desc: 'Over 500+ commercial kitchens and industries rely on us globally.' },
-                { icon: Globe2, title: 'Pan-India Reach', desc: 'Robust supply chain delivering machinery exactly when needed.' }
+                { icon: Factory, title: 'In-House Production', desc: 'Every Millzon machine is strictly monitored in our Rajkot facility.' },
+                { icon: ShieldCheck, title: '304 Grade Quality', desc: 'Food-grade stainless steel ensures absolute food safety.' },
+                { icon: Award, title: 'Trusted By Brands', desc: 'Over 500+ commercial kitchens and industries rely on Millzon machinery.' },
+                { icon: Globe2, title: 'Pan-India Reach', desc: 'Robust supply chain and service network delivering machinery across India.' }
               ].map((item, idx) => (
                 <motion.div 
                   key={idx}

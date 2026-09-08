@@ -1,10 +1,10 @@
 /**
  * Utility to generate optimized/compressed image URLs dynamically.
- * Supports Cloudinary and Unsplash URL transformations.
+ * Supports Cloudinary, Unsplash, and local image transformations for WebP/AVIF.
  */
 export const getOptimizedImageUrl = (url, width, quality = "auto") => {
   if (!url) return "";
-  
+
   // Handle local object URLs (blobs used during previews)
   if (url.startsWith("blob:") || url.startsWith("data:")) {
     return url;
@@ -33,10 +33,21 @@ export const getOptimizedImageUrl = (url, width, quality = "auto") => {
       newUrl.searchParams.set("auto", "format");
       newUrl.searchParams.set("fit", "crop");
       return newUrl.toString();
-    } catch (e) {
+    } catch {
       return url;
     }
   }
 
+  return url;
+};
+
+/**
+ * Returns WebP alternative path if available for local assets
+ */
+export const getWebPUrl = (url) => {
+  if (!url) return "";
+  if (url.endsWith(".png") || url.endsWith(".jpg") || url.endsWith(".jpeg")) {
+    return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
+  }
   return url;
 };

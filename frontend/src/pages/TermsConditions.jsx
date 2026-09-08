@@ -12,12 +12,18 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import SEO from "../components/SEO";
 
 export default function TermsConditions() {
   const lastUpdated = "August 2026";
 
   return (
     <div className="min-h-screen bg-brand-slateDark text-white flex flex-col selection:bg-brand-amber selection:text-brand-slateDark">
+      <SEO
+        title="Terms & Conditions | Millzon"
+        description="Terms and conditions for purchasing commercial food processing machinery from Millzon (Durga Manufactures)."
+        canonicalUrl="/terms-and-conditions"
+      />
       <Navbar />
 
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

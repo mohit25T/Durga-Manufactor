@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   FileText,
   Plus,
@@ -151,12 +150,7 @@ export default function CreateInvoice() {
     fetchData();
   }, [id, isEditMode]);
 
-  // Recalculate totals whenever items, freight, or state changes
-  useEffect(() => {
-    recalculateTotals(formData.items, formData.freightCharges, formData.packagingCharges, formData.state);
-  }, [formData.state]);
-
-  const recalculateTotals = (itemsList, freight = formData.freightCharges, packaging = formData.packagingCharges, stateVal = formData.state) => {
+  const recalculateTotals = useCallback((itemsList, freight = formData.freightCharges, packaging = formData.packagingCharges, stateVal = formData.state) => {
     let sub = 0;
     let gstSum = 0;
 
@@ -166,50 +160,50 @@ export default function CreateInvoice() {
       const disc = Number(item.discountPercent) || 0;
       const gstRate = Number(item.gstRate) || 18;
 
-      const discountedRate = rate - (rate * disc) / 100;
-      const taxable = discountedRate * qty;
-      const gstAmt = (taxable * gstRate) / 100;
-      const tot = taxable + gstAmt;
+      const baseAmount = qty * rate;
+      const discountAmount = (baseAmount * disc) / 100;
+      const taxableValue = baseAmount - discountAmount;
+      const itemGst = (taxableValue * gstRate) / 100;
+      const totalAmount = taxableValue + itemGst;
 
-      sub += taxable;
-      gstSum += gstAmt;
+      sub += taxableValue;
+      gstSum += itemGst;
 
       return {
         ...item,
-        taxableAmount: Math.round(taxable),
-        gstAmount: Math.round(gstAmt),
-        totalAmount: Math.round(tot)
+        taxableValue,
+        gstAmount: itemGst,
+        totalAmount,
       };
     });
 
-    const isInter = (stateVal || "").trim().toLowerCase() !== "gujarat";
+    const isInterstate = (stateVal || "Gujarat").trim().toLowerCase() !== "gujarat";
     const freightVal = Number(freight) || 0;
-    const pkgVal = Number(packaging) || 0;
+    const packagingVal = Number(packaging) || 0;
+    const freightGst = (freightVal * 18) / 100;
+    const packagingGst = (packagingVal * 18) / 100;
 
-    const cgst = isInter ? 0 : Math.round(gstSum / 2);
-    const sgst = isInter ? 0 : Math.round(gstSum / 2);
-    const igst = isInter ? Math.round(gstSum) : 0;
-
-    const grand = Math.round(sub + freightVal + pkgVal + gstSum);
-    const advance = Math.round(grand * 0.5);
-    const balance = grand - advance;
+    const totalGst = gstSum + freightGst + packagingGst;
+    const gTotal = sub + freightVal + packagingVal + totalGst;
+    const advance = Math.round(gTotal * 0.5);
+    const balance = gTotal - advance;
 
     setFormData((prev) => ({
       ...prev,
       items: updatedItems,
       subtotal: Math.round(sub),
       freightCharges: freightVal,
-      packagingCharges: pkgVal,
-      isInterstate: isInter,
-      cgstAmount: cgst,
-      sgstAmount: sgst,
-      igstAmount: igst,
-      totalGst: Math.round(gstSum),
-      grandTotal: grand,
+      packagingCharges: packagingVal,
+      isInterstate,
+      cgstAmount: isInterstate ? 0 : Math.round(totalGst / 2),
+      sgstAmount: isInterstate ? 0 : Math.round(totalGst / 2),
+      igstAmount: isInterstate ? Math.round(totalGst) : 0,
+      totalGst: Math.round(totalGst),
+      grandTotal: Math.round(gTotal),
       advancePayment: advance,
-      balanceDue: balance
+      balanceDue: Math.round(balance)
     }));
-  };
+  }, [formData.freightCharges, formData.packagingCharges, formData.state]);
 
   // Handle Customer Selection Dropdown
   const handleDealerSelect = (dealerId) => {

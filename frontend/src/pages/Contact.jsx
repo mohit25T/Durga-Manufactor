@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import SEO from "../components/SEO";
 import API from "../services/api";
 import { motion } from "framer-motion";
 import { MapPin, Phone, Mail, Send, CheckCircle2 } from "lucide-react";
@@ -27,8 +28,30 @@ function Contact() {
     }
   };
 
+  const contactJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": "Contact Millzon Sales & Support",
+    "url": "https://www.durgamanufactures.com/contact",
+    "description": "Contact Millzon for commercial food processing machinery price quotations, technical specifications, and dealer support.",
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "Millzon",
+      "legalName": "Durga Manufactures",
+      "telephone": "+91-9428156213",
+      "email": "durgamanufactures2010@gmail.com"
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-brand-cream text-brand-charcoal">
+      <SEO
+        title="Contact Us & Request Quotation | Millzon"
+        description="Get in touch with Millzon sales engineering for commercial food processing machinery inquiries, price quotations, machine demonstrations, and technical support."
+        canonicalUrl="/contact"
+        jsonLd={contactJsonLd}
+        keywords="Contact Millzon, food machinery quotation, commercial food machine price India, Millzon Rajkot contact"
+      />
       <Navbar />
 
       <main className="flex-grow">
@@ -40,7 +63,7 @@ function Contact() {
               animate={{ opacity: 1, y: 0 }}
               className="font-serif text-3xl md:text-5xl font-bold mb-4 text-brand-forest tracking-tight"
             >
-              Get in <span className="text-brand-charcoal">Touch</span>
+              Get in <span className="text-brand-charcoal">Touch</span> | Millzon
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 15 }}
@@ -48,7 +71,7 @@ function Contact() {
               transition={{ delay: 0.1 }}
               className="text-sm md:text-base text-brand-gray max-w-xl mx-auto leading-relaxed font-semibold"
             >
-              Have a custom requirement or need a quote? Reach out to our team of experts directly.
+              Have a custom machinery requirement or need a price quotation? Reach out to Millzon's engineering support team directly.
             </motion.p>
           </div>
         </section>
@@ -61,7 +84,7 @@ function Contact() {
             <div className="lg:col-span-2 bg-brand-sage/10 p-6 lg:p-8 border-r border-brand-sand flex flex-col justify-between">
               <div className="space-y-6">
                 <h3 className="font-serif text-xl font-bold text-brand-forest">
-                  Contact Details
+                  Millzon Contact Details
                 </h3>
 
                 <div className="space-y-4 font-semibold">
@@ -71,7 +94,7 @@ function Contact() {
                     </div>
                     <div>
                       <p className="text-[10px] text-brand-gray mb-1 uppercase tracking-widest font-bold">
-                        Sales & Support
+                        Sales & Technical Support
                       </p>
                       <a
                         href="tel:+919825870821"
@@ -100,7 +123,7 @@ function Contact() {
                     </div>
                     <div>
                       <p className="text-[10px] text-brand-gray mb-1 uppercase tracking-widest font-bold">
-                        Email inquiries
+                        Email Inquiries
                       </p>
                       <a
                         href="mailto:durgamanufactures2010@gmail.com"
@@ -117,7 +140,7 @@ function Contact() {
                     </div>
                     <div>
                       <p className="text-[10px] text-brand-gray mb-1 uppercase tracking-widest font-bold">
-                        Factory Location
+                        Factory & Facility Location
                       </p>
                       <a
                         href="https://maps.app.goo.gl/aU3AFdMye5pQWjrZA"
@@ -142,7 +165,7 @@ function Contact() {
                 Send Us a Message
               </h3>
               <p className="text-brand-gray mb-6 font-semibold text-xs md:text-sm">
-                We will get back to you within 24 hours.
+                Our sales team will get back to you within 24 hours.
               </p>
 
               {status === "success" && (

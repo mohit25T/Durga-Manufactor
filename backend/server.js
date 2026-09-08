@@ -83,6 +83,14 @@ const corsOptions = {
 /* CORS MUST COME BEFORE ROUTES */
 app.use(cors(corsOptions));
 
+/* Security Headers (HSTS & MIME Sniffing protection) */
+app.use((req, res, next) => {
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  next();
+});
+
 /* Body Parser (Configured for up to 5MB document uploads + base64 encoding margin) */
 app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ limit: "15mb", extended: true }));

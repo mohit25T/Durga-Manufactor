@@ -1,9 +1,7 @@
 /**
- * GSTIN Validation Utility (From ERP-main)
- * Implements Regex and Mod 36 Checksum logic.
+ * GSTIN Validation Utility
+ * Implements Regex and structural validation logic.
  */
-
-const charMap = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 export const validateGSTIN = (gstin) => {
   if (!gstin) return { isValid: false, message: "GSTIN is required" };

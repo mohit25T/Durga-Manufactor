@@ -22,10 +22,11 @@ function Navbar() {
       </div>
 
       <nav className="bg-brand-slateDark border-b border-white/10 flex justify-between items-center px-6 md:px-12 py-5">
-        {/* Logo / Company Name */}
+        {/* Logo / Brand Name */}
         <Link to="/" className="flex items-center gap-3 group">
+          <img src="/millzon-logo.png" alt="Millzon Logo" className="h-8 w-auto object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
           <span className="font-serif text-xl md:text-2xl font-bold tracking-wide text-white hover:text-brand-amber transition-colors duration-300">
-            DURGA MANUFACTURES
+            Durga Manufactures
           </span>
         </Link>
 

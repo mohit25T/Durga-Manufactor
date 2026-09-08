@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
 import * as Icons from "lucide-react";
+import API from "../../services/api";
 
 function AdminSidebar({ isOpen, setIsOpen }) {
   const location = useLocation();
@@ -19,11 +19,8 @@ function AdminSidebar({ isOpen, setIsOpen }) {
   const handleLogout = async () => {
     try {
       const fcmToken = localStorage.getItem("fcmToken");
-      const token = localStorage.getItem("token");
       if (fcmToken) {
-        await axios.post("/api/notifications/remove-fcm-token", { fcmToken }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await API.post("/notifications/remove-fcm-token", { fcmToken });
       }
     } catch (e) {
       console.error("Admin FCM logout error:", e);
@@ -57,11 +54,11 @@ function AdminSidebar({ isOpen, setIsOpen }) {
         <div className="p-6 flex items-center justify-between border-b border-white/10">
           <Link to="/admin/dashboard" className="flex items-center gap-3">
             <div className="w-10 h-10 bg-brand-amber rounded-none flex items-center justify-center shadow-lg shadow-brand-amber/20">
-              <span className="text-brand-slateDark font-extrabold text-xl">D</span>
+              <span className="text-brand-slateDark font-extrabold text-xl">M</span>
             </div>
             <div>
               <h2 className="font-bold text-lg tracking-tight">Admin Portal</h2>
-              <p className="text-xs text-brand-gray">Durga Manufactures</p>
+              <p className="text-xs text-brand-gray">Millzon</p>
             </div>
           </Link>
           <button onClick={() => setIsOpen(false)} className="lg:hidden text-brand-gray hover:text-white transition-colors">

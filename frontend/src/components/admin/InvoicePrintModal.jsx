@@ -13,21 +13,19 @@ export default function InvoicePrintModal({ invoice, isOpen, onClose }) {
   };
 
   const handleWhatsAppShare = () => {
-    const text = `*PROFORMA INVOICE - DURGA MANUFACTURES*\n` +
+    const text = `*PROFORMA INVOICE - MILLZON*\n` +
       `Invoice No: ${invoice.invoiceNumber}\n` +
       `Date: ${new Date(invoice.invoiceDate).toLocaleDateString("en-IN")}\n` +
       `Customer: ${invoice.companyName || invoice.customerName}\n` +
       `Grand Total: ₹${invoice.grandTotal?.toLocaleString("en-IN")}\n` +
       `Advance Payable: ₹${invoice.advancePayment?.toLocaleString("en-IN")}\n\n` +
-      `Thank you for choosing Durga Manufactures! Call +91 94281 56213 for support.`;
+      `Thank you for choosing Millzon! Call +91 94281 56213 for support.`;
     
     const cleanPhone = (invoice.phone || "").replace(/\D/g, "");
     const targetPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
     const url = `https://wa.me/${targetPhone}?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");
   };
-
-  const isGujarat = (invoice.state || "Gujarat").trim().toLowerCase() === "gujarat" || !invoice.isInterstate;
 
   return (
     <AnimatePresence>

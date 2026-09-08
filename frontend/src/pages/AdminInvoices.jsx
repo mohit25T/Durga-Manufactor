@@ -34,7 +34,6 @@ import { isPIExpired } from "../utils/isPIExpired";
 export default function AdminInvoices() {
   const [activeTab, setActiveTab] = useState("inquiries"); // "inquiries" | "proformas" | "purchase-orders" | "summary"
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
 
   // Data States
   const [inquiries, setInquiries] = useState([]);
@@ -264,20 +263,6 @@ export default function AdminInvoices() {
     }
   };
 
-  const handleWhatsAppShare = (inv) => {
-    const text = `*PROFORMA INVOICE - DURGA MANUFACTURES*\n` +
-      `Invoice No: ${inv.invoiceNumber} (v${inv.version || 1})\n` +
-      `Date: ${new Date(inv.invoiceDate).toLocaleDateString("en-IN")}\n` +
-      `Customer: ${inv.companyName || inv.customerName}\n` +
-      `Grand Total: ₹${inv.grandTotal?.toLocaleString("en-IN")}\n\n` +
-      `Call +91 94281 56213 for Durga Manufactures Support.`;
-
-    const cleanPhone = (inv.phone || "").replace(/\D/g, "");
-    const targetPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-    const url = `https://wa.me/${targetPhone}?text=${encodeURIComponent(text)}`;
-    window.open(url, "_blank");
-  };
-
   const handleOpenDocument = (fileUrl, fileName) => {
     if (!fileUrl) {
       alert("No signed document file available for this PO.");
@@ -471,11 +456,7 @@ export default function AdminInvoices() {
                     <div className="bg-stone-50 p-2.5 text-xs divide-y divide-stone-200">
                       {(inq.items || []).map((item, idx) => (
                         <div key={idx} className="py-1 flex justify-between items-center">
-                          <div>
-                            <span className="font-bold text-brand-slateDark">{item.name}</span>
-                            {item.model && <span className="text-brand-gray ml-2">({item.model})</span>}
-                            {item.specification && <p className="text-[10px] text-brand-gray italic">{item.specification}</p>}
-                          </div>
+                          <span className="font-bold text-brand-slateDark">{item.name}</span>
                           <span className="font-mono font-bold">Qty: {item.quantity}</span>
                         </div>
                       ))}

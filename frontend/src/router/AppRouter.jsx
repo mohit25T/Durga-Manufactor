@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ScrollToTop from "../ScrollTop";
 import FloatingActionButton from "../components/FloatingActionButton";
 import AiChatbot from "../components/AiChatbot";
@@ -13,6 +13,7 @@ import About from "../pages/About";
 import Contact from "../pages/Contact";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
 import TermsConditions from "../pages/TermsConditions";
+import NotFound from "../pages/NotFound";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 /* Admin Pages */
@@ -33,7 +34,7 @@ import ProtectedDealerRoute from "../components/ProtectedDealerRoute";
 
 function AppRouter() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <CompareProvider>
         <ScrollToTop />
         <FloatingActionButton />
@@ -146,11 +147,11 @@ function AppRouter() {
           {/* Admin Redirect */}
           <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
 
-          {/* Fallback Catch-all Route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Custom 404 Page Fallback Route */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </CompareProvider>
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 

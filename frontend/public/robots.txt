@@ -1,0 +1,19 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Allow: /products
+Allow: /products/*
+Allow: /about
+Allow: /contact
+Allow: /privacy-policy
+Allow: /terms-and-conditions
+
+# Block private & administrative portals
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /dealer
+Disallow: /dealer/*
+Disallow: /api/
+
+# XML Sitemap
+Sitemap: https://www.durgamanufactures.com/sitemap.xml

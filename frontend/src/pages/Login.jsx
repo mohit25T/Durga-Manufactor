@@ -1,7 +1,7 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
-import { motion } from "framer-motion";
 import { Lock as LockIcon, Mail, ArrowRight, ShieldCheck } from "lucide-react";
 
 function Login() {

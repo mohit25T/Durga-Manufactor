@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ProductCard from "../components/ProductCard";
+import SEO from "../components/SEO";
 import API from "../services/api";
 import { motion } from "framer-motion";
 import { LayoutGrid, List, ArrowRight, Scale, Check, Phone } from "lucide-react";
@@ -188,8 +189,42 @@ function Products() {
     setSearchQuery("");
   };
 
+  const pageTitle = selectedCategory && selectedCategory !== "ALL" 
+    ? `${selectedCategory} Food Processing Machines | Millzon` 
+    : "Food Processing Machines & Commercial Equipment | Millzon";
+
+  const pageDesc = selectedCategory && selectedCategory !== "ALL"
+    ? `Explore commercial-grade ${selectedCategory} food processing machines manufactured by Millzon in India. Built with 304 food-grade stainless steel.`
+    : "Explore Millzon's catalog of commercial food processing machinery, flour mills, pulverizers, vegetable cutters, potato slicers, and dough kneaders.";
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://www.durgamanufactures.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Products",
+        "item": "https://www.durgamanufactures.com/products"
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-brand-cream">
+      <SEO
+        title={pageTitle}
+        description={pageDesc}
+        canonicalUrl="/products"
+        jsonLd={breadcrumbSchema}
+        keywords="commercial food machinery, Millzon products, pulverizer, flour mill, vegetable cutter, dough kneader, potato slicer machine"
+      />
       <Navbar />
 
       <main className="flex-grow">

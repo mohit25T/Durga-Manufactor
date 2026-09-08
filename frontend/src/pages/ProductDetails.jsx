@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import SEO from "../components/SEO";
 import API from "../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, ChevronRight, Phone, X, ZoomIn, ZoomOut, Star, MessageSquare, User, Send, AlertCircle, Scale, Check } from "lucide-react";
@@ -100,12 +101,13 @@ function ProductDetails() {
     dragStartPos.current = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
-    } catch (err) {}
+    } catch {
+      /* ignore pointer capture errors */
+    }
   };
 
   const handleZoomDragMove = (e) => {
     if (!isDragging.current || zoomScale <= 1) return;
-    // Panning bounds grow with zoomScale level for complete edge-to-edge coverage
     const limitX = 750 * (zoomScale - 1);
     const limitY = 550 * (zoomScale - 1);
     const newX = Math.max(-limitX, Math.min(limitX, e.clientX - dragStartPos.current.x));
@@ -117,7 +119,9 @@ function ProductDetails() {
     isDragging.current = false;
     try {
       e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch (err) {}
+    } catch {
+      /* ignore pointer capture errors */
+    }
   };
 
   const viewTracked = useRef(false);
@@ -153,47 +157,6 @@ function ProductDetails() {
 
     fetchProduct();
   }, [id]);
-
-  // Gesture Swipe State Management
-  const swipeStartX = useRef(0);
-  const hasSwiped = useRef(false);
-
-  const handleDragStart = (clientX) => {
-    swipeStartX.current = clientX;
-    hasSwiped.current = false;
-  };
-
-  const handleDragMove = (clientX) => {
-    if (hasSwiped.current) return;
-    if (!product?.images || product.images.length <= 1) return;
-
-    const diff = swipeStartX.current - clientX;
-    const threshold = 40; // pixels to trigger swipe (40px is highly responsive)
-
-    if (Math.abs(diff) > threshold) {
-      hasSwiped.current = true;
-      const currentIndex = product.images.indexOf(selectedImage);
-      if (diff > 0) {
-        swipeDirection.current = "left";
-        const nextIdx = (currentIndex + 1) % product.images.length;
-        setSelectedImage(product.images[nextIdx]);
-      } else {
-        swipeDirection.current = "right";
-        const prevIdx = (currentIndex - 1 + product.images.length) % product.images.length;
-        setSelectedImage(product.images[prevIdx]);
-      }
-    }
-  };
-
-  const handleImageClick = (e) => {
-    if (hasSwiped.current) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-    setZoomScale(1);
-    setIsZoomOpen(true);
-  };
 
   const generateWhatsAppLink = () => {
     if (!product?.whatsappNumbers?.length) return "#";
@@ -256,8 +219,69 @@ Thank you.
     );
   }
 
+  const productTitle = `${product.name} | Millzon`;
+  const productDesc = `${product.name} - Commercial food processing machine engineered by Millzon. ${product.description ? product.description.substring(0, 150) : ''}`;
+  const productImage = product.images?.[0] || "https://www.durgamanufactures.com/millzon-logo.png";
+
+  const productJsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": product.name,
+      "image": product.images || [productImage],
+      "description": product.description || product.name,
+      "brand": {
+        "@type": "Brand",
+        "name": "Millzon"
+      },
+      "category": product.category || "Commercial Food Processing Machinery",
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "INR",
+        "price": product.price || "0",
+        "availability": "https://schema.org/InStock",
+        "seller": {
+          "@type": "Organization",
+          "name": "Millzon"
+        }
+      }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.durgamanufactures.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Machines",
+          "item": "https://www.durgamanufactures.com/products"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": product.name,
+          "item": `https://www.durgamanufactures.com/products/${id}`
+        }
+      ]
+    }
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-brand-cream text-brand-charcoal">
+      <SEO
+        title={productTitle}
+        description={productDesc}
+        canonicalUrl={`/products/${id}`}
+        ogImage={productImage}
+        jsonLd={productJsonLd}
+        keywords={`${product.name}, Millzon, ${product.category}, commercial machine India, food processing machinery`}
+      />
       <Navbar />
 
       <main className="flex-grow py-6">
@@ -281,14 +305,14 @@ Thank you.
             <div className="lg:col-span-2 space-y-4">
               <div 
                 className="bg-white border border-brand-sand p-3 shadow-sm cursor-zoom-in relative group/img overflow-hidden select-none touch-pan-y"
-                onClick={(e) => {
+                onClick={() => {
                   handleUserGesture();
                   setIsZoomOpen(true);
                 }}
-                onTouchStart={(e) => {
+                onTouchStart={() => {
                   handleUserGesture();
                 }}
-                onPointerDown={(e) => {
+                onPointerDown={() => {
                   handleUserGesture();
                 }}
               >

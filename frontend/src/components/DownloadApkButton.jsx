@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Smartphone, Download, QrCode, X, ShieldCheck, Check } from "lucide-react";
 import { getDeviceOS } from "../utils/deviceDetect";
@@ -8,13 +8,9 @@ export default function DownloadApkButton({
   className = "",
   showQrModalDirectly = false
 }) {
-  const [device, setDevice] = useState({ isAndroid: false, isIOS: false, isDesktop: true });
+  const [device] = useState(() => getDeviceOS());
   const [showQrModal, setShowQrModal] = useState(showQrModalDirectly);
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    setDevice(getDeviceOS());
-  }, []);
 
   // Construct absolute download URL for the QR code and download links
   const isLocalhost = typeof window !== "undefined" && (
