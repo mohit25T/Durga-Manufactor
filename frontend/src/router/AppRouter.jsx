@@ -147,6 +147,14 @@ function AppRouter() {
           {/* Admin Redirect */}
           <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
 
+          {/* Fallback Redirects for legacy or prefixed /pages/ URLs */}
+          <Route path="/pages/admin/login" element={<Navigate to="/admin/login" replace />} />
+          <Route path="/pages/admin" element={<Navigate to="/admin/login" replace />} />
+          <Route path="/pages/admin/*" element={<Navigate to="/admin/login" replace />} />
+          <Route path="/pages/dealer/login" element={<Navigate to="/dealer/login" replace />} />
+          <Route path="/pages/dealer" element={<Navigate to="/dealer/login" replace />} />
+          <Route path="/pages/login" element={<Navigate to="/admin/login" replace />} />
+
           {/* Custom 404 Page Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
