@@ -305,7 +305,7 @@ export default function PurchaseOrderPrintModal({ po, isOpen, onClose }) {
                 </p>
                 <p>1. Payment: {terms.paymentTerms || "50% Advance, 50% before dispatch."}</p>
                 <p>2. Delivery: {terms.deliveryTerms || "Ex-factory Rajkot."} | Freight: {terms.freightTerms || "On customer."}</p>
-                <p>3. Warranty: {terms.warrantyTerms || "1 Year Warranty."} | Electrical fittings: {terms.installationTerms || "On customer."}</p>
+                <p>3. Warranty: {terms.warrantyTerms || "6 Months Motor Warranty Only."} | Electrical fittings: {terms.installationTerms || "On customer."}</p>
                 {terms.otherTerms && <p>4. Special Notes: {terms.otherTerms}</p>}
               </div>
 

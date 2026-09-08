@@ -57,7 +57,7 @@ export default function AdminInvoices() {
     packagingCharges: 0,
     paymentTerms: "50% Advance with Purchase Order, 50% before Dispatch.",
     deliveryTerms: "Ex-factory Rajkot, Gujarat.",
-    warrantyTerms: "1 Year Pan-India Warranty.",
+    warrantyTerms: "6 Months Motor Warranty Only.",
     notes: "Factory Service Included. Subject to Rajkot Jurisdiction."
   });
   const [generatingPI, setGeneratingPI] = useState(false);
@@ -152,7 +152,7 @@ export default function AdminInvoices() {
       packagingCharges: 0,
       paymentTerms: "50% Advance with Purchase Order, 50% before Dispatch.",
       deliveryTerms: "Ex-factory Rajkot, Gujarat.",
-      warrantyTerms: "1 Year Pan-India Warranty.",
+      warrantyTerms: "6 Months Motor Warranty Only.",
       notes: "Factory Service Included. Subject to Rajkot Jurisdiction."
     });
     setPriceInquiryModalOpen(true);

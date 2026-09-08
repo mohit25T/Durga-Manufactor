@@ -224,23 +224,28 @@ export default function InvoicePrintModal({ invoice, isOpen, onClose }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-900 text-slate-900 font-semibold bg-transparent">
-                    {(invoice.items || []).map((item, index) => (
-                      <tr key={index} className="bg-transparent">
-                        <td className="border border-slate-900 p-1.5 text-center font-bold">{index + 1}</td>
-                        <td className="border border-slate-900 p-1.5 font-bold text-slate-900">
-                          {item.name}
-
-                        </td>
-                        <td className="border border-slate-900 p-1.5 text-center font-mono font-bold">{item.hsnCode || "8438"}</td>
-                        <td className="border border-slate-900 p-1.5 text-center font-bold">{item.quantity} {item.unit || "Set"}</td>
-                        <td className="border border-slate-900 p-1.5 text-right font-mono font-bold">₹{item.unitPrice?.toLocaleString("en-IN")}</td>
-                        <td className="border border-slate-900 p-1.5 text-right font-mono font-bold">₹{item.taxableAmount?.toLocaleString("en-IN")}</td>
-                        <td className="border border-slate-900 p-1.5 text-center font-bold">{item.gstRate || 18}%</td>
-                        <td className="border border-slate-900 p-1.5 text-right font-mono font-extrabold text-slate-900">
-                          ₹{item.totalAmount?.toLocaleString("en-IN")}
-                        </td>
-                      </tr>
-                    ))}
+                    {(invoice.items || []).map((item, index) => {
+                      const qty = Number(item.quantity || item.qty || 1);
+                      const unitRate = Number(item.unitPrice ?? item.price ?? item.rate ?? 0);
+                      const taxable = Number(item.taxableAmount ?? (qty * unitRate));
+                      const totalAmt = Number(item.totalAmount ?? item.total ?? (taxable * (1 + (item.gstRate || 18)/100)));
+                      return (
+                        <tr key={index} className="bg-transparent">
+                          <td className="border border-slate-900 p-1.5 text-center font-bold">{index + 1}</td>
+                          <td className="border border-slate-900 p-1.5 font-bold text-slate-900">
+                            {item.name || item.productName}
+                          </td>
+                          <td className="border border-slate-900 p-1.5 text-center font-mono font-bold">{item.hsnCode || "8438"}</td>
+                          <td className="border border-slate-900 p-1.5 text-center font-bold">{qty} {item.unit || "Set"}</td>
+                          <td className="border border-slate-900 p-1.5 text-right font-mono font-bold">₹{unitRate.toLocaleString("en-IN")}</td>
+                          <td className="border border-slate-900 p-1.5 text-right font-mono font-bold">₹{taxable.toLocaleString("en-IN")}</td>
+                          <td className="border border-slate-900 p-1.5 text-center font-bold">{item.gstRate || 18}%</td>
+                          <td className="border border-slate-900 p-1.5 text-right font-mono font-extrabold text-slate-900">
+                            ₹{totalAmt.toLocaleString("en-IN")}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

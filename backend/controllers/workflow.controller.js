@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Inquiry from "../models/Inquiry.js";
 import ProformaInvoice from "../models/ProformaInvoice.js";
 import PurchaseOrder from "../models/PurchaseOrder.js";
@@ -6,6 +7,44 @@ import Dealer from "../models/Dealer.js";
 import DealerNotification from "../models/DealerNotification.js";
 import DealerProductPrice from "../models/DealerProductPrice.js";
 import { createAndSendDealerNotification, createAndSendAdminNotification } from "../services/notification.service.js";
+
+/**
+ * Helper to update/save agreed custom product prices in DealerProductPrice collection
+ */
+export const updateDealerProductPricesHelper = async (dealerId, items, piNumber = "", poNumber = "") => {
+  if (!dealerId || !Array.isArray(items)) return;
+  const dIdStr = dealerId._id ? dealerId._id.toString() : dealerId.toString();
+  for (const item of items) {
+    const rawProductId = item.productId?._id || item.productId || item._id;
+    const unitPrice = Number(item.unitPrice || item.price || item.customPrice) || 0;
+
+    if (rawProductId && unitPrice > 0) {
+      try {
+        const pIdStr = rawProductId.toString();
+        const prodName = item.name || item.productName || item.productTitle || "";
+
+        if (mongoose.Types.ObjectId.isValid(pIdStr)) {
+          await DealerProductPrice.findOneAndUpdate(
+            { dealerId: dIdStr, productId: pIdStr },
+            {
+              dealerId: dIdStr,
+              productId: pIdStr,
+              productName: prodName,
+              customPrice: unitPrice,
+              lastAgreedDate: new Date(),
+              poNumber: poNumber || "",
+              piNumber: piNumber || "",
+            },
+            { upsert: true, new: true }
+          );
+          console.log(`[DealerProductPrice] Saved custom price ₹${unitPrice} for dealer ${dIdStr} & product ${pIdStr}`);
+        }
+      } catch (err) {
+        console.error("[DealerProductPrice] Error saving price:", err);
+      }
+    }
+  }
+};
 
 /**
  * Utility: Generate next sequential inquiry number (e.g. INQ-2026-0001)
@@ -324,6 +363,9 @@ export const generatePIFromInquiry = async (req, res) => {
     });
     await inquiry.save();
 
+    // Auto-save dealer product prices to DealerProductPrice database model
+    await updateDealerProductPricesHelper(dealer._id, processedItems, invoiceNumber);
+
     return res.status(201).json({
       success: true,
       message: `Proforma Invoice ${invoiceNumber} generated!`,
@@ -459,6 +501,10 @@ export const updatePIVersion = async (req, res) => {
     });
 
     await pi.save();
+
+    if (pi.dealerId) {
+      await updateDealerProductPricesHelper(pi.dealerId, processedItems, pi.invoiceNumber);
+    }
 
     // Notify Dealer if inquiry linked
     if (pi.dealerId) {
@@ -659,7 +705,7 @@ export const confirmPI = async (req, res) => {
       commercialTerms: {
         paymentTerms: pi.paymentTerms,
         deliveryTerms: "Ex-factory Rajkot, Gujarat.",
-        warrantyTerms: "1 Year Pan-India Warranty.",
+        warrantyTerms: "6 Months Motor Warranty Only.",
         installationTerms: "Electric panel board, wiring on customer.",
         freightTerms: "Transportation charges on customer.",
         otherTerms: pi.notes
@@ -1222,10 +1268,24 @@ export const regeneratePI = async (req, res) => {
 export const getDealerPrices = async (req, res) => {
   try {
     const { dealerId } = req.params;
-    const customPrices = await DealerProductPrice.find({ dealerId }).lean();
+    let customPrices = await DealerProductPrice.find({ dealerId }).lean();
+
+    // Auto-backfill if empty: extract agreed prices from all ProformaInvoices for this dealer
+    if (customPrices.length === 0 && dealerId) {
+      const latestPIs = await ProformaInvoice.find({ dealerId }).sort({ createdAt: -1 }).lean();
+      for (const pi of latestPIs) {
+        if (pi.items && pi.items.length > 0) {
+          await updateDealerProductPricesHelper(dealerId, pi.items, pi.invoiceNumber);
+        }
+      }
+      customPrices = await DealerProductPrice.find({ dealerId }).lean();
+    }
+
     const priceMap = {};
     customPrices.forEach((p) => {
-      priceMap[p.productId.toString()] = p.customPrice;
+      if (p.productId) {
+        priceMap[p.productId.toString()] = p.customPrice;
+      }
     });
     return res.status(200).json({
       success: true,
@@ -1235,6 +1295,23 @@ export const getDealerPrices = async (req, res) => {
   } catch (error) {
     console.error("GET DEALER PRICES ERROR:", error);
     return res.status(500).json({ success: false, message: error.message || "Failed to fetch dealer custom prices." });
+  }
+};
+
+/**
+ * Save / Update custom agreed dealer product price directly
+ */
+export const saveDealerPrice = async (req, res) => {
+  try {
+    const { dealerId, productId, customPrice, productName } = req.body;
+    if (!dealerId || !productId || customPrice === undefined) {
+      return res.status(400).json({ success: false, message: "dealerId, productId, and customPrice are required." });
+    }
+    await updateDealerProductPricesHelper(dealerId, [{ productId, unitPrice: customPrice, name: productName }]);
+    return res.status(200).json({ success: true, message: "Dealer product price saved successfully!" });
+  } catch (error) {
+    console.error("SAVE DEALER PRICE ERROR:", error);
+    return res.status(500).json({ success: false, message: error.message || "Failed to save dealer price." });
   }
 };
 

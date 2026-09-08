@@ -14,6 +14,7 @@ import {
   getAdminPOs,
   getWorkflowSummary,
   getDealerPrices,
+  saveDealerPrice,
   deleteInquiry,
   updateInquiry
 } from "../controllers/workflow.controller.js";
@@ -30,6 +31,7 @@ router.post("/inquiries/:inquiryId/generate-pi", verifyAdmin, generatePIFromInqu
 router.put("/inquiries/:id", verifyDealer, updateInquiry);
 router.delete("/inquiries/:id", deleteInquiry);
 router.get("/dealer-prices/:dealerId", getDealerPrices);
+router.post("/dealer-prices", verifyAdmin, saveDealerPrice);
 
 // PI Versioning & Confirmation routes
 router.put("/pi/:id/version", verifyAdmin, updatePIVersion);

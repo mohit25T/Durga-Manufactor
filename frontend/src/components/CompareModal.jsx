@@ -238,7 +238,7 @@ export default function CompareModal() {
                     <td key={p._id} className="p-3.5 border-r border-brand-sand font-bold text-green-700">
                       <span className="flex items-center gap-1">
                         <ShieldCheck className="w-4 h-4 text-green-600" />
-                        1 Year Motor Warranty
+                        6 Months Motor Warranty Only
                       </span>
                     </td>
                   ))}

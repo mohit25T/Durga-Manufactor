@@ -4,6 +4,7 @@ import Dealer from "../models/Dealer.js";
 import Product from "../models/Product.js";
 import Inquiry from "../models/Inquiry.js";
 import PurchaseOrder from "../models/PurchaseOrder.js";
+import { updateDealerProductPricesHelper } from "./workflow.controller.js";
 
 /**
  * Generate next sequential invoice number (e.g. PI-2026-0001)
@@ -88,6 +89,10 @@ export const createInvoice = async (req, res) => {
 
     const newInvoice = new ProformaInvoice(data);
     await newInvoice.save();
+
+    if (newInvoice.dealerId) {
+      await updateDealerProductPricesHelper(newInvoice.dealerId, newInvoice.items, newInvoice.invoiceNumber);
+    }
 
     return res.status(201).json({
       success: true,
@@ -199,6 +204,10 @@ export const updateInvoice = async (req, res) => {
         success: false,
         message: "Invoice not found"
       });
+    }
+
+    if (updatedInvoice && updatedInvoice.dealerId) {
+      await updateDealerProductPricesHelper(updatedInvoice.dealerId, updatedInvoice.items, updatedInvoice.invoiceNumber);
     }
 
     return res.status(200).json({

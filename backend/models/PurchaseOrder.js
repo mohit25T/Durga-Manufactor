@@ -93,7 +93,7 @@ const purchaseOrderSchema = new mongoose.Schema(
     commercialTerms: {
       paymentTerms: { type: String, default: "50% Advance with Purchase Order, 50% before Dispatch." },
       deliveryTerms: { type: String, default: "Ex-factory Rajkot, Gujarat." },
-      warrantyTerms: { type: String, default: "1 Year Pan-India Warranty." },
+      warrantyTerms: { type: String, default: "6 Months Motor Warranty Only." },
       installationTerms: { type: String, default: "Electric panel board, wiring on customer." },
       freightTerms: { type: String, default: "Transportation charges on customer." },
       otherTerms: { type: String, default: "" }
