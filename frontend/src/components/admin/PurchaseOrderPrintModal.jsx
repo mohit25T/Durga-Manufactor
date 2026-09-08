@@ -127,7 +127,7 @@ export default function PurchaseOrderPrintModal({ po, isOpen, onClose }) {
           id="po-document"
         >
           {/* Background Watermark Logo - Tilted 45 Degrees */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.5] z-0 overflow-hidden">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.12] z-0 overflow-hidden">
             <img
               src="/millzon-watermark.png"
               alt="MillZon Watermark"
@@ -329,11 +329,11 @@ export default function PurchaseOrderPrintModal({ po, isOpen, onClose }) {
                   <p className="font-extrabold text-slate-900 border-b border-slate-900 pb-0.5 uppercase text-left">
                     For DURGA MANUFACTURES
                   </p>
-                  <div className="h-10 flex items-center justify-center my-1">
+                  <div className="h-14 flex items-center justify-center my-1">
                     <img
                       src="/signature.jpg"
                       alt="Authorized Signatory"
-                      className="h-10 object-contain mix-blend-multiply"
+                      className="h-14 object-contain mix-blend-multiply"
                     />
                   </div>
                   <div>

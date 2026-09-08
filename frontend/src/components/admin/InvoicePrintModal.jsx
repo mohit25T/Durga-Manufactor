@@ -123,7 +123,7 @@ export default function InvoicePrintModal({ invoice, isOpen, onClose }) {
           id="invoice-document"
         >
           {/* Background Watermark Logo - Tilted 45 Degrees */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.5] z-0 overflow-hidden">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.12] z-0 overflow-hidden">
             <img
               src="/millzon-watermark.png"
               alt="MillZon Watermark"
@@ -381,11 +381,11 @@ export default function InvoicePrintModal({ invoice, isOpen, onClose }) {
                 </div>
 
                 <div className="text-center w-48">
-                  <div className="h-10 flex items-end justify-center mb-0.5 relative">
+                  <div className="h-14 flex items-end justify-center mb-0.5 relative">
                     <img
                       src="/signature.jpg"
                       alt="Authorized Signatory"
-                      className="h-10 object-contain mix-blend-multiply"
+                      className="h-14 object-contain mix-blend-multiply"
                     />
                   </div>
                   <p className="font-bold text-slate-900 text-[10px] border-t border-slate-900 pt-0.5">
