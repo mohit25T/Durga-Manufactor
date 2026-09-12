@@ -12,7 +12,7 @@ node_modules/
 .DS_Store
 Thumbs.db
 /dealer_app
-
+/attendence
 # Build folders
 dist/
 build/

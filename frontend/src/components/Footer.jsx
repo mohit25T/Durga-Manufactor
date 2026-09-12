@@ -21,6 +21,14 @@ function Footer() {
           </p>
           <div className="mt-3">
             <DownloadApkButton variant="secondary" />
+            <div className="mt-2">
+              <Link 
+                to="/install" 
+                className="text-xs text-brand-amber/90 hover:text-white hover:underline inline-flex items-center gap-1 font-semibold"
+              >
+                <span>Installation Guide (Android & iOS) →</span>
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -60,6 +68,14 @@ function Footer() {
                 className="hover:text-brand-amber hover:underline transition-all"
               >
                 Contact & Support
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/install"
+                className="hover:text-brand-amber hover:underline transition-all text-white/90 flex items-center gap-1.5"
+              >
+                <span>Install Mobile App (Android & iOS)</span>
               </Link>
             </li>
             <li>

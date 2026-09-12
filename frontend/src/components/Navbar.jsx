@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Smartphone } from "lucide-react";
 
 function Navbar() {
   const location = useLocation();
@@ -17,6 +18,10 @@ function Navbar() {
           Free Pan-India Delivery & Demo Support | Call <a href="tel:+91 94281 56213" className="text-brand-amber font-bold hover:underline">+91 94281 56213</a>
         </span>
         <div className="hidden sm:flex items-center gap-4 text-[11px]">
+          <Link to="/install" className="text-brand-amber font-bold hover:underline flex items-center gap-1">
+            <Smartphone className="w-3.5 h-3.5" /> Install Mobile App
+          </Link>
+          <span className="text-white/40">|</span>
           <span className="text-white/60">Quality Food Machinery Since 2010</span>
         </div>
       </div>
@@ -31,11 +36,12 @@ function Navbar() {
         </Link>
 
         {/* Navigation */}
-        <div className="hidden md:flex gap-8 font-sans text-xs tracking-widest uppercase items-center">
+        <div className="hidden md:flex gap-7 font-sans text-xs tracking-widest uppercase items-center">
           {[
             { label: "Home", path: "/" },
             { label: "Products", path: "/products" },
             { label: "About", path: "/about" },
+            { label: "Install App", path: "/install" },
             { label: "Contact", path: "/contact" },
             { label: "Dealer Portal", path: "/dealer/login" }
           ].map((item) => {

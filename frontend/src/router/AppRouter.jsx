@@ -13,6 +13,7 @@ import About from "../pages/About";
 import Contact from "../pages/Contact";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
 import TermsConditions from "../pages/TermsConditions";
+import InstallApp from "../pages/InstallApp";
 import NotFound from "../pages/NotFound";
 import ProtectedRoute from "../components/ProtectedRoute";
 
@@ -49,6 +50,10 @@ function AppRouter() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-and-conditions" element={<TermsConditions />} />
+          <Route path="/install" element={<InstallApp />} />
+          <Route path="/how-to-install" element={<Navigate to="/install" replace />} />
+          <Route path="/download" element={<Navigate to="/install" replace />} />
+          <Route path="/install-app" element={<Navigate to="/install" replace />} />
 
           {/* Dealer Portal Routes */}
           <Route path="/dealer" element={<Navigate to="/dealer/login" replace />} />

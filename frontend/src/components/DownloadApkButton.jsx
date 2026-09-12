@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Smartphone, Download, QrCode, X, ShieldCheck, Check } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Smartphone, Download, QrCode, X, ShieldCheck, Check, Apple } from "lucide-react";
 import { getDeviceOS } from "../utils/deviceDetect";
 
 export default function DownloadApkButton({ 
@@ -26,9 +27,28 @@ export default function DownloadApkButton({
   const apkDownloadUrl = `${baseUrl}/downloads/durga-dealer-app.apk`;
   const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(apkDownloadUrl)}`;
 
-  // iOS users cannot install APK files directly
+  // For iOS users, direct them to the iOS installation guide
   if (device.isIOS) {
-    return null;
+    if (variant === "minimal") {
+      return (
+        <Link
+          to="/install"
+          className={`inline-flex items-center gap-1.5 text-brand-amber hover:text-white text-xs font-bold transition-colors ${className}`}
+        >
+          <Apple className="w-3.5 h-3.5" />
+          <span>Install iOS App</span>
+        </Link>
+      );
+    }
+    return (
+      <Link
+        to="/install"
+        className={`inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-brand-amber border border-brand-amber/30 px-4 py-2.5 rounded-lg text-xs font-bold transition-all duration-300 ${className}`}
+      >
+        <Apple className="w-4 h-4" />
+        <span>Install App on iPhone / iPad</span>
+      </Link>
+    );
   }
 
   const handleCopyLink = () => {
@@ -236,8 +256,17 @@ export default function DownloadApkButton({
                 </button>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-white/10 text-[11px] text-white/50">
-                ⚡ For Android 8.0+ devices. Enable "Allow from this source" when prompted.
+              <div className="mt-4 pt-4 border-t border-white/10 text-[11px] text-white/50 space-y-1.5">
+                <div>⚡ For Android 8.0+ devices. Enable "Allow from this source" when prompted.</div>
+                <div>
+                  <Link 
+                    to="/install" 
+                    onClick={() => setShowQrModal(false)} 
+                    className="text-brand-amber hover:underline font-semibold inline-block"
+                  >
+                    Need help? View step-by-step installation guide →
+                  </Link>
+                </div>
               </div>
             </motion.div>
           </motion.div>
