@@ -1,30 +1,33 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:attendance_app/main.dart';
+import 'package:attendance_app/models/attendance_record.dart';
+import 'package:attendance_app/widgets/attendance_success_card.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('AttendanceSuccessCard displays employee name, time, and type correctly', (WidgetTester tester) async {
+    final record = AttendanceRecord(
+      name: 'Rahul',
+      date: '12/09/2026',
+      time: '09:15 AM',
+      type: 'Check-In',
+      synced: true,
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AttendanceSuccessCard(
+            record: record,
+            onDismiss: () {},
+          ),
+        ),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Attendance Marked Successfully'), findsOneWidget);
+    expect(find.text('Rahul'), findsOneWidget);
+    expect(find.text('09:15 AM'), findsOneWidget);
+    expect(find.text('Check-In'), findsOneWidget);
+    expect(find.text('Synced to Google Sheets'), findsOneWidget);
   });
 }
