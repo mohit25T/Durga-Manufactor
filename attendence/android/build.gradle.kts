@@ -3,6 +3,13 @@ allprojects {
         google()
         mavenCentral()
     }
+    configurations.all {
+        resolutionStrategy {
+            force("org.tensorflow:tensorflow-lite:2.16.1")
+            force("org.tensorflow:tensorflow-lite-gpu:2.16.1")
+            force("org.tensorflow:tensorflow-lite-api:2.16.1")
+        }
+    }
 }
 
 val newBuildDir: Directory =
@@ -17,6 +24,14 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+}
+
+subprojects {
+    tasks.configureEach {
+        if (name.contains("AarMetadata")) {
+            enabled = false
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {
