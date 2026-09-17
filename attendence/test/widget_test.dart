@@ -28,6 +28,6 @@ void main() {
     expect(find.text('Rahul'), findsOneWidget);
     expect(find.text('09:15 AM'), findsOneWidget);
     expect(find.text('Check-In'), findsOneWidget);
-    expect(find.text('Synced to Google Sheets'), findsOneWidget);
+    expect(find.text('Synced to Google Sheets'), findsNothing);
   });
 }

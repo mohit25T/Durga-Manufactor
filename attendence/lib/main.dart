@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:attendance_app/services/storage_service.dart';
 import 'package:attendance_app/screens/scanner/scanner_screen.dart';
 
+final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -26,6 +28,18 @@ void main() async {
   runApp(AttendanceApp(storage: storage));
 }
 
+class NoStretchScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Widget buildOverscrollIndicator(
+      BuildContext context, Widget child, ScrollableDetails details) {
+    return GlowingOverscrollIndicator(
+      axisDirection: details.direction,
+      color: const Color(0xFF38BDF8),
+      child: child,
+    );
+  }
+}
+
 class AttendanceApp extends StatelessWidget {
   final StorageService storage;
 
@@ -36,6 +50,7 @@ class AttendanceApp extends StatelessWidget {
     return MaterialApp(
       title: 'Face Recognition Attendance',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: NoStretchScrollBehavior(),
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF0A0E1A),
@@ -53,6 +68,7 @@ class AttendanceApp extends StatelessWidget {
           iconTheme: IconThemeData(color: Colors.white),
         ),
       ),
+      navigatorObservers: [routeObserver],
       home: ScannerScreen(storage: storage),
     );
   }

@@ -12,6 +12,8 @@ import dealerRoutes from "./routes/dealer.routes.js";
 import invoiceRoutes from "./routes/invoice.routes.js";
 import workflowRoutes from "./routes/workflow.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
+import vatRoutes from "./routes/vat.routes.js";
+import { langMiddleware } from "./middleware/lang.middleware.js";
 
 dotenv.config();
 
@@ -94,6 +96,7 @@ app.use((req, res, next) => {
 /* Body Parser (Configured for up to 5MB document uploads + base64 encoding margin) */
 app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ limit: "15mb", extended: true }));
+app.use(langMiddleware);
 
 
 
@@ -112,6 +115,7 @@ app.use("/api/dealers", dealerRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/workflow", workflowRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/vat", vatRoutes);
 
 /* =========================
    HEALTH CHECK
