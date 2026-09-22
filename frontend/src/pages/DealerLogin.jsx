@@ -6,7 +6,7 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import DownloadApkButton from "../components/DownloadApkButton";
-import { validateGSTIN } from "../utils/gstValidator";
+import { validateGSTIN, filterGSTINInput, getNextGSTHint, getStateName } from "../utils/gstValidator";
 
 const isLocalhost =
   typeof window !== "undefined" &&
@@ -26,6 +26,7 @@ function DealerLogin() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [gstModal, setGstModal] = useState({ isOpen: false, title: "", message: "" });
+  const [gstInputHint, setGstInputHint] = useState({ message: "", isError: false, isComplete: false });
 
   const handleGstLookup = async (gstinVal) => {
     const cleanGst = (gstinVal || regData.gstNumber).trim().toUpperCase();
@@ -458,10 +459,22 @@ function DealerLogin() {
                       <FileText className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
                       <input
                         type="text"
+                        maxLength={15}
                         value={regData.gstNumber}
                         onChange={(e) => {
-                          const val = e.target.value.toUpperCase();
-                          setRegData({ ...regData, gstNumber: val });
+                          const res = filterGSTINInput(e.target.value, regData.gstNumber);
+                          setGstInputHint({
+                            message: res.message,
+                            isError: res.isError,
+                            isComplete: res.isComplete
+                          });
+                          if (res.accepted) {
+                            const updated = { ...regData, gstNumber: res.value };
+                            if (res.stateName && (!regData.state || regData.state !== res.stateName)) {
+                              updated.state = res.stateName;
+                            }
+                            setRegData(updated);
+                          }
                         }}
                         placeholder="24AHMPT0206E1Z0"
                         className="w-full bg-slate-950 border border-slate-800 focus:border-brand-amber pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none uppercase tracking-wider font-mono"
@@ -484,10 +497,29 @@ function DealerLogin() {
                       )}
                     </button>
                   </div>
-                  {regData.gstNumber && !validateGSTIN(regData.gstNumber).isValid && (
-                    <p className="text-[10px] text-amber-400 mt-1 flex items-start gap-1 font-mono">
-                      <AlertCircle className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" />
-                      <span>{validateGSTIN(regData.gstNumber).message}</span>
+
+                  {/* State Name Badge when first 2 digits are entered */}
+                  {regData.gstNumber.length >= 2 && getStateName(regData.gstNumber.substring(0, 2)) && (
+                    <div className="mt-1.5 px-2.5 py-1.5 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[11px] font-mono flex items-center gap-2">
+                      <MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                      <span><strong>State:</strong> {getStateName(regData.gstNumber.substring(0, 2))} (Code: {regData.gstNumber.substring(0, 2)})</span>
+                    </div>
+                  )}
+
+                  {gstInputHint.message ? (
+                    <p className={`text-[11px] mt-1.5 flex items-start gap-1 font-mono ${gstInputHint.isError ? 'text-red-400 font-semibold' : gstInputHint.isComplete ? 'text-emerald-400 font-semibold' : 'text-amber-400'}`}>
+                      {gstInputHint.isError ? (
+                        <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+                      ) : gstInputHint.isComplete ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                      ) : (
+                        <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                      )}
+                      <span>{gstInputHint.message}</span>
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-slate-500 mt-1 font-mono">
+                      Pattern: 2 Numbers (State Code) + 5 Letters + 4 Digits + 1 Letter + 1 Number + Z + 1 Digit (e.g. 24AHMPT0206E1Z0)
                     </p>
                   )}
                 </div>
