@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
-import { Building2, User, Mail, Lock as LockIcon, Phone, MapPin, FileText, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle, Search, X } from "lucide-react";
+import { Building2, User, Mail, Lock as LockIcon, Phone, MapPin, FileText, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle, Search, X, HelpCircle } from "lucide-react";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import DownloadApkButton from "../components/DownloadApkButton";
-import { validateGSTIN, filterGSTINInput, getNextGSTHint, getStateName } from "../utils/gstValidator";
+import WorkflowGuideModal from "../components/WorkflowGuideModal";
+import { validateGSTIN, filterGSTINInput, getNextGSTHint, getStateName, calculateGSTChecksum } from "../utils/gstValidator";
 
 const isLocalhost =
   typeof window !== "undefined" &&
@@ -27,6 +28,7 @@ function DealerLogin() {
   const [successMessage, setSuccessMessage] = useState("");
   const [gstModal, setGstModal] = useState({ isOpen: false, title: "", message: "" });
   const [gstInputHint, setGstInputHint] = useState({ message: "", isError: false, isComplete: false });
+  const [workflowModalOpen, setWorkflowModalOpen] = useState(false);
 
   const handleGstLookup = async (gstinVal) => {
     const cleanGst = (gstinVal || regData.gstNumber).trim().toUpperCase();
@@ -506,6 +508,32 @@ function DealerLogin() {
                     </div>
                   )}
 
+                  {/* 15th Checksum Digit Helper when 14 characters are typed */}
+                  {regData.gstNumber.length === 14 && calculateGSTChecksum(regData.gstNumber) && (
+                    <div className="mt-1.5 flex items-center justify-between px-2.5 py-1.5 bg-purple-500/10 border border-purple-500/30 text-purple-300 text-[11px] font-mono">
+                      <span>✨ Checksum Digit: <strong className="text-white bg-purple-900/60 px-1.5 py-0.5 rounded">{calculateGSTChecksum(regData.gstNumber)}</strong></span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const chk = calculateGSTChecksum(regData.gstNumber);
+                          const full = regData.gstNumber + chk;
+                          const res = filterGSTINInput(full, regData.gstNumber);
+                          setGstInputHint({
+                            message: res.message,
+                            isError: res.isError,
+                            isComplete: res.isComplete
+                          });
+                          if (res.accepted) {
+                            setRegData({ ...regData, gstNumber: res.value });
+                          }
+                        }}
+                        className="px-2 py-0.5 bg-purple-600 hover:bg-purple-500 text-white rounded text-[10px] font-bold cursor-pointer transition-colors"
+                      >
+                        Auto-Fill
+                      </button>
+                    </div>
+                  )}
+
                   {gstInputHint.message ? (
                     <p className={`text-[11px] mt-1.5 flex items-start gap-1 font-mono ${gstInputHint.isError ? 'text-red-400 font-semibold' : gstInputHint.isComplete ? 'text-emerald-400 font-semibold' : 'text-amber-400'}`}>
                       {gstInputHint.isError ? (
@@ -575,8 +603,30 @@ function DealerLogin() {
               </form>
             )}
           </motion.div>
+
+          {/* HOW TO USE BUTTON AT BOTTOM */}
+          <div className="mt-6 flex flex-col items-center justify-center">
+            <button
+              type="button"
+              onClick={() => setWorkflowModalOpen(true)}
+              className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-900 border border-brand-amber/50 hover:border-brand-amber text-brand-amber hover:bg-brand-amber/10 transition-all text-xs font-bold tracking-wider uppercase shadow-lg shadow-brand-amber/10 cursor-pointer"
+            >
+              <HelpCircle className="w-4 h-4 text-brand-amber group-hover:rotate-12 transition-transform" />
+              <span>How to Use • App & Portal Workflow</span>
+              <ArrowRight className="w-3.5 h-3.5 text-brand-amber group-hover:translate-x-1 transition-transform" />
+            </button>
+            <p className="text-[11px] text-slate-500 mt-2 text-center">
+              New to Durga Manufactures? View our 4-step procurement guide.
+            </p>
+          </div>
         </div>
       </main>
+
+      {/* 4-STEP WORKFLOW GUIDE MODAL */}
+      <WorkflowGuideModal
+        isOpen={workflowModalOpen}
+        onClose={() => setWorkflowModalOpen(false)}
+      />
 
       {/* INVALID GST POPUP MODAL */}
       {gstModal.isOpen && (

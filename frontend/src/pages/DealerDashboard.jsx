@@ -39,6 +39,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { isPIExpired } from "../utils/isPIExpired";
 import DownloadApkButton from "../components/DownloadApkButton";
+import WorkflowGuideModal from "../components/WorkflowGuideModal";
 import InvoicePrintModal from "../components/admin/InvoicePrintModal";
 import PurchaseOrderPrintModal from "../components/admin/PurchaseOrderPrintModal";
 
@@ -113,6 +114,7 @@ function DealerDashboard() {
   const [signedFileUrl, setSignedFileUrl] = useState("");
   const [signedFileName, setSignedFileName] = useState("");
   const [uploadSubmitting, setUploadSubmitting] = useState(false);
+  const [workflowModalOpen, setWorkflowModalOpen] = useState(false);
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("dealerToken");
@@ -641,6 +643,16 @@ function DealerDashboard() {
           </div>
 
           <div className="flex items-center gap-3 self-end md:self-auto">
+            {/* How to Use / Workflow Guide */}
+            <button
+              onClick={() => setWorkflowModalOpen(true)}
+              className="bg-slate-900 border border-brand-amber/40 hover:border-brand-amber text-brand-amber hover:bg-brand-amber/10 px-3.5 py-3 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer"
+              title="How App & Portal Work"
+            >
+              <HelpCircle className="w-4 h-4 text-brand-amber" />
+              <span className="hidden sm:inline">How to Use</span>
+            </button>
+
             <DownloadApkButton variant="secondary" />
 
             {/* Notification Bell */}
@@ -1771,6 +1783,12 @@ function DealerDashboard() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* 4-STEP WORKFLOW GUIDE MODAL */}
+      <WorkflowGuideModal
+        isOpen={workflowModalOpen}
+        onClose={() => setWorkflowModalOpen(false)}
+      />
 
       <Footer />
     </div>
