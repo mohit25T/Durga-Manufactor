@@ -7,6 +7,7 @@ import Dealer from "../models/Dealer.js";
 import DealerNotification from "../models/DealerNotification.js";
 import DealerProductPrice from "../models/DealerProductPrice.js";
 import { createAndSendDealerNotification, createAndSendAdminNotification } from "../services/notification.service.js";
+import cloudinary from "../config/cloudinary.js";
 
 /**
  * Helper to update/save agreed custom product prices in DealerProductPrice collection
@@ -887,8 +888,25 @@ export const uploadSignedPO = async (req, res) => {
       });
     }
 
+    // Upload file stream / Base64 to Cloudinary under dedicated 'purchase_orders' folder
+    let finalFileUrl = fileUrl;
+    if (fileUrl.startsWith("data:") || !fileUrl.startsWith("http")) {
+      try {
+        const sanitizePoNumber = (po.poNumber || "PO").replace(/[^a-zA-Z0-9_-]/g, "_");
+        const cloudResult = await cloudinary.uploader.upload(fileUrl, {
+          folder: "purchase_orders",
+          resource_type: "auto",
+          public_id: `PO_${sanitizePoNumber}_${Date.now()}`
+        });
+        finalFileUrl = cloudResult.secure_url;
+      } catch (cloudError) {
+        console.error("Cloudinary PO Upload Error:", cloudError);
+        // Fallback to storing input payload if Cloudinary upload service fails
+      }
+    }
+
     po.signedPoDocument = {
-      fileUrl,
+      fileUrl: finalFileUrl,
       fileName: fileName || "Signed_Purchase_Order",
       fileType: fileType || "application/pdf",
       uploadedAt: new Date(),

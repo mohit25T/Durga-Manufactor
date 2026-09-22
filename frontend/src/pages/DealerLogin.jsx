@@ -6,6 +6,7 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import DownloadApkButton from "../components/DownloadApkButton";
+import { validateGSTIN } from "../utils/gstValidator";
 
 const isLocalhost =
   typeof window !== "undefined" &&
@@ -32,7 +33,17 @@ function DealerLogin() {
       setGstModal({
         isOpen: true,
         title: "GST Number Required",
-        message: "Please enter a GSTIN number before searching."
+        message: "Please enter a GSTIN number before searching (Pattern: 24AHMPT0206E1Z0)."
+      });
+      return;
+    }
+
+    const gstCheck = validateGSTIN(cleanGst);
+    if (!gstCheck.isValid) {
+      setGstModal({
+        isOpen: true,
+        title: "Invalid GST Pattern",
+        message: gstCheck.message
       });
       return;
     }
@@ -440,7 +451,7 @@ function DealerLogin() {
                 {/* SEPARATE DEDICATED ROW FOR GST NUMBER */}
                 <div className="pt-1">
                   <label className="block text-[11px] font-bold uppercase text-brand-amber mb-1">
-                    GST Number (Auto-Fill Company Details)
+                    GST Number (Pattern: 24AHMPT0206E1Z0)
                   </label>
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
@@ -452,7 +463,7 @@ function DealerLogin() {
                           const val = e.target.value.toUpperCase();
                           setRegData({ ...regData, gstNumber: val });
                         }}
-                        placeholder="24AAAAA0000A1Z5"
+                        placeholder="24AHMPT0206E1Z0"
                         className="w-full bg-slate-950 border border-slate-800 focus:border-brand-amber pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none uppercase tracking-wider font-mono"
                       />
                     </div>
@@ -473,6 +484,12 @@ function DealerLogin() {
                       )}
                     </button>
                   </div>
+                  {regData.gstNumber && !validateGSTIN(regData.gstNumber).isValid && (
+                    <p className="text-[10px] text-amber-400 mt-1 flex items-start gap-1 font-mono">
+                      <AlertCircle className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" />
+                      <span>{validateGSTIN(regData.gstNumber).message}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* City & State Row */}
