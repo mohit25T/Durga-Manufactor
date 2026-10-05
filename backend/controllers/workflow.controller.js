@@ -1489,8 +1489,26 @@ export const updatePODispatchInfo = async (req, res) => {
       });
     }
 
+    if (po.status !== "ORDER_CONFIRMED" && po.signedPoDocument?.status !== "APPROVED") {
+      return res.status(400).json({
+        success: false,
+        message: "LR and Transporter details can only be assigned after the Purchase Order is approved."
+      });
+    }
+
     if (transporterName !== undefined) po.transporterName = transporterName.trim();
-    if (lrNumber !== undefined) po.lrNumber = lrNumber.trim();
+    if (lrNumber !== undefined && lrNumber !== null && lrNumber.toString().trim() !== "") {
+      const cleanLr = lrNumber.toString().trim();
+      if (!/^\d{8,10}$/.test(cleanLr)) {
+        return res.status(400).json({
+          success: false,
+          message: "LR Number must contain numbers only and be between 8 to 10 digits long."
+        });
+      }
+      po.lrNumber = cleanLr;
+    } else if (lrNumber !== undefined) {
+      po.lrNumber = "";
+    }
     if (dispatchDate !== undefined) po.dispatchDate = dispatchDate;
 
     po.auditTrail.push({

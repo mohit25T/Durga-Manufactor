@@ -24,7 +24,11 @@ import {
   History,
   Lock as LockIcon,
   RefreshCw,
-  Truck
+  Truck,
+  ArrowLeft,
+  MessageSquare,
+  ChevronRight,
+  X
 } from "lucide-react";
 import API from "../services/api";
 import AdminLayout from "../components/admin/AdminLayout";
@@ -32,9 +36,257 @@ import InvoicePrintModal from "../components/admin/InvoicePrintModal";
 import PurchaseOrderPrintModal from "../components/admin/PurchaseOrderPrintModal";
 import { isPIExpired } from "../utils/isPIExpired";
 
+function getDealerInitials(name) {
+  if (!name) return "D";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
+const AVATAR_COLORS = [
+  "#2563EB", "#059669", "#D97706", "#7C3AED", "#DB2777", "#0891B2", "#4F46E5", "#0D9488"
+];
+function getDealerColor(name) {
+  if (!name) return AVATAR_COLORS[0];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function WhatsAppDealerFilter({
+  itemTypeLabel,
+  items,
+  getDealerName,
+  getDealerInfo,
+  selectedDealer,
+  onSelectDealer,
+  viewMode,
+  onToggleViewMode,
+  searchQuery,
+  onSearchChange,
+  renderItems,
+}) {
+  const grouped = {};
+  items.forEach((item) => {
+    const dName = getDealerName(item) || "Valued Dealer";
+    if (!grouped[dName]) {
+      grouped[dName] = {
+        name: dName,
+        items: [],
+        info: getDealerInfo ? getDealerInfo(item) : {}
+      };
+    }
+    grouped[dName].items.push(item);
+  });
+
+  const dealerList = Object.values(grouped);
+
+  if (selectedDealer) {
+    const dealerGroup = grouped[selectedDealer] || { name: selectedDealer, items: [], info: {} };
+    return (
+      <div className="space-y-4">
+        <div className="bg-brand-slateDark text-white p-3.5 rounded shadow-sm border-2 border-brand-amber flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => onSelectDealer(null)}
+              className="p-1.5 hover:bg-white/10 rounded-full transition-colors text-brand-amber flex items-center gap-1 text-xs font-bold"
+              title="Back to All Dealers"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="hidden sm:inline">All Dealers</span>
+            </button>
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm shadow-inner flex-shrink-0"
+              style={{ backgroundColor: getDealerColor(selectedDealer) }}
+            >
+              {getDealerInitials(selectedDealer)}
+            </div>
+            <div>
+              <div className="font-bold text-sm sm:text-base flex items-center gap-2">
+                {selectedDealer}
+                <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-brand-amber/20 text-brand-amber border border-brand-amber/40 font-mono font-bold">
+                  {dealerGroup.items.length} {itemTypeLabel}
+                </span>
+              </div>
+              <div className="text-xs text-slate-300">
+                {dealerGroup.info.phone && <span>{dealerGroup.info.phone} • </span>}
+                {dealerGroup.info.city && <span>{dealerGroup.info.city} • </span>}
+                Filtered by dealer company
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => onSelectDealer(null)}
+            className="text-xs font-bold text-slate-300 hover:text-white flex items-center gap-1 px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 transition-colors"
+          >
+            <X className="w-3.5 h-3.5" /> Show All
+          </button>
+        </div>
+
+        {dealerGroup.items.length === 0 ? (
+          <div className="p-8 text-center text-xs text-brand-gray bg-stone-50 border border-brand-sand">
+            No {itemTypeLabel} found for {selectedDealer}.
+          </div>
+        ) : (
+          renderItems(dealerGroup.items)
+        )}
+      </div>
+    );
+  }
+
+  const filteredDealers = dealerList.filter((d) => {
+    if (!searchQuery.trim()) return true;
+    return d.name.toLowerCase().includes(searchQuery.toLowerCase().trim());
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between bg-stone-50 p-2.5 border border-brand-sand">
+        <div className="flex items-center gap-1 bg-white p-1 border border-brand-sand rounded shadow-sm">
+          <button
+            type="button"
+            onClick={() => onToggleViewMode("whatsapp")}
+            className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 rounded transition-colors ${
+              viewMode === "whatsapp"
+                ? "bg-brand-amber text-brand-slateDark shadow-sm"
+                : "text-brand-slateDark hover:bg-stone-100"
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            By Dealer ({dealerList.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => onToggleViewMode("all")}
+            className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 rounded transition-colors ${
+              viewMode === "all"
+                ? "bg-brand-amber text-brand-slateDark shadow-sm"
+                : "text-brand-slateDark hover:bg-stone-100"
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            View All ({items.length})
+          </button>
+        </div>
+
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 text-brand-gray absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Filter dealers by company name..."
+            className="w-full pl-9 pr-8 py-1.5 text-xs border border-brand-sand rounded focus:outline-none focus:border-brand-amber bg-white"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => onSearchChange("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-brand-gray hover:text-brand-slateDark"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {viewMode === "all" ? (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <button
+              onClick={() => onSelectDealer(null)}
+              className="px-3 py-1 rounded-full text-xs font-bold bg-brand-slateDark text-white whitespace-nowrap shadow-sm"
+            >
+              All ({items.length})
+            </button>
+            {dealerList.map((d) => (
+              <button
+                key={d.name}
+                onClick={() => onSelectDealer(d.name)}
+                className="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-brand-sand hover:border-brand-amber text-brand-slateDark flex items-center gap-1.5 whitespace-nowrap transition-colors"
+              >
+                <span
+                  className="w-4 h-4 rounded-full text-[9px] font-bold text-white flex items-center justify-center"
+                  style={{ backgroundColor: getDealerColor(d.name) }}
+                >
+                  {getDealerInitials(d.name)[0]}
+                </span>
+                {d.name} ({d.items.length})
+              </button>
+            ))}
+          </div>
+
+          {items.length === 0 ? (
+            <div className="p-8 text-center text-xs text-brand-gray">No {itemTypeLabel} found.</div>
+          ) : (
+            renderItems(items)
+          )}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filteredDealers.length === 0 ? (
+            <div className="p-8 text-center text-xs text-brand-gray bg-stone-50 border border-brand-sand">
+              No dealers matching "{searchQuery}" found with active {itemTypeLabel}.
+            </div>
+          ) : (
+            filteredDealers.map(({ name, items: dItems, info }) => (
+              <div
+                key={name}
+                onClick={() => onSelectDealer(name)}
+                className="p-3 bg-white hover:bg-amber-50/70 border border-brand-sand hover:border-brand-amber transition-all cursor-pointer rounded flex items-center justify-between group shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-sm shadow-sm flex-shrink-0"
+                    style={{ backgroundColor: getDealerColor(name) }}
+                  >
+                    {getDealerInitials(name)}
+                  </div>
+                  <div>
+                    <div className="font-bold text-sm text-brand-slateDark group-hover:text-amber-800 transition-colors flex items-center gap-2">
+                      <span>{name}</span>
+                    </div>
+                    <div className="text-xs text-brand-gray flex flex-wrap items-center gap-1 mt-0.5">
+                      {info.city && <span>{info.city} • </span>}
+                      {info.phone && <span>{info.phone} • </span>}
+                      <span className="text-brand-slateDark font-semibold">{dItems.length} {itemTypeLabel}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold px-3 py-1 bg-amber-100 text-amber-900 border border-amber-300 rounded-full font-mono">
+                    {dItems.length} {itemTypeLabel}
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-brand-gray group-hover:text-brand-amber group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminInvoices() {
   const [activeTab, setActiveTab] = useState("inquiries"); // "inquiries" | "proformas" | "purchase-orders" | "summary"
   const [loading, setLoading] = useState(true);
+
+  // Dealer Filter States for WhatsApp style navigation
+  const [selectedDealerInq, setSelectedDealerInq] = useState(null);
+  const [dealerSearchInq, setDealerSearchInq] = useState("");
+  const [viewModeInq, setViewModeInq] = useState("whatsapp");
+
+  const [selectedDealerPI, setSelectedDealerPI] = useState(null);
+  const [dealerSearchPI, setDealerSearchPI] = useState("");
+  const [viewModePI, setViewModePI] = useState("whatsapp");
+
+  const [selectedDealerPO, setSelectedDealerPO] = useState(null);
+  const [dealerSearchPO, setDealerSearchPO] = useState("");
+  const [viewModePO, setViewModePO] = useState("whatsapp");
 
   // Data States
   const [inquiries, setInquiries] = useState([]);
@@ -285,11 +537,18 @@ export default function AdminInvoices() {
   const handleSaveDispatchInfo = async (e) => {
     e.preventDefault();
     if (!dispatchPO) return;
+
+    const lrClean = (dispatchForm.lrNumber || "").trim();
+    if (lrClean && !/^\d{8,10}$/.test(lrClean)) {
+      alert("LR Number must contain numbers only and be between 8 to 10 digits long.");
+      return;
+    }
+
     try {
       setDispatchSubmitting(true);
       const res = await API.put(`/workflow/po/${dispatchPO._id}/dispatch`, {
         transporterName: dispatchForm.transporterName,
-        lrNumber: dispatchForm.lrNumber
+        lrNumber: lrClean
       });
       if (res.data.success) {
         alert("Transporter & LR details updated successfully!");
@@ -478,52 +737,82 @@ export default function AdminInvoices() {
             ) : inquiries.length === 0 ? (
               <div className="p-8 text-center text-xs text-brand-gray">No dealer inquiries submitted yet.</div>
             ) : (
-              <div className="space-y-3">
-                {inquiries.map((inq) => (
-                  <div key={inq._id} className="border border-brand-sand p-4 hover:border-brand-amber transition-colors space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-sand pb-2">
-                      <div>
-                        <span className="font-mono font-bold text-brand-slateDark text-sm">{inq.inquiryNumber}</span>
-                        <span className="text-xs text-brand-gray ml-3">
-                          Dealer: <strong>{inq.dealerId?.companyName || inq.dealerId?.contactPerson || "Dealer"}</strong> ({inq.dealerId?.phone})
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300">
-                        {inq.status}
-                      </span>
-                    </div>
+              <WhatsAppDealerFilter
+                itemTypeLabel="Inquiries"
+                items={inquiries}
+                getDealerName={(inq) => inq.dealerId?.companyName || inq.dealerId?.contactPerson || inq.companyName || "Dealer"}
+                getDealerInfo={(inq) => ({
+                  phone: inq.dealerId?.phone,
+                  city: inq.dealerId?.city,
+                  contactPerson: inq.dealerId?.contactPerson,
+                })}
+                selectedDealer={selectedDealerInq}
+                onSelectDealer={setSelectedDealerInq}
+                viewMode={viewModeInq}
+                onToggleViewMode={setViewModeInq}
+                searchQuery={dealerSearchInq}
+                onSearchChange={setDealerSearchInq}
+                renderItems={(filteredList) => (
+                  <div className="space-y-3">
+                    {filteredList.map((inq) => {
+                      const dName = inq.dealerId?.companyName || inq.dealerId?.contactPerson || inq.companyName || "Dealer";
+                      return (
+                        <div key={inq._id} className="border border-brand-sand p-4 hover:border-brand-amber transition-colors space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-sand pb-2">
+                            <div>
+                              <span className="font-mono font-bold text-brand-slateDark text-sm">{inq.inquiryNumber}</span>
+                              <span className="text-xs text-brand-gray ml-3">
+                                Dealer:{" "}
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedDealerInq(dName)}
+                                  className="font-bold text-amber-800 hover:text-amber-950 underline hover:font-extrabold cursor-pointer"
+                                  title="Filter inquiries by this dealer"
+                                >
+                                  {dName}
+                                </button>
+                                {inq.dealerId?.phone && ` (${inq.dealerId.phone})`}
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300">
+                              {inq.status}
+                            </span>
+                          </div>
 
-                    {/* Requested Items List */}
-                    <div className="bg-stone-50 p-2.5 text-xs divide-y divide-stone-200">
-                      {(inq.items || []).map((item, idx) => (
-                        <div key={idx} className="py-1 flex justify-between items-center">
-                          <span className="font-bold text-brand-slateDark">{item.name}</span>
-                          <span className="font-mono font-bold">Qty: {item.quantity}</span>
+                          {/* Requested Items List */}
+                          <div className="bg-stone-50 p-2.5 text-xs divide-y divide-stone-200">
+                            {(inq.items || []).map((item, idx) => (
+                              <div key={idx} className="py-1 flex justify-between items-center">
+                                <span className="font-bold text-brand-slateDark">{item.name}</span>
+                                <span className="font-mono font-bold">Qty: {item.quantity}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Action */}
+                          <div className="flex justify-end gap-2 pt-1">
+                            {inq.status === "SUBMITTED" && (
+                              <button
+                                onClick={() => handleDeleteInquiry(inq._id, inq.inquiryNumber)}
+                                className="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-2 text-xs uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-sm"
+                                title="Delete Inquiry (Only allowed before PI generation)"
+                              >
+                                <Trash2 className="w-4 h-4" /> Delete Inquiry
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleOpenPriceModal(inq)}
+                              className="bg-brand-amber hover:bg-brand-slateDark hover:text-white text-brand-slateDark font-bold px-4 py-2 text-xs uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-sm"
+                            >
+                              <DollarSign className="w-4 h-4" /> Set Price & Generate PI
+                            </button>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-
-                    {/* Action */}
-                    <div className="flex justify-end gap-2 pt-1">
-                      {inq.status === "SUBMITTED" && (
-                        <button
-                          onClick={() => handleDeleteInquiry(inq._id, inq.inquiryNumber)}
-                          className="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-2 text-xs uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-sm"
-                          title="Delete Inquiry (Only allowed before PI generation)"
-                        >
-                          <Trash2 className="w-4 h-4" /> Delete Inquiry
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleOpenPriceModal(inq)}
-                        className="bg-brand-amber hover:bg-brand-slateDark hover:text-white text-brand-slateDark font-bold px-4 py-2 text-xs uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-sm"
-                      >
-                        <DollarSign className="w-4 h-4" /> Set Price & Generate PI
-                      </button>
-                    </div>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
+                )}
+              />
             )}
           </div>
         )}
@@ -540,103 +829,128 @@ export default function AdminInvoices() {
             {invoices.length === 0 ? (
               <div className="p-8 text-center text-xs text-brand-gray">No Proforma Invoices found.</div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-brand-slateDark text-white uppercase tracking-wider text-[11px]">
-                      <th className="p-3">PI #</th>
-                      <th className="p-3">Version</th>
-                      <th className="p-3">Dealer / Customer</th>
-                      <th className="p-3 text-right">Grand Total</th>
-                      <th className="p-3 text-center">Status</th>
-                      <th className="p-3 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-brand-sand font-semibold text-brand-slateDark">
-                    {invoices.map((inv) => {
-                      const expired = isPIExpired(inv);
-                      return (
-                        <tr key={inv._id} className={expired ? "bg-red-50/70 hover:bg-red-100/70" : "hover:bg-stone-50"}>
-                          <td className="p-3 font-mono font-bold">{inv.invoiceNumber}</td>
-                          <td className="p-3 font-mono font-bold text-amber-700">v{inv.version || 1}</td>
-                          <td className="p-3">
-                            <div className="font-bold">{inv.companyName || inv.customerName}</div>
-                            <div className="text-[10px] text-brand-gray">{inv.phone}</div>
-                          </td>
-                          <td className="p-3 text-right font-mono font-bold text-sm">
-                            ₹{(inv.grandTotal || 0).toLocaleString("en-IN")}
-                          </td>
-                          <td className="p-3 text-center">
-                            {expired ? (
-                              <span className="text-[10px] font-bold uppercase px-2 py-0.5 border bg-red-100 text-red-800 border-red-300">
-                                EXPIRED
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-bold uppercase px-2 py-0.5 border bg-amber-50 text-amber-800 border-amber-300">
-                                {inv.status}
-                              </span>
-                            )}
-                          </td>
-                          <td className="p-3 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              {expired && (
-                                <button
-                                  onClick={() => handleRegeneratePI(inv._id)}
-                                  className="p-1.5 bg-amber-600 text-white font-bold hover:bg-amber-500"
-                                  title="Regenerate Expired PI (30-Day Extension)"
-                                >
-                                  <RefreshCw className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-
-                              <button
-                                onClick={() => {
-                                  setSelectedInvoice(inv);
-                                  setShowPrintModal(true);
-                                }}
-                                className="p-1.5 bg-brand-slateDark text-white hover:bg-slate-800"
-                                title="Print / Save PDF"
-                              >
-                                <Printer className="w-3.5 h-3.5 text-brand-amber" />
-                              </button>
-
-                              <button
-                                onClick={() => handleSendPIToDealer(inv._id)}
-                                className="p-1.5 bg-purple-700 text-white hover:bg-purple-600"
-                                title="Send PI to Dealer"
-                              >
-                                <Send className="w-3.5 h-3.5" />
-                              </button>
-
-                              {!inv.isLocked ? (
-                                <button
-                                  onClick={() => handleOpenEditPIModal(inv)}
-                                  className="p-1.5 bg-amber-500 text-slate-950 font-bold hover:bg-amber-400"
-                                  title="Edit PI Version"
-                                >
-                                  <Edit className="w-3.5 h-3.5" />
-                                </button>
-                              ) : (
-                                <span className="p-1.5 bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold flex items-center gap-1" title="Confirmed & Locked">
-                                  <LockIcon className="w-3 h-3" /> Locked
-                                </span>
-                              )}
-                              
-                              <button
-                                onClick={() => handleDeletePI(inv._id, inv.invoiceNumber)}
-                                className="p-1.5 bg-red-600 text-white hover:bg-red-700 transition-colors"
-                                title="Delete Unwanted PI"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
+              <WhatsAppDealerFilter
+                itemTypeLabel="Proforma Invoices"
+                items={invoices}
+                getDealerName={(inv) => inv.companyName || inv.dealerId?.companyName || inv.customerName || "Dealer"}
+                getDealerInfo={(inv) => ({
+                  phone: inv.phone || inv.dealerId?.phone,
+                  city: inv.city || inv.dealerId?.city,
+                })}
+                selectedDealer={selectedDealerPI}
+                onSelectDealer={setSelectedDealerPI}
+                viewMode={viewModePI}
+                onToggleViewMode={setViewModePI}
+                searchQuery={dealerSearchPI}
+                onSearchChange={setDealerSearchPI}
+                renderItems={(filteredList) => (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-brand-slateDark text-white uppercase tracking-wider text-[11px]">
+                          <th className="p-3">PI #</th>
+                          <th className="p-3">Version</th>
+                          <th className="p-3">Dealer / Customer</th>
+                          <th className="p-3 text-right">Grand Total</th>
+                          <th className="p-3 text-center">Status</th>
+                          <th className="p-3 text-right">Actions</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                      </thead>
+                      <tbody className="divide-y divide-brand-sand font-semibold text-brand-slateDark">
+                        {filteredList.map((inv) => {
+                          const expired = isPIExpired(inv);
+                          const dName = inv.companyName || inv.dealerId?.companyName || inv.customerName || "Dealer";
+                          return (
+                            <tr key={inv._id} className={expired ? "bg-red-50/70 hover:bg-red-100/70" : "hover:bg-stone-50"}>
+                              <td className="p-3 font-mono font-bold">{inv.invoiceNumber}</td>
+                              <td className="p-3 font-mono font-bold text-amber-700">v{inv.version || 1}</td>
+                              <td className="p-3">
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedDealerPI(dName)}
+                                  className="font-bold text-amber-800 hover:text-amber-950 underline hover:font-extrabold cursor-pointer text-left"
+                                  title="Filter PIs by this dealer"
+                                >
+                                  {dName}
+                                </button>
+                                <div className="text-[10px] text-brand-gray">{inv.phone}</div>
+                              </td>
+                              <td className="p-3 text-right font-mono font-bold text-sm">
+                                ₹{(inv.grandTotal || 0).toLocaleString("en-IN")}
+                              </td>
+                              <td className="p-3 text-center">
+                                {expired ? (
+                                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 border bg-red-100 text-red-800 border-red-300">
+                                    EXPIRED
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 border bg-amber-50 text-amber-800 border-amber-300">
+                                    {inv.status}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="p-3 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  {expired && (
+                                    <button
+                                      onClick={() => handleRegeneratePI(inv._id)}
+                                      className="p-1.5 bg-amber-600 text-white font-bold hover:bg-amber-500"
+                                      title="Regenerate Expired PI (30-Day Extension)"
+                                    >
+                                      <RefreshCw className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+
+                                  <button
+                                    onClick={() => {
+                                      setSelectedInvoice(inv);
+                                      setShowPrintModal(true);
+                                    }}
+                                    className="p-1.5 bg-brand-slateDark text-white hover:bg-slate-800"
+                                    title="Print / Save PDF"
+                                  >
+                                    <Printer className="w-3.5 h-3.5 text-brand-amber" />
+                                  </button>
+
+                                  <button
+                                    onClick={() => handleSendPIToDealer(inv._id)}
+                                    className="p-1.5 bg-purple-700 text-white hover:bg-purple-600"
+                                    title="Send PI to Dealer"
+                                  >
+                                    <Send className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  {!inv.isLocked ? (
+                                    <button
+                                      onClick={() => handleOpenEditPIModal(inv)}
+                                      className="p-1.5 bg-amber-500 text-slate-950 font-bold hover:bg-amber-400"
+                                      title="Edit PI Version"
+                                    >
+                                      <Edit className="w-3.5 h-3.5" />
+                                    </button>
+                                  ) : (
+                                    <span className="p-1.5 bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold flex items-center gap-1" title="Confirmed & Locked">
+                                      <LockIcon className="w-3 h-3" /> Locked
+                                    </span>
+                                  )}
+                                  
+                                  <button
+                                    onClick={() => handleDeletePI(inv._id, inv.invoiceNumber)}
+                                    className="p-1.5 bg-red-600 text-white hover:bg-red-700 transition-colors"
+                                    title="Delete Unwanted PI"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              />
             )}
           </div>
         )}
@@ -653,114 +967,152 @@ export default function AdminInvoices() {
             {purchaseOrders.length === 0 ? (
               <div className="p-8 text-center text-xs text-brand-gray">No Customer Purchase Orders generated yet.</div>
             ) : (
-              <div className="space-y-3">
-                {purchaseOrders.map((po) => {
-                  const isUploaded = po.signedPoDocument?.status === "PENDING" || po.status === "SIGNED_PO_UPLOADED";
-                  const isApproved = po.status === "ORDER_CONFIRMED" || po.signedPoDocument?.status === "APPROVED";
-                  const isRejected = po.status === "SIGNED_PO_REJECTED" || po.signedPoDocument?.status === "REJECTED";
-
-                  return (
-                    <div key={po._id} className="border border-brand-sand p-4 space-y-3 hover:border-brand-amber transition-colors">
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-sand pb-2">
-                        <div>
-                          <span className="font-mono font-bold text-brand-slateDark text-base">{po.poNumber}</span>
-                          <span className="text-xs text-brand-gray ml-3">
-                            Ref PI: <strong>{po.proformaInvoiceId?.invoiceNumber || "N/A"}</strong> (v{po.piVersionNumber || 1})
-                          </span>
-                          <span className="text-xs text-brand-gray ml-3">
-                            Dealer: <strong>{po.buyerDetails?.companyName || po.buyerDetails?.dealerName}</strong>
-                          </span>
-                        </div>
-                        <span className={`text-[10px] font-bold uppercase px-2.5 py-1 border ${
-                          isApproved ? "bg-emerald-100 text-emerald-800 border-emerald-300" :
-                          isRejected ? "bg-red-100 text-red-800 border-red-300" :
-                          isUploaded ? "bg-blue-100 text-blue-800 border-blue-300" :
-                          "bg-amber-100 text-amber-800 border-amber-300"
-                        }`}>
-                          {po.status}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs bg-stone-50 p-2.5">
-                        <div>
-                          <p>Total Value: <strong className="font-mono text-emerald-700">₹{(po.financials?.grandTotal || po.totalAmount || 0).toLocaleString("en-IN")}</strong></p>
-                          <p>Payment Terms: <span className="text-brand-gray">{po.commercialTerms?.paymentTerms}</span></p>
-                        </div>
-                        <div>
-                          <p>Signed Document Status: <strong>{po.signedPoDocument?.status || "NOT_UPLOADED"}</strong></p>
-                          {po.signedPoDocument?.fileName && (
-                            <button
-                              type="button"
-                              onClick={() => handleOpenDocument(po.signedPoDocument?.fileUrl, po.signedPoDocument?.fileName)}
-                              className="text-blue-700 font-mono underline hover:text-blue-900 text-xs flex items-center gap-1 font-bold mt-1 text-left"
-                            >
-                              <Eye className="w-3.5 h-3.5" /> View Document: {po.signedPoDocument.fileName}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Transporter & LR Details Box */}
-                      <div className="bg-amber-50/70 border border-amber-200/90 p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
-                        <div className="flex items-center gap-2">
-                          <Truck className="w-4 h-4 text-brand-amber flex-shrink-0" />
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                            <span>
-                              Transporter: <strong className="text-brand-slateDark font-semibold">{po.transporterName || "Not assigned"}</strong>
-                            </span>
-                            <span>
-                              LR / Bilti Number: <strong className="text-brand-slateDark font-mono font-bold">{po.lrNumber || "Not added"}</strong>
-                            </span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleOpenDispatchModal(po)}
-                          className="text-amber-800 hover:text-amber-950 underline font-bold text-[11px] flex items-center gap-1"
-                        >
-                          <Edit className="w-3 h-3" />
-                          {po.transporterName || po.lrNumber ? "Edit Transporter & LR" : "+ Add Transporter & LR"}
-                        </button>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => {
-                              setSelectedPO(po);
-                              setShowPOPrintModal(true);
-                            }}
-                            className="bg-brand-slateDark text-white hover:bg-slate-800 font-bold px-3 py-1.5 text-xs uppercase tracking-wider flex items-center gap-1.5"
-                          >
-                            <Printer className="w-3.5 h-3.5 text-brand-amber" /> View / Print PO PDF
-                          </button>
-                          <button
-                            onClick={() => handleOpenDispatchModal(po)}
-                            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-1.5 text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors"
-                          >
-                            <Truck className="w-3.5 h-3.5" />
-                            {po.transporterName || po.lrNumber ? "Update LR & Transporter" : "Add LR & Transporter"}
-                          </button>
-                        </div>
-
-                        {isUploaded && (
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => {
-                                setVerifyingPO(po);
-                                setVerifyPOModalOpen(true);
-                              }}
-                              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-1.5 text-xs uppercase tracking-wider shadow flex items-center gap-1.5"
-                            >
-                              <ShieldCheck className="w-4 h-4" /> Review & Approve Signed PO
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
+              <WhatsAppDealerFilter
+                itemTypeLabel="Purchase Orders"
+                items={purchaseOrders}
+                getDealerName={(po) => po.buyerDetails?.companyName || po.buyerDetails?.dealerName || po.dealerId?.companyName || "Dealer"}
+                getDealerInfo={(po) => ({
+                  phone: po.buyerDetails?.phone,
+                  city: po.buyerDetails?.city,
                 })}
-              </div>
+                selectedDealer={selectedDealerPO}
+                onSelectDealer={setSelectedDealerPO}
+                viewMode={viewModePO}
+                onToggleViewMode={setViewModePO}
+                searchQuery={dealerSearchPO}
+                onSearchChange={setDealerSearchPO}
+                renderItems={(filteredList) => (
+                  <div className="space-y-3">
+                    {filteredList.map((po) => {
+                      const isUploaded = po.signedPoDocument?.status === "PENDING" || po.status === "SIGNED_PO_UPLOADED";
+                      const isApproved = po.status === "ORDER_CONFIRMED" || po.signedPoDocument?.status === "APPROVED";
+                      const isRejected = po.status === "SIGNED_PO_REJECTED" || po.signedPoDocument?.status === "REJECTED";
+                      const dName = po.buyerDetails?.companyName || po.buyerDetails?.dealerName || po.dealerId?.companyName || "Dealer";
+
+                      return (
+                        <div key={po._id} className="border border-brand-sand p-4 space-y-3 hover:border-brand-amber transition-colors">
+                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-sand pb-2">
+                            <div>
+                              <span className="font-mono font-bold text-brand-slateDark text-base">{po.poNumber}</span>
+                              <span className="text-xs text-brand-gray ml-3">
+                                Ref PI: <strong>{po.proformaInvoiceId?.invoiceNumber || "N/A"}</strong> (v{po.piVersionNumber || 1})
+                              </span>
+                              <span className="text-xs text-brand-gray ml-3">
+                                Dealer:{" "}
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedDealerPO(dName)}
+                                  className="font-bold text-amber-800 hover:text-amber-950 underline hover:font-extrabold cursor-pointer"
+                                  title="Filter POs by this dealer"
+                                >
+                                  {dName}
+                                </button>
+                              </span>
+                            </div>
+                            <span className={`text-[10px] font-bold uppercase px-2.5 py-1 border ${
+                              isApproved ? "bg-emerald-100 text-emerald-800 border-emerald-300" :
+                              isRejected ? "bg-red-100 text-red-800 border-red-300" :
+                              isUploaded ? "bg-blue-100 text-blue-800 border-blue-300" :
+                              "bg-amber-100 text-amber-800 border-amber-300"
+                            }`}>
+                              {po.status}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs bg-stone-50 p-2.5">
+                            <div>
+                              <p>Total Value: <strong className="font-mono text-emerald-700">₹{(po.financials?.grandTotal || po.totalAmount || 0).toLocaleString("en-IN")}</strong></p>
+                              <p>Payment Terms: <span className="text-brand-gray">{po.commercialTerms?.paymentTerms}</span></p>
+                            </div>
+                            <div>
+                              <p>Signed Document Status: <strong>{po.signedPoDocument?.status || "NOT_UPLOADED"}</strong></p>
+                              {po.signedPoDocument?.fileName && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenDocument(po.signedPoDocument?.fileUrl, po.signedPoDocument?.fileName)}
+                                  className="text-blue-700 font-mono underline hover:text-blue-900 text-xs flex items-center gap-1 font-bold mt-1 text-left"
+                                >
+                                  <Eye className="w-3.5 h-3.5" /> View Document: {po.signedPoDocument.fileName}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Transporter & LR Details Box */}
+                          <div className="bg-amber-50/70 border border-amber-200/90 p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <div className="flex items-center gap-2">
+                              <Truck className="w-4 h-4 text-brand-amber flex-shrink-0" />
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                                <span>
+                                  Transporter: <strong className="text-brand-slateDark font-semibold">{po.transporterName || "Not assigned"}</strong>
+                                </span>
+                                <span>
+                                  LR / Bilti Number: <strong className="text-brand-slateDark font-mono font-bold">{po.lrNumber || "Not added"}</strong>
+                                </span>
+                              </div>
+                            </div>
+                            {isApproved && (
+                              <button
+                                onClick={() => handleOpenDispatchModal(po)}
+                                className="text-amber-800 hover:text-amber-950 underline font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                              >
+                                <Edit className="w-3 h-3" />
+                                {po.transporterName || po.lrNumber ? "Edit Transporter & LR" : "+ Add Transporter & LR"}
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => {
+                                  setSelectedPO(po);
+                                  setShowPOPrintModal(true);
+                                }}
+                                className="bg-brand-slateDark text-white hover:bg-slate-800 font-bold px-3 py-1.5 text-xs uppercase tracking-wider flex items-center gap-1.5"
+                              >
+                                <Printer className="w-3.5 h-3.5 text-brand-amber" /> View / Print PO PDF
+                              </button>
+                              <button
+                                disabled={!isApproved}
+                                onClick={() => {
+                                  if (isApproved) {
+                                    handleOpenDispatchModal(po);
+                                  }
+                                }}
+                                title={isApproved ? "Add or Edit LR & Transporter Details" : "Enabled only after PO is approved"}
+                                className={`font-bold px-3 py-1.5 text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors ${
+                                  isApproved
+                                    ? "bg-amber-500 hover:bg-amber-600 text-slate-950 cursor-pointer shadow-sm"
+                                    : "bg-stone-200 text-stone-400 cursor-not-allowed border border-stone-300"
+                                }`}
+                              >
+                                <Truck className="w-3.5 h-3.5" />
+                                {po.transporterName || po.lrNumber ? "Update LR & Transporter" : "Add LR & Transporter"}
+                              </button>
+                            </div>
+
+                            {isUploaded && (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => {
+                                    setVerifyingPO(po);
+                                    setVerifyPOModalOpen(true);
+                                  }}
+                                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-1.5 text-xs uppercase tracking-wider shadow flex items-center gap-1.5"
+                                >
+                                  <ShieldCheck className="w-4 h-4" /> Review & Approve Signed PO
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              />
             )}
           </div>
         )}
@@ -1123,16 +1475,23 @@ export default function AdminInvoices() {
 
                   <div>
                     <label className="font-bold uppercase text-brand-gray block mb-1">
-                      LR / Bilti Number:
+                      LR / Bilti Number (8 to 10 Digits Only):
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. LR-984210 / BLT-4402"
+                      inputMode="numeric"
+                      pattern="[0-9]{8,10}"
+                      maxLength={10}
+                      placeholder="e.g. 98421035 (8 to 10 numbers)"
                       value={dispatchForm.lrNumber}
-                      onChange={(e) => setDispatchForm({ ...dispatchForm, lrNumber: e.target.value })}
+                      onChange={(e) => {
+                        const numericVal = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setDispatchForm({ ...dispatchForm, lrNumber: numericVal });
+                      }}
                       className="w-full bg-white border border-brand-sand p-2.5 font-mono font-bold text-xs focus:outline-none focus:border-brand-amber"
                       required
                     />
+                    <p className="text-[10px] text-brand-gray mt-1">Must contain numbers only (8 to 10 digits).</p>
                   </div>
 
                   <div className="flex justify-end gap-3 pt-3 border-t border-brand-sand">
