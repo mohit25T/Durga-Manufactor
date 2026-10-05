@@ -53,8 +53,8 @@ const purchaseOrderSchema = new mongoose.Schema(
     sellerDetails: {
       companyName: { type: String, default: "Durga Manufactures" },
       brand: { type: String, default: "Millzon" },
-      gstin: { type: String, default: "24HMPT0206E1ZO" },
-      pan: { type: String, default: "HMPT0206E" },
+      gstin: { type: String, default: "24AHMPT0206E1ZO" },
+      pan: { type: String, default: "AHMPT0206E" },
       udyam: { type: String, default: "GJ-20-0130533" },
       address: { type: String, default: "Plot No. A5, Shapar Main Road, Opp. Mahindra Gear, Decora Cement Campus, Shapar (Veraval) 360024, Rajkot, Gujarat, India." },
       phone: { type: String, default: "+91 94281 56213, +91 98258 70821" },

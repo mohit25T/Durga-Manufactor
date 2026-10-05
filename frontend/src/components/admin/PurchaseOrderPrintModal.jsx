@@ -154,7 +154,7 @@ export default function PurchaseOrderPrintModal({ po, isOpen, onClose }) {
                     <div className="flex flex-wrap gap-3 text-[10px] text-slate-700 font-semibold mt-1.5">
                       <span><strong>Phone:</strong> {seller.phone || "+91 94281 56213"}</span>
                       <span><strong>Email:</strong> {seller.email || "durgamanufactures2010@gmail.com"}</span>
-                      <span><strong>GSTIN:</strong> {seller.gstin || "24HMPT0206E1ZO"}</span>
+                      <span><strong>GSTIN:</strong> {seller.gstin || "24AHMPT0206E1ZO"}</span>
                     </div>
                   </div>
 

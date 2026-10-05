@@ -622,7 +622,7 @@ export default function CreateInvoice() {
                 value={formData.gstNumber}
                 onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value.toUpperCase() })}
                 className="w-full px-4 py-3 bg-stone-50 border border-brand-sand rounded-none text-brand-slateDark text-sm font-mono uppercase font-bold outline-none focus:border-brand-amber"
-                placeholder="24AAAAA0000A1Z5"
+                placeholder="24AHMPT0206E1ZO"
               />
             </div>
 

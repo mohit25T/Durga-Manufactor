@@ -119,7 +119,7 @@ export const loginDealer = async (req, res) => {
               contactPerson: "System Administrator",
               email: admin.email,
               phone: "+91 94281 56213",
-              gstNumber: "24AAAAA0000A1Z5",
+              gstNumber: "24AHMPT0206E1ZO",
               status: "approved",
               role: "admin",
               discountPercent: 0
@@ -228,7 +228,7 @@ export const getDealerProfile = async (req, res) => {
             contactPerson: "System Administrator",
             email: admin.email,
             phone: "+91 94281 56213",
-            gstNumber: "24AAAAA0000A1Z5",
+            gstNumber: "24AHMPT0206E1ZO",
             status: "approved",
             role: "admin",
             discountPercent: 0
@@ -250,7 +250,7 @@ export const getDealerProfile = async (req, res) => {
             contactPerson: "System Administrator",
             email: admin.email,
             phone: "+91 94281 56213",
-            gstNumber: "24AAAAA0000A1Z5",
+            gstNumber: "24AHMPT0206E1ZO",
             status: "approved",
             role: "admin",
             discountPercent: 0
@@ -296,7 +296,7 @@ export const updateDealerProfile = async (req, res) => {
             contactPerson: admin.name || contactPerson || "System Administrator",
             email: admin.email,
             phone: phone || "+91 94281 56213",
-            gstNumber: gstNumber || "24AAAAA0000A1Z5",
+            gstNumber: gstNumber || "24AHMPT0206E1ZO",
             status: "approved",
             role: "admin",
             address: address || "",

@@ -159,7 +159,7 @@ export default function InvoicePrintModal({ invoice, isOpen, onClose }) {
                     <div className="flex flex-wrap gap-3 text-[10px] text-slate-700 font-semibold mt-1.5">
                       <span><strong>Phone:</strong> +91 94281 56213, +91 98258 70821</span>
                       <span><strong>Email:</strong> durgamanufactures2010@gmail.com</span>
-                      <span><strong>GST NO. :</strong> 24HMPT0206E1ZO</span>
+                      <span><strong>GST NO. :</strong> 24AHMPT0206E1ZO</span>
                       <span><strong>UDYAM NO:</strong> GJ-20-0130533</span>
                     </div>
                   </div>
@@ -328,7 +328,7 @@ export default function InvoicePrintModal({ invoice, isOpen, onClose }) {
                     GST DETAIL :
                   </div>
                   <div className="p-1 border-b border-slate-900 text-slate-900">
-                    <strong>GST NO. :</strong> 24HMPT0206E1ZO
+                    <strong>GST NO. :</strong> 24AHMPT0206E1ZO
                   </div>
                   <div className="p-1 text-slate-900">
                     <strong>UDYAM NO:</strong> GJ-20-0130533

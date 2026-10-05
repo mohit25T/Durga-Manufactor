@@ -666,8 +666,8 @@ export const confirmPI = async (req, res) => {
       sellerDetails: {
         companyName: "Durga Manufactures",
         brand: "Millzon",
-        gstin: "24HMPT0206E1ZO",
-        pan: "HMPT0206E",
+        gstin: "24AHMPT0206E1ZO",
+        pan: "AHMPT0206E",
         udyam: "GJ-20-0130533",
         address: "Plot No. A5, Shapar Main Road, Opp. Mahindra Gear, Decora Cement Campus, Shapar (Veraval) 360024, Rajkot, Gujarat, India.",
         phone: "+91 94281 56213, +91 98258 70821",
