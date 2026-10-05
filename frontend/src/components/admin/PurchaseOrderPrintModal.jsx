@@ -168,6 +168,12 @@ export default function PurchaseOrderPrintModal({ po, isOpen, onClose }) {
                       <p><strong>Ref PI No:</strong> <span className="font-mono font-bold">{po.proformaInvoiceId?.invoiceNumber || "N/A"}</span></p>
                       <p><strong>Ref PI Version:</strong> Version {po.piVersionNumber || 1}</p>
                       <p><strong>Status:</strong> <span className="text-emerald-800 font-bold uppercase">{po.status}</span></p>
+                      {po.transporterName && (
+                        <p><strong>Transporter:</strong> <span className="text-slate-900 font-bold">{po.transporterName}</span></p>
+                      )}
+                      {po.lrNumber && (
+                        <p><strong>LR / Bilti No:</strong> <span className="font-mono text-slate-900 font-bold">{po.lrNumber}</span></p>
+                      )}
                     </div>
                   </div>
                 </div>

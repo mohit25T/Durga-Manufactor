@@ -1073,6 +1073,7 @@ export const verifySignedPO = async (req, res) => {
 
       await DealerOrder.create({
         dealer: po.dealerId,
+        purchaseOrder: po._id,
         items: orderItems,
         subtotal: po.financials.subtotal,
         includeFullGst: true,
@@ -1473,3 +1474,77 @@ export const updateInquiry = async (req, res) => {
     });
   }
 };
+
+// Admin: Add/Update Transporter Name & LR Number on PO and linked DealerOrder
+export const updatePODispatchInfo = async (req, res) => {
+  try {
+    const { poId } = req.params;
+    const { transporterName, lrNumber, dispatchDate } = req.body;
+
+    const po = await PurchaseOrder.findById(poId);
+    if (!po) {
+      return res.status(404).json({
+        success: false,
+        message: "Purchase Order not found."
+      });
+    }
+
+    if (transporterName !== undefined) po.transporterName = transporterName.trim();
+    if (lrNumber !== undefined) po.lrNumber = lrNumber.trim();
+    if (dispatchDate !== undefined) po.dispatchDate = dispatchDate;
+
+    po.auditTrail.push({
+      action: "Dispatch Details Updated",
+      performedBy: req.user?.username || req.user?.name || "Admin",
+      role: "Admin",
+      timestamp: new Date(),
+      note: `Transporter: ${po.transporterName || 'N/A'}, LR #: ${po.lrNumber || 'N/A'}`
+    });
+
+    await po.save();
+
+    // Also update linked DealerOrder if exists
+    let linkedOrder = await DealerOrder.findOne({
+      $or: [
+        { purchaseOrder: po._id },
+        { notes: new RegExp(po.poNumber, "i") }
+      ]
+    });
+
+    if (linkedOrder) {
+      if (transporterName !== undefined) linkedOrder.transporterName = transporterName.trim();
+      if (lrNumber !== undefined) linkedOrder.lrNumber = lrNumber.trim();
+      if (dispatchDate !== undefined) linkedOrder.dispatchDate = dispatchDate;
+      await linkedOrder.save();
+    }
+
+    // Trigger Notification for Dealer
+    try {
+      if (po.lrNumber || po.transporterName) {
+        await createAndSendDealerNotification({
+          dealerId: po.dealerId,
+          orderId: linkedOrder ? linkedOrder._id : po._id,
+          title: `Freight & LR Update: ${po.poNumber}`,
+          message: `Consignment details updated. Transporter: ${po.transporterName || 'N/A'}, LR/Bilti #: ${po.lrNumber || 'N/A'}.`,
+          type: "status_update"
+        });
+      }
+    } catch (notifErr) {
+      console.warn("Notification send warning in updatePODispatchInfo:", notifErr.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Transporter & LR details updated successfully.",
+      purchaseOrder: po,
+      order: linkedOrder
+    });
+  } catch (error) {
+    console.error("UPDATE PO DISPATCH INFO ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update dispatch information."
+    });
+  }
+};
+

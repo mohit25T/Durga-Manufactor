@@ -32,6 +32,10 @@ const dealerOrderSchema = new mongoose.Schema(
       ref: "Dealer",
       required: true
     },
+    purchaseOrder: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PurchaseOrder"
+    },
     items: [dealerOrderItemSchema],
     subtotal: {
       type: Number,
@@ -61,6 +65,17 @@ const dealerOrderSchema = new mongoose.Schema(
       type: String,
       enum: ["Pending", "Confirmed", "Processing", "Dispatched", "Delivered", "Cancelled"],
       default: "Pending"
+    },
+    transporterName: {
+      type: String,
+      default: ""
+    },
+    lrNumber: {
+      type: String,
+      default: ""
+    },
+    dispatchDate: {
+      type: Date
     },
     notes: {
       type: String,

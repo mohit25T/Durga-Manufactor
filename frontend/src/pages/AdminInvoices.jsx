@@ -23,7 +23,8 @@ import {
   ShieldCheck,
   History,
   Lock as LockIcon,
-  RefreshCw
+  RefreshCw,
+  Truck
 } from "lucide-react";
 import API from "../services/api";
 import AdminLayout from "../components/admin/AdminLayout";
@@ -79,6 +80,15 @@ export default function AdminInvoices() {
   const [verifyingPO, setVerifyingPO] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [verifyingSubmitting, setVerifyingSubmitting] = useState(false);
+
+  // Transporter & LR Number Modal State
+  const [dispatchModalOpen, setDispatchModalOpen] = useState(false);
+  const [dispatchPO, setDispatchPO] = useState(null);
+  const [dispatchForm, setDispatchForm] = useState({
+    transporterName: "",
+    lrNumber: ""
+  });
+  const [dispatchSubmitting, setDispatchSubmitting] = useState(false);
 
   const fetchAllWorkflowData = async (isSilent = false) => {
     try {
@@ -260,6 +270,37 @@ export default function AdminInvoices() {
       alert(err.response?.data?.message || "Failed to process PO verification.");
     } finally {
       setVerifyingSubmitting(false);
+    }
+  };
+
+  const handleOpenDispatchModal = (po) => {
+    setDispatchPO(po);
+    setDispatchForm({
+      transporterName: po.transporterName || "",
+      lrNumber: po.lrNumber || ""
+    });
+    setDispatchModalOpen(true);
+  };
+
+  const handleSaveDispatchInfo = async (e) => {
+    e.preventDefault();
+    if (!dispatchPO) return;
+    try {
+      setDispatchSubmitting(true);
+      const res = await API.put(`/workflow/po/${dispatchPO._id}/dispatch`, {
+        transporterName: dispatchForm.transporterName,
+        lrNumber: dispatchForm.lrNumber
+      });
+      if (res.data.success) {
+        alert("Transporter & LR details updated successfully!");
+        setDispatchModalOpen(false);
+        fetchAllWorkflowData(true);
+      }
+    } catch (err) {
+      console.error("Error updating LR & Transporter info:", err);
+      alert(err.response?.data?.message || "Failed to update transporter and LR details.");
+    } finally {
+      setDispatchSubmitting(false);
     }
   };
 
@@ -659,17 +700,48 @@ export default function AdminInvoices() {
                         </div>
                       </div>
 
+                      {/* Transporter & LR Details Box */}
+                      <div className="bg-amber-50/70 border border-amber-200/90 p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <Truck className="w-4 h-4 text-brand-amber flex-shrink-0" />
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                            <span>
+                              Transporter: <strong className="text-brand-slateDark font-semibold">{po.transporterName || "Not assigned"}</strong>
+                            </span>
+                            <span>
+                              LR / Bilti Number: <strong className="text-brand-slateDark font-mono font-bold">{po.lrNumber || "Not added"}</strong>
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleOpenDispatchModal(po)}
+                          className="text-amber-800 hover:text-amber-950 underline font-bold text-[11px] flex items-center gap-1"
+                        >
+                          <Edit className="w-3 h-3" />
+                          {po.transporterName || po.lrNumber ? "Edit Transporter & LR" : "+ Add Transporter & LR"}
+                        </button>
+                      </div>
+
                       {/* Actions */}
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                        <button
-                          onClick={() => {
-                            setSelectedPO(po);
-                            setShowPOPrintModal(true);
-                          }}
-                          className="bg-brand-slateDark text-white hover:bg-slate-800 font-bold px-3 py-1.5 text-xs uppercase tracking-wider flex items-center gap-1.5"
-                        >
-                          <Printer className="w-3.5 h-3.5 text-brand-amber" /> View / Print PO PDF
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedPO(po);
+                              setShowPOPrintModal(true);
+                            }}
+                            className="bg-brand-slateDark text-white hover:bg-slate-800 font-bold px-3 py-1.5 text-xs uppercase tracking-wider flex items-center gap-1.5"
+                          >
+                            <Printer className="w-3.5 h-3.5 text-brand-amber" /> View / Print PO PDF
+                          </button>
+                          <button
+                            onClick={() => handleOpenDispatchModal(po)}
+                            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-1.5 text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors"
+                          >
+                            <Truck className="w-3.5 h-3.5" />
+                            {po.transporterName || po.lrNumber ? "Update LR & Transporter" : "Add LR & Transporter"}
+                          </button>
+                        </div>
 
                         {isUploaded && (
                           <div className="flex items-center gap-2">
@@ -1004,6 +1076,82 @@ export default function AdminInvoices() {
                     Approve Signed PO & Confirm Order
                   </button>
                 </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* --- MODAL 4: ADD / UPDATE TRANSPORTER & LR NUMBER --- */}
+        <AnimatePresence>
+          {dispatchModalOpen && dispatchPO && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white border-2 border-brand-slateDark p-6 max-w-md w-full text-brand-slateDark space-y-4 shadow-2xl"
+              >
+                <div className="flex justify-between items-center border-b border-brand-sand pb-3">
+                  <div className="flex items-center gap-2">
+                    <Truck className="w-5 h-5 text-brand-amber" />
+                    <div>
+                      <h3 className="font-bold text-sm uppercase text-brand-slateDark">
+                        Add LR Number & Transporter
+                      </h3>
+                      <p className="text-[11px] text-brand-gray font-mono">PO: {dispatchPO.poNumber}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setDispatchModalOpen(false)}>
+                    <XCircle className="w-5 h-5 text-brand-gray hover:text-brand-slateDark" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveDispatchInfo} className="space-y-4 text-xs">
+                  <div>
+                    <label className="font-bold uppercase text-brand-gray block mb-1">
+                      Transporter Name:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. V-Trans, TCI Express, Delhivery, etc."
+                      value={dispatchForm.transporterName}
+                      onChange={(e) => setDispatchForm({ ...dispatchForm, transporterName: e.target.value })}
+                      className="w-full bg-white border border-brand-sand p-2.5 font-medium text-xs focus:outline-none focus:border-brand-amber"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold uppercase text-brand-gray block mb-1">
+                      LR / Bilti Number:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. LR-984210 / BLT-4402"
+                      value={dispatchForm.lrNumber}
+                      onChange={(e) => setDispatchForm({ ...dispatchForm, lrNumber: e.target.value })}
+                      className="w-full bg-white border border-brand-sand p-2.5 font-mono font-bold text-xs focus:outline-none focus:border-brand-amber"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-3 border-t border-brand-sand">
+                    <button
+                      type="button"
+                      onClick={() => setDispatchModalOpen(false)}
+                      className="px-4 py-2 border border-brand-sand text-brand-gray font-bold uppercase text-[11px] hover:bg-stone-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={dispatchSubmitting}
+                      className="bg-brand-amber hover:bg-amber-500 text-slate-950 font-bold px-5 py-2 uppercase text-[11px] tracking-wider transition-colors disabled:opacity-50"
+                    >
+                      {dispatchSubmitting ? "Saving..." : "Save Details"}
+                    </button>
+                  </div>
+                </form>
               </motion.div>
             </div>
           )}

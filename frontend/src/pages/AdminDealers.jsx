@@ -15,7 +15,8 @@ import {
   Tag,
   ShoppingBag,
   Trash2,
-  MessageSquare
+  MessageSquare,
+  Truck
 } from "lucide-react";
 import API from "../services/api";
 import AdminSidebar from "../components/admin/AdminSidebar";
@@ -1011,6 +1012,18 @@ function AdminDealers() {
                         <p className="text-xs text-slate-400 bg-slate-950/50 p-2 border-l-2 border-brand-amber">
                           Dealer Note: {ord.notes}
                         </p>
+                      )}
+
+                      {(ord.transporterName || ord.lrNumber) && (
+                        <div className="bg-amber-500/10 border border-amber-500/20 p-2.5 text-xs flex flex-wrap items-center justify-between gap-2 text-amber-200">
+                          <span className="flex items-center gap-1.5 font-semibold">
+                            <Truck className="w-4 h-4 text-brand-amber" />
+                            Transporter: <strong className="text-white">{ord.transporterName || "N/A"}</strong>
+                          </span>
+                          <span>
+                            LR / Bilti #: <strong className="text-brand-amber font-mono font-bold">{ord.lrNumber || "N/A"}</strong>
+                          </span>
+                        </div>
                       )}
                     </div>
                   ))}

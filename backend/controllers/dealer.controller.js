@@ -680,6 +680,13 @@ export const updateOrderStatusAdmin = async (req, res) => {
       order.totalAmount = Number(totalAmount);
     }
 
+    if (req.body.transporterName !== undefined) {
+      order.transporterName = req.body.transporterName.trim();
+    }
+    if (req.body.lrNumber !== undefined) {
+      order.lrNumber = req.body.lrNumber.trim();
+    }
+
     await order.save();
 
     // Trigger In-App & Push Notification for Dealer

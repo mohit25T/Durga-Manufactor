@@ -16,7 +16,8 @@ import {
   getDealerPrices,
   saveDealerPrice,
   deleteInquiry,
-  updateInquiry
+  updateInquiry,
+  updatePODispatchInfo
 } from "../controllers/workflow.controller.js";
 import { verifyDealer } from "../middleware/dealer.middleware.js";
 import { verifyAdmin } from "../middleware/auth.middleware.js";
@@ -45,6 +46,8 @@ router.post("/po/:poId/upload-signed", verifyDealer, uploadSignedPO);
 router.post("/po/:poId/verify", verifyAdmin, verifySignedPO);
 router.get("/po/dealer", verifyDealer, getDealerPOs);
 router.get("/po/admin", verifyAdmin, getAdminPOs);
+router.put("/po/:poId/dispatch", verifyAdmin, updatePODispatchInfo);
+router.patch("/po/:poId/dispatch", verifyAdmin, updatePODispatchInfo);
 
 // Dashboard Summary
 router.get("/summary", getWorkflowSummary);

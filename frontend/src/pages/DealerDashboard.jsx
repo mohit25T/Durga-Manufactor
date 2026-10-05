@@ -1133,6 +1133,18 @@ function DealerDashboard() {
                         Note: {ord.notes}
                       </p>
                     )}
+
+                    {(ord.transporterName || ord.lrNumber) && (
+                      <div className="mt-2.5 bg-amber-500/10 border border-amber-500/20 p-2 text-xs flex flex-wrap items-center justify-between gap-2 text-amber-200">
+                        <span className="flex items-center gap-1.5 font-semibold">
+                          <Truck className="w-3.5 h-3.5 text-brand-amber" />
+                          Transporter: <strong className="text-white">{ord.transporterName || "N/A"}</strong>
+                        </span>
+                        <span>
+                          LR / Bilti #: <strong className="text-brand-amber font-mono font-bold">{ord.lrNumber || "N/A"}</strong>
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1449,6 +1461,17 @@ function DealerDashboard() {
                             >
                               <Eye className="w-3.5 h-3.5" /> {po.signedPoDocument.fileName}
                             </button>
+                          </div>
+                        )}
+                        {(po.transporterName || po.lrNumber) && (
+                          <div className="flex flex-wrap items-center justify-between py-1.5 text-xs bg-amber-500/10 px-2 mt-1 rounded border border-amber-500/20 text-amber-200">
+                            <span className="flex items-center gap-1.5 font-semibold">
+                              <Truck className="w-3.5 h-3.5 text-brand-amber" />
+                              Transporter: <strong className="text-white">{po.transporterName || "N/A"}</strong>
+                            </span>
+                            <span>
+                              LR / Bilti #: <strong className="text-brand-amber font-mono font-bold">{po.lrNumber || "N/A"}</strong>
+                            </span>
                           </div>
                         )}
                       </div>

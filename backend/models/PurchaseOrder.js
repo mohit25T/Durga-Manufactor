@@ -133,6 +133,17 @@ const purchaseOrderSchema = new mongoose.Schema(
       ],
       default: "AWAITING_DEALER_SIGNATURE"
     },
+    transporterName: {
+      type: String,
+      default: ""
+    },
+    lrNumber: {
+      type: String,
+      default: ""
+    },
+    dispatchDate: {
+      type: Date
+    },
     isCommerciallyLocked: {
       type: Boolean,
       default: false
