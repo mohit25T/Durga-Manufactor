@@ -16,7 +16,13 @@ import {
   ShoppingBag,
   Trash2,
   MessageSquare,
-  Truck
+  Truck,
+  KeyRound,
+  Eye,
+  EyeOff,
+  Copy,
+  Check,
+  RefreshCw
 } from "lucide-react";
 import API from "../services/api";
 import AdminSidebar from "../components/admin/AdminSidebar";
@@ -108,6 +114,82 @@ function AdminDealers() {
   const [customProductName, setCustomProductName] = useState("");
   const [selQty, setSelQty] = useState(1);
   const [selCustomRate, setSelCustomRate] = useState("");
+
+  // Reset Dealer Password State & Handlers
+  const [resetModalDealer, setResetModalDealer] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(true);
+  const [resettingPassword, setResettingPassword] = useState(false);
+  const [copiedPassword, setCopiedPassword] = useState(false);
+  const [resetSuccessMessage, setResetSuccessMessage] = useState("");
+  const [resetErrorMessage, setResetErrorMessage] = useState("");
+
+  const generateRandomPassword = () => {
+    return "Durga@" + Math.floor(1000 + Math.random() * 9000);
+  };
+
+  const handleOpenResetModal = (dealer) => {
+    setResetModalDealer(dealer);
+    const initialPwd = generateRandomPassword();
+    setNewPassword(initialPwd);
+    setShowPassword(true);
+    setCopiedPassword(false);
+    setResetSuccessMessage("");
+    setResetErrorMessage("");
+  };
+
+  const handleGeneratePassword = () => {
+    const pwd = generateRandomPassword();
+    setNewPassword(pwd);
+    setCopiedPassword(false);
+    setResetSuccessMessage("");
+    setResetErrorMessage("");
+  };
+
+  const handleCopyPassword = async () => {
+    if (!newPassword) return;
+    try {
+      await navigator.clipboard.writeText(newPassword);
+      setCopiedPassword(true);
+      setTimeout(() => setCopiedPassword(false), 2500);
+    } catch (err) {
+      console.error("Clipboard copy failed:", err);
+    }
+  };
+
+  const handleSaveResetPassword = async (e) => {
+    e.preventDefault();
+    if (!resetModalDealer || !newPassword || newPassword.trim().length < 6) {
+      setResetErrorMessage("Password must be at least 6 characters long.");
+      return;
+    }
+    try {
+      setResettingPassword(true);
+      setResetErrorMessage("");
+      setResetSuccessMessage("");
+
+      const res = await API.patch(`/dealers/admin/${resetModalDealer._id}/reset-password`, {
+        newPassword: newPassword.trim()
+      });
+
+      if (res.data?.success) {
+        setResetSuccessMessage(res.data.message || "Password reset successfully!");
+        try {
+          await navigator.clipboard.writeText(newPassword.trim());
+          setCopiedPassword(true);
+        } catch (_) {}
+      } else {
+        setResetErrorMessage(res.data?.message || "Failed to reset password.");
+      }
+    } catch (err) {
+      console.error("Error resetting dealer password:", err);
+      setResetErrorMessage(
+        err.response?.data?.message || "Server error while resetting password."
+      );
+    } finally {
+      setResettingPassword(false);
+    }
+  };
 
   const fetchAdminDealerData = async (isSilent = false) => {
     try {
@@ -673,6 +755,16 @@ function AdminDealers() {
                           ) : (
                             <ChevronDown className="w-3.5 h-3.5" />
                           )}
+                        </button>
+
+                        {/* Reset Password Button */}
+                        <button
+                          onClick={() => handleOpenResetModal(d)}
+                          className="bg-amber-500/10 hover:bg-amber-500/20 text-brand-amber border border-amber-500/30 px-3 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all"
+                          title="Reset login password for this dealer"
+                        >
+                          <KeyRound className="w-3.5 h-3.5" />
+                          <span>Reset Password</span>
                         </button>
                       </div>
                     </div>
@@ -1289,6 +1381,171 @@ function AdminDealers() {
                           className="bg-brand-amber text-slate-950 px-5 py-2 text-xs font-bold uppercase tracking-wider hover:bg-amber-400"
                         >
                           {creatingOrder ? "Creating..." : "Create Order"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* RESET DEALER PASSWORD MODAL */}
+              {resetModalDealer && (
+                <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+                  <div className="bg-slate-900 border border-brand-amber/40 w-full max-w-md p-6 space-y-4 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+                    <button
+                      onClick={() => {
+                        setResetModalDealer(null);
+                        setResetSuccessMessage("");
+                        setResetErrorMessage("");
+                      }}
+                      className="absolute top-4 right-4 text-slate-400 hover:text-white"
+                      title="Close"
+                    >
+                      <XCircle className="w-5 h-5" />
+                    </button>
+
+                    {/* Modal Header */}
+                    <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+                      <div className="w-10 h-10 rounded bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-brand-amber shrink-0">
+                        <KeyRound className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-bold text-white uppercase tracking-wider">
+                          Reset Dealer Password
+                        </h2>
+                        <p className="text-xs text-slate-400">
+                          Set a temporary password for login
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Dealer Account Details */}
+                    <div className="bg-slate-950 border border-slate-800 p-3 space-y-1.5 text-xs">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400">Company:</span>
+                        <span className="text-white font-bold">{resetModalDealer.companyName}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400">Contact Person:</span>
+                        <span className="text-slate-200">{resetModalDealer.contactPerson}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400">Login Email:</span>
+                        <span className="text-brand-amber font-mono font-semibold">{resetModalDealer.email}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400">Phone:</span>
+                        <span className="text-slate-300 font-mono">{resetModalDealer.phone}</span>
+                      </div>
+                    </div>
+
+                    {/* Feedback Messages */}
+                    {resetErrorMessage && (
+                      <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 text-xs flex items-center gap-2">
+                        <XCircle className="w-4 h-4 shrink-0" />
+                        <span>{resetErrorMessage}</span>
+                      </div>
+                    )}
+
+                    {resetSuccessMessage && (
+                      <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 p-3 text-xs space-y-1">
+                        <div className="flex items-center gap-2 font-bold">
+                          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                          <span>{resetSuccessMessage}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-300">
+                          The new password is now active. Send it to the dealer to log in.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Reset Password Form */}
+                    <form onSubmit={handleSaveResetPassword} className="space-y-4">
+                      <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <label className="text-xs font-bold text-slate-300 uppercase">
+                            New Password *
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleGeneratePassword}
+                            className="text-[11px] text-brand-amber hover:text-amber-300 font-bold flex items-center gap-1 uppercase tracking-wider"
+                            title="Generate a random password"
+                          >
+                            <RefreshCw className="w-3 h-3" /> Auto-Generate
+                          </button>
+                        </div>
+
+                        <div className="relative">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            value={newPassword}
+                            onChange={(e) => {
+                              setNewPassword(e.target.value);
+                              setCopiedPassword(false);
+                              setResetErrorMessage("");
+                            }}
+                            placeholder="Enter at least 6 characters..."
+                            required
+                            minLength={6}
+                            className="w-full bg-slate-950 border border-slate-700 text-sm text-white px-3 py-2.5 pr-20 font-mono focus:border-brand-amber focus:outline-none"
+                          />
+                          <div className="absolute right-2 top-2.5 flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="p-1 text-slate-400 hover:text-white"
+                              title={showPassword ? "Hide password" : "Show password"}
+                            >
+                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleCopyPassword}
+                              disabled={!newPassword}
+                              className={`p-1 transition-colors ${
+                                copiedPassword ? "text-emerald-400" : "text-slate-400 hover:text-brand-amber"
+                              }`}
+                              title="Copy to clipboard"
+                            >
+                              {copiedPassword ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        {copiedPassword && (
+                          <p className="text-[11px] text-emerald-400 mt-1 font-semibold flex items-center gap-1">
+                            <Check className="w-3.5 h-3.5" /> Password copied to clipboard!
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex justify-end gap-2.5 pt-2 border-t border-white/10">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setResetModalDealer(null);
+                            setResetSuccessMessage("");
+                            setResetErrorMessage("");
+                          }}
+                          className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 text-xs font-bold uppercase"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={resettingPassword || !newPassword || newPassword.trim().length < 6}
+                          className="bg-brand-amber text-slate-950 hover:bg-amber-400 px-5 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 disabled:opacity-50"
+                        >
+                          {resettingPassword ? (
+                            <>
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Saving...
+                            </>
+                          ) : (
+                            <>
+                              <KeyRound className="w-3.5 h-3.5" /> Save Password
+                            </>
+                          )}
                         </button>
                       </div>
                     </form>

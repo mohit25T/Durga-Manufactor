@@ -14,7 +14,8 @@ import {
   deleteOrderAdmin,
   getDealerNotifications,
   markDealerNotificationsRead,
-  lookupGSTIN
+  lookupGSTIN,
+  resetDealerPasswordAdmin
 } from "../controllers/dealer.controller.js";
 import { verifyDealer } from "../middleware/dealer.middleware.js";
 import { verifyAdmin } from "../middleware/auth.middleware.js";
@@ -37,6 +38,7 @@ router.patch("/notifications/mark-read", verifyDealer, markDealerNotificationsRe
 // Admin routes for managing dealers
 router.get("/admin/all", verifyAdmin, getAllDealersAdmin);
 router.patch("/admin/:id/status", verifyAdmin, updateDealerStatusAdmin);
+router.patch("/admin/:id/reset-password", verifyAdmin, resetDealerPasswordAdmin);
 router.get("/admin/orders", verifyAdmin, getAllDealerOrdersAdmin);
 router.post("/admin/orders/create", verifyAdmin, createOrderAdmin);
 router.patch("/admin/orders/:id/status", verifyAdmin, updateOrderStatusAdmin);

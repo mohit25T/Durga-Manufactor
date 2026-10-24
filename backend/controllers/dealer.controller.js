@@ -537,6 +537,46 @@ export const updateDealerStatusAdmin = async (req, res) => {
   }
 };
 
+// Admin: Reset dealer password
+export const resetDealerPasswordAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.trim().length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 6 characters long."
+      });
+    }
+
+    const dealer = await Dealer.findById(id);
+    if (!dealer) {
+      return res.status(404).json({
+        success: false,
+        message: "Dealer not found."
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword.trim(), salt);
+
+    dealer.password = hashedPassword;
+    await dealer.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Password for ${dealer.companyName} has been successfully reset.`
+    });
+  } catch (error) {
+    console.error("ADMIN RESET DEALER PASSWORD ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error resetting dealer password."
+    });
+  }
+};
+
 // Admin: Get all dealer orders
 export const getAllDealerOrdersAdmin = async (req, res) => {
   try {
