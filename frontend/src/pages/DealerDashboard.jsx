@@ -32,7 +32,8 @@ import {
   RefreshCw,
   AlertTriangle,
   Trash2,
-  Eye
+  Eye,
+  Tag
 } from "lucide-react";
 import axios from "axios";
 import Navbar from "../components/Navbar";
@@ -832,30 +833,11 @@ function DealerDashboard() {
                                   {p.description || "Heavy-duty food processing machinery engineered for durability."}
                                 </p>
 
-                                {/* Pricing */}
+                                {/* Pricing Badge */}
                                 <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-                                  <div>
-                                    {p.isConfirmedPrice ? (
-                                      <div className="flex items-center gap-1.5 mb-1">
-                                        <span className="inline-flex items-center gap-1 text-[10px] uppercase font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-0.5 rounded">
-                                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                                          Agreed PO Price {p.confirmedPoNumber ? `(#${p.confirmedPoNumber})` : ""}
-                                        </span>
-                                      </div>
-                                    ) : (
-                                      <span className="text-[10px] uppercase text-brand-amber block font-bold">Dealer Price</span>
-                                    )}
-                                    <div className="flex items-baseline gap-2">
-                                      <span className="text-lg font-serif font-bold text-white">
-                                        ₹{dealerPrice.toLocaleString("en-IN")}
-                                      </span>
-                                      {p.isConfirmedPrice && p.originalPrice > 0 && p.originalPrice !== dealerPrice && (
-                                        <span className="text-xs text-slate-500 line-through font-serif">
-                                          ₹{Number(p.originalPrice).toLocaleString("en-IN")}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
+                                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-amber bg-brand-amber/10 border border-brand-amber/30 px-2.5 py-1 uppercase tracking-wider">
+                                    <Tag className="w-3.5 h-3.5" /> Price on Request
+                                  </span>
                                 </div>
                               </div>
                             </div>
@@ -914,12 +896,12 @@ function DealerDashboard() {
                           <div key={item.product._id} className="bg-slate-950 border border-slate-800 p-3">
                             <div className="flex items-start justify-between">
                               <h4 className="text-xs font-bold text-white line-clamp-1">{item.productTitle}</h4>
-                              <span className="text-xs font-serif font-bold text-brand-amber">
-                                ₹{(item.discountedPrice * item.quantity).toLocaleString("en-IN")}
+                              <span className="text-xs font-bold text-brand-amber uppercase">
+                                Price on Request
                               </span>
                             </div>
                             <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-900 text-xs text-slate-400">
-                              <span>Rate: ₹{item.discountedPrice.toLocaleString("en-IN")}</span>
+                              <span className="text-[11px] text-slate-400">Qty: {item.quantity} unit(s)</span>
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => updateCartQty(item.product._id, -1)}
@@ -940,37 +922,17 @@ function DealerDashboard() {
                         ))}
                       </div>
 
-                      {/* Total Breakdown */}
+                      {/* Inquiry Notice */}
                       <div className="pt-3 border-t border-slate-800 space-y-2">
-                        {(() => {
-                          const subtotal = calculateCartTotal();
-                          const gstAmount = Math.round(subtotal * 0.18);
-                          const grandTotal = subtotal + gstAmount;
-
-                          return (
-                            <>
-                              <div className="flex justify-between text-xs text-slate-400">
-                                <span>Subtotal (Excl. GST)</span>
-                                <span className="text-white font-medium">
-                                  ₹{subtotal.toLocaleString("en-IN")}
-                                </span>
-                              </div>
-                              <div className="flex justify-between text-xs text-slate-400">
-                                <span>GST (18%)</span>
-                                <span className="text-amber-400 font-medium">
-                                  + ₹{gstAmount.toLocaleString("en-IN")}
-                                </span>
-                              </div>
-                              <div className="flex justify-between text-xs text-white font-bold pt-2 border-t border-slate-800">
-                                <span>Grand Total (Incl. 18% GST)</span>
-                                <span className="text-brand-amber font-serif font-bold text-base">
-                                  ₹{grandTotal.toLocaleString("en-IN")}
-                                </span>
-                              </div>
-                            </>
-                          );
-                        })()}
-                        <p className="text-[10px] text-slate-500 pt-1">Applied standard wholesale rate + 18% standard GST.</p>
+                        <div className="bg-slate-950 border border-slate-800 p-3 text-xs space-y-1">
+                          <div className="flex items-center gap-1.5 text-brand-amber font-bold uppercase tracking-wider text-[11px]">
+                            <Tag className="w-3.5 h-3.5" />
+                            <span>Inquiry Submission</span>
+                          </div>
+                          <p className="text-slate-400 text-[11px] leading-relaxed">
+                            Final wholesale rates, taxes & freight will be calculated and provided in your official Proforma Invoice (PI) after admin review.
+                          </p>
+                        </div>
                       </div>
 
                       {/* Order Notes */}
@@ -993,10 +955,10 @@ function DealerDashboard() {
                         className="w-full bg-gradient-to-r from-brand-amber to-amber-500 hover:from-amber-400 hover:to-amber-600 text-slate-950 font-bold text-xs uppercase tracking-wider py-3 shadow-lg transition-all flex items-center justify-center gap-2"
                       >
                         {submittingOrder ? (
-                          "Submitting Order..."
+                          "Submitting Inquiry..."
                         ) : (
                           <>
-                            <Send className="w-4 h-4" /> Submit Bulk Order / Quote
+                            <Send className="w-4 h-4" /> Submit Bulk Inquiry / Quote
                           </>
                         )}
                       </button>
