@@ -636,16 +636,7 @@ function AdminDealers() {
                               </div>
                             ) : (
                               <>
-                                <button
-                                  onClick={() => {
-                                    setEditingDealerId(d._id);
-                                    setEditDiscount(d.discountPercent || 10);
-                                  }}
-                                  className="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-1 border border-white/10"
-                                >
-                                  <Percent className="w-3.5 h-3.5 text-brand-amber" /> Edit Margin
-                                </button>
-                                <button
+                               <button
                                   onClick={() => handleUpdateDealerStatus(d._id, "rejected")}
                                   className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-2 text-xs font-bold uppercase"
                                 >
